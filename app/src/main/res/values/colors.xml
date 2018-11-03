@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#121212</color>
+    <color name="colorPrimaryDark">#000000</color>
+    <color name="colorAccent">#80D8FF</color>
+    <color name="colorWindowBackground">#121212</color>
+
+    <!-- 52 = 32%, hex to alpha -->
+    <color name="colorTransparentBlack">#52000000</color>
+    <color name="colorTransparentWhite">#52FFFFFF</color>
+
+    <color name="RED">#FF0000</color>
+    <color name="BLUE">#0000FF</color>
+    <color name="GREEN">#00FF00</color>
+    <color name="YELLOW">#FFEB3B</color>
+</resources>

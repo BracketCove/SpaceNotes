@@ -1,0 +1,9 @@
+apply plugin: 'java-library'
+apply plugin: 'kotlin'
+
+dependencies {
+    implementation deps.kotlin.coroutines_core
+}
+
+sourceCompatibility = "1.8"
+targetCompatibility = "1.8"

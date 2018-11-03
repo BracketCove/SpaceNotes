@@ -1,0 +1,72 @@
+apply plugin: 'com.android.application'
+
+apply plugin: 'kotlin-android'
+
+apply plugin: 'kotlin-android-extensions'
+
+apply plugin: 'kotlin-kapt'
+
+android {
+    compileSdkVersion build_versions.target_sdk
+
+    defaultConfig {
+        applicationId "com.wiseassblog.kotlincalculator"
+        minSdkVersion build_versions.min_sdk
+        targetSdkVersion build_versions.target_sdk
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    buildTypes {
+        debug {
+            testCoverageEnabled = true
+            minifyEnabled false
+        }
+
+        release {
+            testCoverageEnabled = false
+            minifyEnabled true
+        }
+    }
+
+    testOptions.unitTests.all {
+        testLogging {
+            events 'passed', 'skipped', 'failed', 'standardOut', 'standardError'
+        }
+    }
+
+}
+
+dependencies {
+    implementation project(":domain")
+    implementation project(":data")
+
+    //Dependencies
+    implementation deps.android.constraint_layout
+    implementation deps.android.lifecycle_extensions
+    implementation deps.android.ktx_fragment
+    implementation deps.android.fragment
+    implementation deps.android.appcompat
+    implementation deps.android.recyclerview
+    implementation deps.android.design
+    implementation deps.room.runtime
+
+    implementation deps.kotlin.kotlin_jre
+    implementation deps.kotlin.coroutines_core
+    implementation deps.kotlin.coroutines_android
+
+    kapt deps.room.compiler
+
+    testImplementation deps.test.junit
+    testImplementation deps.test.mockk
+    testImplementation deps.test.kotlin_junit
+    testImplementation 'org.junit.jupiter:junit-jupiter-api'
+
+
+}

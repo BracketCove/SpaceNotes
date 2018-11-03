@@ -1,0 +1,85 @@
+/**
+ *Source largely taken from this OS repo: https://github.com/googlesamples/android-architecture-components/blob/master/GithubBrowserSample/versions.gradle
+ * Thank you to everyone involved in this awesome OS project!
+ *
+ * In this file, we basically build a tree of deps in a very DRY way.
+ **/
+
+//ext is a way to add extra data key/value pairs to a gradle domain object. Since it has no prefix,
+//it is short hand for project.ext in this case.
+//[:] is groovy syntax for creating a "Map" Object, which is a collection of key/value pairs
+
+//create a map of key/value pairs, called deps (deps)
+ext.deps = [:]
+
+//def means we're making a local variable. We'll use this map to build our deps key/value
+//pairs below
+def versions = [:]
+versions.lifecycle = "2.0.0-rc01"
+versions.junit = "5.1.1"
+versions.room = "2.1.0-alpha01"
+versions.navigation = "1.0.0-alpha06"
+versions.espresso = "3.0.1"
+versions.mockito = "2.13.0"
+versions.dagger = "2.15"
+versions.support_test = "1.0.1"
+versions.design = "1.0.0-rc01"
+versions.appcompat = "1.0.0"
+versions.ktx_fragment = "1.0.0"
+versions.rec_view = "1.0.0"
+versions.constraint_layout = "2.0.0-alpha2"
+versions.coroutine_version = "1.0.0-RC1"
+versions.android_gradle_plugin = "3.2.1"
+versions.kotlin = "1.3.0-rc-146"
+
+def deps = [:]
+
+def android = [:]
+
+android.appcompat = "androidx.appcompat:appcompat:$versions.appcompat"
+android.fragment = "androidx.fragment:fragment:$versions.appcompat"
+android.recyclerview = "androidx.recyclerview:recyclerview:$versions.appcompat"
+android.design = "com.google.android.material:material:$versions.design"
+android.constraint_layout = "androidx.constraintlayout:constraintlayout:$versions.constraint_layout"
+android.lifecycle_extensions = "androidx.lifecycle:lifecycle-extensions:$versions.lifecycle"
+android.ktx_fragment = "androidx.fragment:fragment-ktx:$versions.ktx_fragment"
+deps.android = android
+
+def room = [:]
+room.runtime = "androidx.room:room-runtime:$versions.room"
+room.compiler = "androidx.room:room-compiler:$versions.room"
+deps.room = room
+
+def test = [:]
+
+test.junit = "org.junit.jupiter:junit-jupiter-api:$versions.junit"
+test.kotlin_junit = "org.jetbrains.kotlin:kotlin-test-junit:$versions.kotlin"
+test.mockk = "io.mockk:mockk:1.8.9.kotlin13"
+deps.test = test
+
+def kotlin = [:]
+kotlin.kotlin_jre = "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$versions.kotlin"
+kotlin.kotlin_gradle_plugin = "org.jetbrains.kotlin:kotlin-gradle-plugin:$versions.kotlin"
+kotlin.coroutines_core = "org.jetbrains.kotlinx:kotlinx-coroutines-core:$versions.coroutine_version"
+kotlin.coroutines_android = "org.jetbrains.kotlinx:kotlinx-coroutines-android:$versions.coroutine_version"
+deps.kotlin = kotlin
+
+
+def build_versions = [:]
+build_versions.min_sdk = 21
+build_versions.target_sdk = 28
+ext.build_versions = build_versions
+
+deps.android_gradle_plugin = "com.android.tools.build:gradle:$versions.android_gradle_plugin"
+
+ext.deps = deps
+
+
+def addRepos(RepositoryHandler handler) {
+    handler.google()
+    handler.jcenter()
+    handler.maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+    handler.maven { url 'https://dl.bintray.com/kotlin/kotlin-eap' }
+}
+
+ext.addRepos = this.&addRepos
