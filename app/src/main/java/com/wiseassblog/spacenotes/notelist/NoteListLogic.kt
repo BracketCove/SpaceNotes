@@ -1,18 +1,17 @@
 package com.wiseassblog.spacenotes.notelist
 
-import com.wiseassblog.spacenotes.common.BaseLogic
-import com.wiseassblog.spacenotes.common.DispatcherProvider
 import com.wiseassblog.domain.ServiceLocator
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.Result
+import com.wiseassblog.domain.interactor.AuthSource
 import com.wiseassblog.domain.interactor.PrivateNoteSource
 import com.wiseassblog.domain.interactor.PublicNoteSource
-import com.wiseassblog.domain.interactor.AuthSource
+import com.wiseassblog.spacenotes.common.BaseLogic
+import com.wiseassblog.spacenotes.common.DispatcherProvider
 import com.wiseassblog.spacenotes.common.MODE_PRIVATE
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import java.lang.Exception
 import kotlin.coroutines.CoroutineContext
 
 class NoteListLogic(dispatcher: DispatcherProvider,

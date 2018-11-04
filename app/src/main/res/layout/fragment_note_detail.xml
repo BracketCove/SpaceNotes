@@ -5,23 +5,79 @@
     android:id="@+id/frag_note_detail"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/space_loop"
     tools:context="com.wiseassblog.spacenotes.notedetail.NoteDetailActivity">
 
+    <FrameLayout
+        android:id="@+id/tlb_detail_activity"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:layout_marginLeft="0dp"
+        android:layout_marginTop="0dp"
+        android:layout_marginRight="0dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:elevation="4dp"
+        android:background="@color/colorTransparentBlack"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent" >
+
+        <ImageButton
+            android:contentDescription="Back Button"
+            android:id="@+id/imb_toolbar_back"
+            style="@style/Widget.AppCompat.ActionButton"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:src="@drawable/ic_arrow_back_black_24dp"
+            android:layout_gravity="start"
+            />
+
+        <ImageButton
+            android:contentDescription="Delete Button"
+            android:id="@+id/imb_toolbar_delete"
+            style="@style/Widget.AppCompat.ActionButton"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:src="@drawable/ic_delete_forever_black_24dp"
+            android:layout_marginEnd="74dp"
+            android:layout_gravity="end"
+            />
+
+        <ImageButton
+            android:contentDescription="Finish Editing Note Button"
+            android:id="@+id/imb_toolbar_done"
+            style="@style/Widget.AppCompat.ActionButton"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:src="@drawable/ic_done_black_24dp"
+            android:layout_gravity="end"
+            />
+
+    </FrameLayout>
+
     <ImageView
-        android:id="@+id/backgroundImage"
+        android:id="@+id/imv_note_detail_satellite"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        tools:src="@drawable/green_drawable"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
         app:layout_constraintBottom_toTopOf="@+id/gdl_detail_middle"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/tlb_detail_activity"
+        android:src="@drawable/satellite_beam"
+        android:tint="@android:color/white"
+        android:alpha=".86"
+        />
 
     <TextView
-        android:id="@+id/dateLabel"
+        android:id="@+id/lbl_note_detail_date"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/noteBody"
+        android:layout_above="@+id/edt_note_detail_text"
         android:background="@color/colorTransparentBlack"
         android:padding="16dp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -30,16 +86,17 @@
         app:layout_constraintTop_toTopOf="@+id/gdl_detail_middle"
         tools:text="2:43AM 09/7/2018" />
 
-    <TextView
-        android:id="@+id/noteBody"
+    <EditText
+        android:inputType="textCapSentences"
+        android:id="@+id/edt_note_detail_text"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:padding="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/dateLabel"
-        tools:text="Check out content like Fragmented Podcast to expose yourself to the knowledge, ideas, and opinions of experts in your field" />
+        app:layout_constraintTop_toBottomOf="@+id/lbl_note_detail_date"
+        tools:text="" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/gdl_detail_middle"

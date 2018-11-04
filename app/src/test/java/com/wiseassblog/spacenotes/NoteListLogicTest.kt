@@ -1,13 +1,12 @@
 package com.wiseassblog.spacenotes
 
 import com.wiseassblog.domain.ServiceLocator
-import com.wiseassblog.domain.domainmodel.ColorType
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.Result
 import com.wiseassblog.domain.domainmodel.User
+import com.wiseassblog.domain.interactor.AuthSource
 import com.wiseassblog.domain.interactor.PrivateNoteSource
 import com.wiseassblog.domain.interactor.PublicNoteSource
-import com.wiseassblog.domain.interactor.AuthSource
 import com.wiseassblog.spacenotes.common.DispatcherProvider
 import com.wiseassblog.spacenotes.common.MODE_PRIVATE
 import com.wiseassblog.spacenotes.notelist.INoteListContract
@@ -49,7 +48,7 @@ class NoteListLogicTest {
     fun getNote(creationDate: String = "28/10/2018",
                 contents: String = "When I understand that this glass is already broken, every moment with it becomes precious.",
                 upVotes: Int = 0,
-                color: ColorType = ColorType.GREEN,
+                imageUrl: String = "",
                 creator: User? = User(
                         "8675309",
                         "Ajahn Chah",
@@ -59,7 +58,7 @@ class NoteListLogicTest {
             creationDate = creationDate,
             contents = contents,
             upVotes = upVotes,
-            color = color,
+            imageUrl = imageUrl,
             creator = creator
     )
 

@@ -1,6 +1,5 @@
 package com.wiseassblog.spacenotes.notedetail
 
-import com.wiseassblog.domain.domainmodel.ColorType
 import com.wiseassblog.domain.domainmodel.Note
 
 
@@ -10,10 +9,12 @@ import com.wiseassblog.domain.domainmodel.Note
 interface INoteDetailContract {
 
     interface View {
-        fun setBackgroundImage(color: ColorType)
+        fun setBackgroundImage(imageUrl: String)
         fun setDateLabel(date: String)
         fun setNoteBody(content: String)
+        fun hideBackButton()
         fun getNoteBody(): String
+        fun getTime(): String
         fun startListFeature()
         fun restartFeature()
         fun showMessage(message: String)
@@ -21,13 +22,17 @@ interface INoteDetailContract {
     }
 
     interface ViewModel {
-        fun setDisplayState(note: Note)
+        fun setIsPrivateMode(isPrivateMode: Boolean)
 
-        fun getDisplayState(): Note?
+        fun getIsPrivateMode(): Boolean
+
+        fun setNoteState(note: Note)
+
+        fun getNoteState(): Note?
 
         fun setId(id: String)
 
-        fun getId() : String?
+        fun getId(): String?
     }
 
     interface Logic {

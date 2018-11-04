@@ -43,7 +43,7 @@ class Injector(private val activityContext: Context) {
         )
     }
 
-    fun provideNoteDetailLogic(view: NoteDetailView, id: String): INoteDetailContract.Logic {
+    fun provideNoteDetailLogic(view: NoteDetailView, id: String, isPrivate:Boolean): INoteDetailContract.Logic {
         return NoteDetailLogic(
                 DispatcherProvider,
                 ServiceLocator(local, remote, auth),
@@ -53,7 +53,8 @@ class Injector(private val activityContext: Context) {
                 PrivateNoteSource(),
                 PublicNoteSource(),
                 AuthSource(),
-                id
+                id,
+                isPrivate
         )
     }
 }

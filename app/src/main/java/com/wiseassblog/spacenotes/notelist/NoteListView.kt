@@ -13,7 +13,7 @@ import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.spacenotes.R
 import com.wiseassblog.spacenotes.R.id.*
 import com.wiseassblog.spacenotes.buildlogic.Injector
-import com.wiseassblog.spacenotes.common.BUNDLE_EXTRA
+import com.wiseassblog.spacenotes.common.BOOLEAN_EXTRA_IS_PRIVATE
 import com.wiseassblog.spacenotes.common.STRING_EXTRA_NOTE_ID
 import com.wiseassblog.spacenotes.notedetail.NoteDetailActivity
 import com.wiseassblog.spacenotes.userauth.UserAuthActivity
@@ -54,12 +54,11 @@ class NoteListView : Fragment(), INoteListContract.View {
         val satelliteLoop = imv_satellite.drawable as AnimationDrawable
         satelliteLoop.stop()
     }
+
     override fun startDetailActivity(noteId: String, isPrivate: Boolean) {
         val i = Intent(this.activity, NoteDetailActivity::class.java)
-        val extras = Bundle()
-        extras.putString(STRING_EXTRA_NOTE_ID, noteId)
-        i.putExtra(BUNDLE_EXTRA, extras)
-
+        i.putExtra(STRING_EXTRA_NOTE_ID, noteId)
+        i.putExtra(BOOLEAN_EXTRA_IS_PRIVATE, isPrivate)
         this.activity?.finish()
         startActivity(i)
     }
@@ -91,6 +90,7 @@ class NoteListView : Fragment(), INoteListContract.View {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         logic.bind()
+
         val spaceLoop = imv_space_background.drawable as AnimationDrawable
         spaceLoop.setEnterFadeDuration(1000)
         spaceLoop.setExitFadeDuration(1000)

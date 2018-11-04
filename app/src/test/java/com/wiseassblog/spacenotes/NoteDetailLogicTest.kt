@@ -1,16 +1,15 @@
 package com.wiseassblog.spacenotes
 
 import com.wiseassblog.domain.ServiceLocator
-import com.wiseassblog.domain.domainmodel.ColorType
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.Result
 import com.wiseassblog.domain.domainmodel.User
+import com.wiseassblog.domain.interactor.AuthSource
 import com.wiseassblog.domain.interactor.PrivateNoteSource
 import com.wiseassblog.domain.interactor.PublicNoteSource
-import com.wiseassblog.domain.interactor.AuthSource
 import com.wiseassblog.spacenotes.common.DispatcherProvider
+import com.wiseassblog.spacenotes.common.MESSAGE_DELETE_SUCCESSFUL
 import com.wiseassblog.spacenotes.notedetail.INoteDetailContract
-import com.wiseassblog.spacenotes.notedetail.MESSAGE_DELETE_SUCCESSFUL
 import com.wiseassblog.spacenotes.notedetail.NoteDetailEvent
 import com.wiseassblog.spacenotes.notedetail.NoteDetailLogic
 import io.mockk.*
@@ -50,10 +49,10 @@ class NoteDetailLogicTest {
 
     //Shout out to Philipp Hauer @philipp_hauer for the snippet below (creating test data) with
     //a default argument wrapper function:
-    fun getNote(creationDate: String = "28/10/2018",
+    fun getNote(creationDate: String = "12:30:30, November 3rd, 2018",
                 contents: String = "When I understand that this glass is already broken, every moment with it becomes precious.",
                 upVotes: Int = 0,
-                color: ColorType = ColorType.GREEN,
+                imageUrl: String = "",
                 creator: User? = User(
                         "8675309",
                         "Ajahn Chah",
@@ -63,8 +62,21 @@ class NoteDetailLogicTest {
             creationDate = creationDate,
             contents = contents,
             upVotes = upVotes,
-            color = color,
+            imageUrl = imageUrl,
             creator = creator
+    )
+
+    fun getLogic(id: String = getNote().creationDate,
+                 isPrivate: Boolean = true) = NoteDetailLogic(
+            dispatcher,
+            locator,
+            vModel,
+            view,
+            private,
+            public,
+            auth,
+            id,
+            isPrivate
     )
 
 
@@ -72,16 +84,7 @@ class NoteDetailLogicTest {
     fun clear() {
         clearMocks()
 
-        logic = NoteDetailLogic(
-                dispatcher,
-                locator,
-                vModel,
-                view,
-                private,
-                public,
-                auth,
-                getNote().creationDate
-        )
+        logic = getLogic()
 
     }
 
@@ -102,7 +105,7 @@ class NoteDetailLogicTest {
 
 
         every {
-            vModel.getDisplayState()
+            vModel.getNoteState()
         } returns getNote()
 
         every {
@@ -119,7 +122,7 @@ class NoteDetailLogicTest {
         //verify interactions and state if necessary
 
         verify { view.getNoteBody() }
-        verify { vModel.getDisplayState() }
+        verify { vModel.getNoteState() }
         verify { view.startListFeature() }
     }
 
@@ -148,7 +151,7 @@ class NoteDetailLogicTest {
     @Test
     fun `On Delete Confirmation successful`() {
         every {
-            vModel.getDisplayState()
+            vModel.getNoteState()
         } returns getNote()
 
         every {
@@ -161,13 +164,13 @@ class NoteDetailLogicTest {
 
         logic.noteDetailEvent(NoteDetailEvent.OnDeleteConfirmed)
 
-        verify { vModel.getDisplayState() }
+        verify { vModel.getNoteState() }
         verify { view.showMessage(MESSAGE_DELETE_SUCCESSFUL) }
         verify { view.startListFeature() }
     }
 
     /**On start  can be considered as a generic event to represent the view telling the presenter
-    *to that it's time to rock'n'roll.
+     *to that it's time to rock'n'roll.
      *
      * Two scenarios may occur when bind is called.
      * a: first time it is called
@@ -178,12 +181,12 @@ class NoteDetailLogicTest {
      * 2a. get id from viewmodel and use it to call privateNoteSource
      * 2b. render the view
      * 3a. update view and viewmodel with result
-    */
+     */
 
     @Test
     fun `On start a`() = runBlocking {
         every {
-            vModel.getDisplayState()
+            vModel.getNoteState()
         } returns null
 
         every {
@@ -200,9 +203,9 @@ class NoteDetailLogicTest {
 
         logic.noteDetailEvent(NoteDetailEvent.OnStart)
 
-        verify { vModel.setDisplayState(any()) }
+        verify { vModel.setNoteState(any()) }
         coVerify { private.getNoteById(getNote().creationDate, locator) }
-        verify { view.setBackgroundImage(getNote().color) }
+        verify { view.setBackgroundImage(getNote().imageUrl) }
         verify { view.setDateLabel(getNote().creationDate) }
         verify { view.setNoteBody(getNote().contents) }
     }
@@ -210,13 +213,13 @@ class NoteDetailLogicTest {
     @Test
     fun `On start b`() {
         every {
-            vModel.getDisplayState()
+            vModel.getNoteState()
         } returns getNote()
 
         logic.noteDetailEvent(NoteDetailEvent.OnStart)
 
-        verify { vModel.getDisplayState() }
-        verify { view.setBackgroundImage(getNote().color) }
+        verify { vModel.getNoteState() }
+        verify { view.setBackgroundImage(getNote().imageUrl) }
         verify { view.setDateLabel(getNote().creationDate) }
         verify { view.setNoteBody(getNote().contents) }
     }
@@ -229,4 +232,139 @@ class NoteDetailLogicTest {
         verify { view.startListFeature() }
     }
 
+
+    /**
+     * On bind process for detail view:
+     * a. if onbind starts with an empty note id, this means that the user has elected to create a
+     * new note instead of editing a note which already exists
+     * b. if onbind starts with an id, this means the user wants to edit an existing note
+     * c. if onbind starts with isPrivate true, parse and write to privateDataSource
+     * d. if onbind starts with isPrivate false, parse and write to publicDataSource
+     *
+     * 1. Check arguments from activity
+     * 2. Check note state
+     * 3. Check User state if necessary
+     * 4. call OnStart
+     *
+     *
+     * a/c:
+     * 1. Check arguments from activity: note id = "", isPrivate = true
+     * 2. Create new note with date and null user, store in vModel
+     * 3. render view
+     * - back set to invisible (only delete or save allowed for new notes
+     * - start satellite animation
+     * - set creation date
+     * 4.
+     */
+    @Test
+    fun `On bind a and c`() {
+        logic = getLogic("", true)
+
+        every {
+            view.getTime()
+        } returns getNote().creationDate
+
+        every {
+            vModel.getId()
+        } returns ""
+
+        every {
+            vModel.getIsPrivateMode()
+        } returns true
+
+        logic.bind()
+
+        //creator should be null for new note. It will be added if the user saves the note while
+        //logged in
+        verify { vModel.setNoteState(getNote(creator = null, contents = "")) }
+        verify { vModel.setIsPrivateMode(true) }
+        verify { vModel.setId("") }
+        verify { vModel.setId(getNote().creationDate) }
+        verify { view.getTime() }
+        verify { view.hideBackButton() }
+    }
+
+    /**
+     *b: Not new Note
+     *d: Not Private Mode
+     */
+    @Test
+    fun `On bind a and d`() {
+//        logic = getLogic("", true)
+//
+//        every {
+//            view.getTime()
+//        } returns getNote().creationDate
+//
+//        every {
+//            vModel.getId()
+//        } returns ""
+//
+//        every {
+//            vModel.getIsPrivateMode()
+//        } returns true
+//
+//        logic.bind()
+//
+//        //creator should be null for new note. It will be added if the user saves the note while
+//        //logged in
+//        verify { vModel.setNoteState(getNote(creator = null, contents = "")) }
+//        verify { vModel.setIsPrivateMode(true) }
+//        verify { vModel.setId("") }
+//        verify { vModel.setId(getNote().creationDate) }
+//        verify { view.getTime() }
+//        verify { view.hideBackButton() }
+    }
+
+    /**
+     *b: Not new Note
+     *c: isPrivate = true
+     *
+     * 1. Check arguments from activity: note id = note id, isPrivate = true
+     * 2. Retrieve Note from appropriate repository
+     * 3. render view
+     * - back set to invisible (only delete or save allowed for new notes
+     * - start satellite animation
+     * - set creation date
+     */
+    @Test
+    fun `On bind b and c`() {
+        logic = getLogic(getNote().creationDate, true)
+
+        every {
+            vModel.getId()
+        } returns getNote().creationDate
+
+        every {
+            vModel.getIsPrivateMode()
+        } returns true
+
+        every {
+            vModel.getNoteState()
+        } returns null
+
+        every {
+            dispatcher.provideUIContext()
+        } returns Dispatchers.Unconfined
+
+        coEvery {
+            private.getNoteById(getNote().creationDate, locator)
+        } returns Result.build { getNote() }
+
+        logic.bind()
+
+        verify { vModel.setIsPrivateMode(true) }
+        verify { vModel.setId(getNote().creationDate) }
+        verify { vModel.setNoteState(getNote()) }
+        coVerify { private.getNoteById(getNote().creationDate, locator) }
+    }
+
+    /**
+     *b: Not new Note
+     *d: public mode
+     */
+    @Test
+    fun `On bind b and d`() {
+
+    }
 }

@@ -1,7 +1,6 @@
 package com.wiseassblog.domain.interactor
 
 import com.wiseassblog.domain.ServiceLocator
-import com.wiseassblog.domain.domainmodel.ColorType
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.Result
 import com.wiseassblog.domain.domainmodel.User
@@ -31,7 +30,7 @@ class PublicNoteSource {
             Note("28/10/2018",
                     "When I understand that this glass is already broken, every moment with it becomes precious.",
                     0,
-                    ColorType.GREEN,
+                    "gps_icon",
                     User(
                             "8675309",
                             "Ajahn Chah",
