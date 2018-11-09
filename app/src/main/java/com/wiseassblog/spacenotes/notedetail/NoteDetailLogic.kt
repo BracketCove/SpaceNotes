@@ -7,7 +7,7 @@ import com.wiseassblog.domain.interactor.AuthSource
 import com.wiseassblog.domain.interactor.PrivateNoteSource
 import com.wiseassblog.domain.interactor.PublicNoteSource
 import com.wiseassblog.spacenotes.common.BaseLogic
-import com.wiseassblog.spacenotes.common.DispatcherProvider
+import com.wiseassblog.domain.DispatcherProvider
 import com.wiseassblog.spacenotes.common.MESSAGE_DELETE_SUCCESSFUL
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -35,7 +35,7 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
                             view.getTime(),
                             "",
                             0,
-                            "",
+                            "satellite_beam",
                             null
                     )
             )
@@ -45,7 +45,7 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
 
         }
 
-        noteDetailEvent(NoteDetailEvent.OnStart)
+        event(NoteDetailEvent.OnStart)
     }
 
     override fun clear() {
@@ -62,7 +62,7 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
         get() = dispatcher.provideUIContext() + jobTracker
 
 
-    override fun noteDetailEvent(event: NoteDetailEvent) {
+    override fun event(event: NoteDetailEvent) {
         when (event) {
             is NoteDetailEvent.OnDoneClick -> onDoneClick()
 
@@ -77,19 +77,34 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
     }
 
     fun onDoneClick() = launch {
-        val currentNote = vModel.getNoteState()
-
-        //if VM data is null, we're in a bad spot
-        if (currentNote == null) {
-            view.restartFeature()
+        if (vModel.getIsPrivateMode()) {
+            preparePrivateRepoUpdate()
         } else {
-            val updatedNote = currentNote.copy(contents = view.getNoteBody())
-            val result = privateNoteSource.updateNote(updatedNote, locator)
+            preparePublicRepoUpdate()
+        }
+    }
 
-            when (result) {
-                is Result.Value -> view.startListFeature()
-                is Result.Error -> view.showMessage(result.error.toString())
-            }
+    suspend fun preparePrivateRepoUpdate(){
+
+        val updatedNote = vModel.getNoteState()!!.copy(contents = view.getNoteBody())
+
+        val result = privateNoteSource.updateNote(updatedNote, locator)
+
+        when (result) {
+            is Result.Value -> view.startListFeature()
+            is Result.Error -> view.showMessage(result.error.toString())
+        }
+    }
+
+    suspend fun preparePublicRepoUpdate(){
+
+        val updatedNote = vModel.getNoteState()!!.copy(contents = view.getNoteBody())
+
+        val result = privateNoteSource.updateNote(updatedNote, locator)
+
+        when (result) {
+            is Result.Value -> view.startListFeature()
+            is Result.Error -> view.showMessage(result.error.toString())
         }
     }
 
@@ -123,8 +138,8 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
 
         when (result) {
             is Result.Value -> {
-                vModel.setNoteState(result.value)
-                renderView(result.value)
+                vModel.setNoteState(result.value!!)
+                renderView(result.value!!)
             }
 
             is Result.Error -> {
@@ -149,7 +164,7 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
         if (currentNote == null) {
             view.restartFeature()
         } else {
-            val result = privateNoteSource.deleteNote(currentNote.creationDate, locator)
+            val result = privateNoteSource.deleteNote(currentNote, locator)
 
             when (result) {
                 is Result.Value -> {

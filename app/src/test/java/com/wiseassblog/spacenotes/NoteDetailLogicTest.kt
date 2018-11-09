@@ -7,7 +7,7 @@ import com.wiseassblog.domain.domainmodel.User
 import com.wiseassblog.domain.interactor.AuthSource
 import com.wiseassblog.domain.interactor.PrivateNoteSource
 import com.wiseassblog.domain.interactor.PublicNoteSource
-import com.wiseassblog.spacenotes.common.DispatcherProvider
+import com.wiseassblog.domain.DispatcherProvider
 import com.wiseassblog.spacenotes.common.MESSAGE_DELETE_SUCCESSFUL
 import com.wiseassblog.spacenotes.notedetail.INoteDetailContract
 import com.wiseassblog.spacenotes.notedetail.NoteDetailEvent
@@ -90,23 +90,33 @@ class NoteDetailLogicTest {
 
     /**
      * When auth presses done, they are finished editing their note. They will be returned to a list
-     * view of all notes.
+     * view of all notes. Depending on if the note isPrivate, it will either be written to the
+     * privateDataSource, or the publicDataSOurce.
      *
-     * 1. get current value of noteBody
-     * 2. write updated note to repositories
+     * a. isPrivate: true
+     * b. isPrivate: false
+     * c. User is logged in
+     * d. User is not logged in
+     *
+     * 1. Check if the note is private: true
+     * 2. Check for currently logged in user: false (not sure if this should be a backend concern or not)
+     * 3. Create a copy of the note in vM, with update content value
      * 3. exit to list activity
      */
     @Test
-    fun `On Done Click`() = runBlocking {
+    fun `On Done Click private, not logged in`() = runBlocking {
 
         every {
             view.getNoteBody()
         } returns getNote().contents
 
-
         every {
             vModel.getNoteState()
         } returns getNote()
+
+        every {
+            vModel.getIsPrivateMode()
+        } returns true
 
         every {
             dispatcher.provideUIContext()
@@ -116,14 +126,63 @@ class NoteDetailLogicTest {
             private.updateNote(getNote(), locator)
         } returns Result.build { true }
 
+        //TODO() figure out if this is a backend concern or not
+//        coEvery {
+//            auth.getCurrentUser(locator)
+//        } returns Result.build { null }
+
         //call the unit to be tested
-        logic.noteDetailEvent(NoteDetailEvent.OnDoneClick)
+        logic.event(NoteDetailEvent.OnDoneClick)
 
         //verify interactions and state if necessary
 
         verify { view.getNoteBody() }
         verify { vModel.getNoteState() }
+        verify { vModel.getIsPrivateMode() }
+     //   coVerify { auth.getCurrentUser(locator) }
+        coVerify { private.updateNote(getNote(), locator) }
         verify { view.startListFeature() }
+    }
+
+    /**
+     * a. isPrivate: true
+    * b. isPrivate: false
+    * c. User is logged in
+    * d. User is not logged in
+    *
+    * 1. get current value of noteBody
+    * 2. write updated note to repositories
+    * 3. exit to list activity
+    */
+    @Test
+    fun `On Done Click public, not logged in`() = runBlocking {
+//
+//        every {
+//            view.getNoteBody()
+//        } returns getNote().contents
+//
+//
+//        every {
+//            vModel.getNoteState()
+//        } returns getNote()
+//
+//        every {
+//            dispatcher.provideUIContext()
+//        } returns Dispatchers.Unconfined
+//
+//        coEvery {
+//            private.insertOrUpdateNote(getNote(), locator)
+//        } returns Result.build { true }
+//
+//        //call the unit to be tested
+//        logic.event(NoteDetailEvent.OnDoneClick)
+//
+//        //verify interactions and state if necessary
+//
+//        verify { view.getNoteBody() }
+//        verify { vModel.getNoteState() }
+//        verify { view.startListFeature() }
+//        coVerify {  }
     }
 
     /**
@@ -135,7 +194,7 @@ class NoteDetailLogicTest {
             view.showConfirmDeleteSnackbar()
         } returns Unit
 
-        logic.noteDetailEvent(NoteDetailEvent.OnDeleteClick)
+        logic.event(NoteDetailEvent.OnDeleteClick)
 
         verify { view.showConfirmDeleteSnackbar() }
     }
@@ -159,10 +218,10 @@ class NoteDetailLogicTest {
         } returns Dispatchers.Unconfined
 
         coEvery {
-            private.deleteNote(getNote().creationDate, locator)
+            private.deleteNote(getNote(), locator)
         } returns Result.build { true }
 
-        logic.noteDetailEvent(NoteDetailEvent.OnDeleteConfirmed)
+        logic.event(NoteDetailEvent.OnDeleteConfirmed)
 
         verify { vModel.getNoteState() }
         verify { view.showMessage(MESSAGE_DELETE_SUCCESSFUL) }
@@ -201,7 +260,7 @@ class NoteDetailLogicTest {
             private.getNoteById(getNote().creationDate, locator)
         } returns Result.build { getNote() }
 
-        logic.noteDetailEvent(NoteDetailEvent.OnStart)
+        logic.event(NoteDetailEvent.OnStart)
 
         verify { vModel.setNoteState(any()) }
         coVerify { private.getNoteById(getNote().creationDate, locator) }
@@ -216,7 +275,7 @@ class NoteDetailLogicTest {
             vModel.getNoteState()
         } returns getNote()
 
-        logic.noteDetailEvent(NoteDetailEvent.OnStart)
+        logic.event(NoteDetailEvent.OnStart)
 
         verify { vModel.getNoteState() }
         verify { view.setBackgroundImage(getNote().imageUrl) }
@@ -227,7 +286,7 @@ class NoteDetailLogicTest {
 
     @Test
     fun `On Back Click`() {
-        logic.noteDetailEvent(NoteDetailEvent.OnBackClick)
+        logic.event(NoteDetailEvent.OnBackClick)
 
         verify { view.startListFeature() }
     }
@@ -274,7 +333,7 @@ class NoteDetailLogicTest {
 
         logic.bind()
 
-        //creator should be null for new note. It will be added if the user saves the note while
+        //creatorId should be null for new note. It will be added if the user saves the note while
         //logged in
         verify { vModel.setNoteState(getNote(creator = null, contents = "")) }
         verify { vModel.setIsPrivateMode(true) }
@@ -306,9 +365,9 @@ class NoteDetailLogicTest {
 //
 //        logic.bind()
 //
-//        //creator should be null for new note. It will be added if the user saves the note while
+//        //creatorId should be null for new note. It will be added if the user saves the note while
 //        //logged in
-//        verify { vModel.setNoteState(getNote(creator = null, contents = "")) }
+//        verify { vModel.setNoteState(getNote(creatorId = null, contents = "")) }
 //        verify { vModel.setIsPrivateMode(true) }
 //        verify { vModel.setId("") }
 //        verify { vModel.setId(getNote().creationDate) }

@@ -17,7 +17,6 @@ import kotlinx.android.synthetic.main.item_note.view.*
 class NoteListAdapter(var logic: INoteListContract.Logic?
                       = null) : ListAdapter<Note, NoteListAdapter.NoteViewHolder>(NoteDiffUtilCallback()) {
 
-
     override fun onBindViewHolder(holder: NoteListAdapter.NoteViewHolder, position: Int) {
         getItem(position).let { note ->
             with(holder) {

@@ -91,6 +91,8 @@ class NoteListView : Fragment(), INoteListContract.View {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         logic.bind()
 
+        fab_create_new_item.setOnClickListener { logic.event(NoteListEvent.OnNewNoteClick) }
+
         val spaceLoop = imv_space_background.drawable as AnimationDrawable
         spaceLoop.setEnterFadeDuration(1000)
         spaceLoop.setExitFadeDuration(1000)

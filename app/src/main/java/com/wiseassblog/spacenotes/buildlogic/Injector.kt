@@ -2,16 +2,14 @@ package com.wiseassblog.spacenotes.buildlogic
 
 import android.content.Context
 import androidx.lifecycle.ViewModelProviders
-import com.wiseassblog.data.note.FirebaseNoteRepositoryImpl
-import com.wiseassblog.data.note.FirebaseAuthSourceImpl
-import com.wiseassblog.data.note.RoomNoteRepositoryImpl
+import com.wiseassblog.data.note.*
 import com.wiseassblog.domain.ServiceLocator
 import com.wiseassblog.domain.interactor.PrivateNoteSource
 import com.wiseassblog.domain.interactor.PublicNoteSource
 import com.wiseassblog.domain.interactor.AuthSource
 import com.wiseassblog.domain.repository.INoteRepository
 import com.wiseassblog.domain.repository.IAuthSource
-import com.wiseassblog.spacenotes.common.DispatcherProvider
+import com.wiseassblog.domain.DispatcherProvider
 import com.wiseassblog.spacenotes.notedetail.*
 import com.wiseassblog.spacenotes.notelist.*
 
@@ -19,7 +17,7 @@ class Injector(private val activityContext: Context) {
 
     //must be val
     private val local: INoteRepository by lazy {
-        RoomNoteRepositoryImpl()
+        RoomNoteRepositoryImpl(noteDao)
     }
 
     private val remote: INoteRepository by lazy {
@@ -28,6 +26,10 @@ class Injector(private val activityContext: Context) {
 
     private val auth: IAuthSource by lazy {
         FirebaseAuthSourceImpl()
+    }
+
+    private val noteDao: RoomNoteDao by lazy {
+        NoteDatabase.getInstance(activityContext).roomNoteDao()
     }
 
     fun provideNoteListLogic(view: NoteListView): INoteListContract.Logic {

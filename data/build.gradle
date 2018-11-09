@@ -45,9 +45,14 @@ android {
 dependencies {
     implementation project(":domain")
 
+    implementation deps.room.runtime
+
     implementation deps.kotlin.kotlin_jre
     implementation deps.kotlin.coroutines_core
     implementation deps.kotlin.coroutines_android
+
+    kapt deps.room.compiler
+
 
     testImplementation deps.test.junit
     testImplementation deps.test.mockk

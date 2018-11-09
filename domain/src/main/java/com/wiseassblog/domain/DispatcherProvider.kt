@@ -1,4 +1,4 @@
-package com.wiseassblog.spacenotes.common
+package com.wiseassblog.domain
 
 import kotlinx.coroutines.Dispatchers
 import kotlin.coroutines.CoroutineContext

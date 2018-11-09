@@ -36,7 +36,7 @@ interface INoteDetailContract {
     }
 
     interface Logic {
-        fun noteDetailEvent(event: NoteDetailEvent)
+        fun event(event: NoteDetailEvent)
         fun bind()
         fun clear()
     }

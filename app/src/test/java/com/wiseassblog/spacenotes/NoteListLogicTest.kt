@@ -7,7 +7,7 @@ import com.wiseassblog.domain.domainmodel.User
 import com.wiseassblog.domain.interactor.AuthSource
 import com.wiseassblog.domain.interactor.PrivateNoteSource
 import com.wiseassblog.domain.interactor.PublicNoteSource
-import com.wiseassblog.spacenotes.common.DispatcherProvider
+import com.wiseassblog.domain.DispatcherProvider
 import com.wiseassblog.spacenotes.common.MODE_PRIVATE
 import com.wiseassblog.spacenotes.notelist.INoteListContract
 import com.wiseassblog.spacenotes.notelist.NoteListAdapter
