@@ -6,20 +6,21 @@ import com.wiseassblog.domain.repository.INoteRepository
 import kotlinx.coroutines.channels.Channel
 
 class FirebaseNoteRepositoryImpl : INoteRepository {
-    override suspend fun deleteNote(note: Note, listener: Channel<Result<Exception, Boolean>>) {
+    override suspend fun getNotes(): Result<Exception, List<Note>> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override suspend fun updateNote(note: Note, listener: Channel<Result<Exception, Boolean>>) {
+    override suspend fun getNote(id: String): Result<Exception, Note?> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override suspend fun getNote(id: String, listener: Channel<Result<Exception, Note?>>) {
+    override suspend fun deleteNote(note: Note): Result<Exception, Boolean> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override suspend fun getNotes(listener: Channel<Result<Exception, List<Note>>>) {
+    override suspend fun updateNote(note: Note): Result<Exception, Boolean> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
+
 
 }

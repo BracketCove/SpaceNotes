@@ -40,11 +40,11 @@ internal fun Fragment.getCalendarTime():String {
 
     return builder.toString()}
 
-internal fun Fragment.showMessage(value: String) {
+internal fun Fragment.makeToast(value: String) {
     Toast.makeText(activity, value, Toast.LENGTH_SHORT).show()
 }
 
-internal fun Fragment.restartFeature() {
+internal fun Fragment.restartCurrentFeature() {
     val i: Intent
     when (this){
         is NoteDetailView -> {

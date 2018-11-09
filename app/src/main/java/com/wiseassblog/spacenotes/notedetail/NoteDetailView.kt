@@ -11,10 +11,7 @@ import androidx.fragment.app.Fragment
 import com.google.android.material.snackbar.Snackbar
 import com.wiseassblog.spacenotes.R
 import com.wiseassblog.spacenotes.buildlogic.Injector
-import com.wiseassblog.spacenotes.common.MESSAGE_DELETE
-import com.wiseassblog.spacenotes.common.MESSAGE_DELETE_CONFIRMATION
-import com.wiseassblog.spacenotes.common.getCalendarTime
-import com.wiseassblog.spacenotes.common.toEditable
+import com.wiseassblog.spacenotes.common.*
 import com.wiseassblog.spacenotes.notelist.NoteListActivity
 import kotlinx.android.synthetic.main.fragment_note_detail.*
 
@@ -31,15 +28,16 @@ class NoteDetailView : Fragment(), INoteDetailContract.View {
         if (activity != null) {
             Snackbar.make(frag_note_detail, MESSAGE_DELETE_CONFIRMATION, Snackbar.LENGTH_LONG)
                     .setAction(MESSAGE_DELETE) { logic.event(NoteDetailEvent.OnDeleteConfirmed) }
+                    .show()
         }
     }
 
     override fun showMessage(message: String) {
-        showMessage(message)
+        makeToast(message)
     }
 
     override fun restartFeature() {
-        restartFeature()
+        restartCurrentFeature()
     }
 
     override fun getNoteBody(): String {

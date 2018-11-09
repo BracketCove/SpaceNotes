@@ -10,31 +10,26 @@ import kotlinx.coroutines.channels.Channel
 
 class RoomNoteRepositoryImpl(private val noteDao: RoomNoteDao) : INoteRepository {
 
-    override suspend fun updateNote(note: Note, listener: Channel<Result<Exception, Boolean>>) {
+    override suspend fun updateNote(note: Note): Result<Exception, Boolean> {
         val updated = noteDao.insertOrUpdateNote(note.toRoomNote)
 
-        when {
+        return when {
             //TODO verify that if nothing is updated, the resulting value will be 0
-            updated == 0L -> listener.send(Result.build { throw SpaceNotesError.LocalIOException})
-            updated > 0L -> listener.send(Result.build { true })
+            updated == 0L -> Result.build { throw SpaceNotesError.LocalIOException }
+            else -> Result.build { true }
         }
     }
 
-    override suspend fun getNote(id: String, listener: Channel<Result<Exception, Note?>>) {
-        val roomNote = noteDao.getNoteById(id)
+    override suspend fun getNote(id: String) : Result<Exception, Note?> = Result.build { noteDao.getNoteById(id).toNote }
 
-        listener.send( Result.build { roomNote.toNote })
-    }
 
-    override suspend fun getNotes(listener: Channel<Result<Exception, List<Note>>>) {
-        val roomNotes = noteDao.getNotes()
+    override suspend fun getNotes(): Result<Exception, List<Note>> = Result.build { noteDao.getNotes().toNoteList() }
 
-        listener.send( Result.build { roomNotes.toNoteList() })    }
 
-    override suspend fun deleteNote(note: Note, listener: Channel<Result<Exception, Boolean>>) {
+
+    override suspend fun deleteNote(note: Note) : Result<Exception, Boolean>{
         noteDao.deleteNote(note.toRoomNote)
-
-        listener.send(Result.build { true })
+        return Result.build { true }
     }
 }
 
