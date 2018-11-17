@@ -37,8 +37,6 @@ interface INoteDetailContract {
 
     interface Logic {
         fun event(event: NoteDetailEvent)
-        fun bind()
-        fun clear()
     }
 }
 
@@ -48,5 +46,7 @@ sealed class NoteDetailEvent {
     object OnDeleteConfirmed : NoteDetailEvent()
     object OnBackClick : NoteDetailEvent()
     object OnStart : NoteDetailEvent()
+    object OnBind : NoteDetailEvent()
+    object OnDestroy : NoteDetailEvent()
 }
 

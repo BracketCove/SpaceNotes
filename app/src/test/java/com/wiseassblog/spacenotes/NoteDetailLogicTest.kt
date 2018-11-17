@@ -56,7 +56,7 @@ class NoteDetailLogicTest {
                 creator: User? = User(
                         "8675309",
                         "Ajahn Chah",
-                        ""
+                        "satellite_beam"
                 )
     ) = Note(
             creationDate = creationDate,
@@ -331,11 +331,11 @@ class NoteDetailLogicTest {
             vModel.getIsPrivateMode()
         } returns true
 
-        logic.bind()
+        logic.event(NoteDetailEvent.OnBind)
 
         //creatorId should be null for new note. It will be added if the user saves the note while
         //logged in
-        verify { vModel.setNoteState(getNote(creator = null, contents = "")) }
+        verify { vModel.setNoteState(getNote(creator = null, contents = "", imageUrl = "satellite_beam")) }
         verify { vModel.setIsPrivateMode(true) }
         verify { vModel.setId("") }
         verify { vModel.setId(getNote().creationDate) }
@@ -410,7 +410,7 @@ class NoteDetailLogicTest {
             private.getNoteById(getNote().creationDate, locator)
         } returns Result.build { getNote() }
 
-        logic.bind()
+        logic.event(NoteDetailEvent.OnBind)
 
         verify { vModel.setIsPrivateMode(true) }
         verify { vModel.setId(getNote().creationDate) }

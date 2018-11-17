@@ -1,13 +1,20 @@
 package com.wiseassblog.data.note
 
+import androidx.room.ColumnInfo
+import androidx.room.PrimaryKey
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.Result
 import com.wiseassblog.domain.repository.INoteRepository
 import kotlinx.coroutines.channels.Channel
 
 class FirebaseNoteRepositoryImpl : INoteRepository {
+    fun getTable(): DatabaseReference = FirebaseDatabase.getInstance().getReference("remote_notes")
+
+
     override suspend fun getNotes(): Result<Exception, List<Note>> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return Result.build { emptyList<Note>() }
     }
 
     override suspend fun getNote(id: String): Result<Exception, Note?> {
@@ -21,6 +28,12 @@ class FirebaseNoteRepositoryImpl : INoteRepository {
     override suspend fun updateNote(note: Note): Result<Exception, Boolean> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
-
-
 }
+
+data class FirebaseNote (
+        val creationDate: String,
+        val contents: String,
+        val upVotes: Int,
+        val imageurl: String,
+        val creator: String
+)

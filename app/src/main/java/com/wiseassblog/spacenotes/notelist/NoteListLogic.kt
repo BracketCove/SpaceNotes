@@ -39,6 +39,8 @@ class NoteListLogic(dispatcher: DispatcherProvider,
             is NoteListEvent.OnLoginClick -> onLoginClick()
             is NoteListEvent.OnTogglePublicMode -> onTogglePublicMode()
             is NoteListEvent.OnStart -> onStart()
+            is NoteListEvent.OnBind -> bind()
+            is NoteListEvent.OnDestroy -> clear()
         }
     }
 
@@ -54,8 +56,10 @@ class NoteListLogic(dispatcher: DispatcherProvider,
     }
 
     private fun onStart() {
+        //similar to CompositeDisposable from RxJava 2
         jobTracker = Job()
         getListData(vModel.getIsPrivateMode())
+
     }
 
     fun getListData(isPrivateMode: Boolean) = launch {
@@ -86,7 +90,9 @@ class NoteListLogic(dispatcher: DispatcherProvider,
     }
 
     fun renderView(list: List<Note>) {
-        view.showList()
+        if (list.isEmpty()) view.showEmptyState()
+        else view.showList()
+
         adapter.submitList(list)
     }
 
@@ -105,7 +111,7 @@ class NoteListLogic(dispatcher: DispatcherProvider,
     }
 
 
-    override fun bind() {
+     fun bind() {
         view.setToolbarTitle(MODE_PRIVATE)
         view.showLoadingView()
         adapter.logic = this
@@ -127,7 +133,7 @@ class NoteListLogic(dispatcher: DispatcherProvider,
     }
 
 
-    override fun clear() {
+    fun clear() {
         jobTracker.cancel()
     }
 }

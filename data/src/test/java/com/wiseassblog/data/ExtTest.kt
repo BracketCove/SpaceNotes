@@ -1,7 +1,6 @@
 package com.wiseassblog.data
 
 import com.wiseassblog.data.note.RoomNote
-import com.wiseassblog.data.note.toNoteList
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.User
 import org.junit.Test

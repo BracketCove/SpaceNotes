@@ -26,9 +26,13 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
                       isPrivate: Boolean)
     : BaseLogic(dispatcher, locator), INoteDetailContract.Logic, CoroutineScope {
 
+    init {
+        vModel.setId(id)
+        vModel.setIsPrivateMode(isPrivate)
+        jobTracker = Job()
+    }
 
-
-    override fun bind() {
+    fun bind() {
         if (vModel.getId() == "" || vModel.getId() == null){
             vModel.setNoteState(
                     Note(
@@ -42,21 +46,16 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
 
             //only save or delete with new note
             view.hideBackButton()
-
         }
 
         event(NoteDetailEvent.OnStart)
     }
 
-    override fun clear() {
+    fun clear() {
         jobTracker.cancel()
     }
 
-    init {
-        vModel.setId(id)
-        vModel.setIsPrivateMode(isPrivate)
-        jobTracker = Job()
-    }
+
 
     override val coroutineContext: CoroutineContext
         get() = dispatcher.provideUIContext() + jobTracker
@@ -65,14 +64,12 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
     override fun event(event: NoteDetailEvent) {
         when (event) {
             is NoteDetailEvent.OnDoneClick -> onDoneClick()
-
             is NoteDetailEvent.OnDeleteClick -> onDeleteClick()
-
             is NoteDetailEvent.OnBackClick -> onBackClick()
-
             is NoteDetailEvent.OnDeleteConfirmed -> onDeleteConfirmed()
-
             is NoteDetailEvent.OnStart -> onStart()
+            is NoteDetailEvent.OnBind -> bind()
+            is NoteDetailEvent.OnDestroy -> clear()
         }
     }
 

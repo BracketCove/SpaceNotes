@@ -4,6 +4,7 @@ import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.ListAdapter
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.User
+import com.wiseassblog.spacenotes.notedetail.NoteDetailEvent
 
 
 /**
@@ -14,6 +15,7 @@ interface INoteListContract {
     interface View {
         fun setAdapter(adapter: ListAdapter<Note, NoteListAdapter.NoteViewHolder>)
         fun showList()
+        fun showEmptyState()
         fun showLoadingView()
         fun setToolbarTitle(title:String)
         fun startDetailActivity(noteId:String, isPrivate: Boolean)
@@ -35,8 +37,6 @@ interface INoteListContract {
     }
 
     interface Logic {
-        fun bind()
-        fun clear()
         fun event(event: NoteListEvent<Int>)
     }
 }
@@ -47,4 +47,6 @@ sealed class NoteListEvent<out T> {
     object OnLoginClick : NoteListEvent<Nothing>()
     object OnTogglePublicMode : NoteListEvent<Nothing>()
     object OnStart : NoteListEvent<Nothing>()
+    object OnBind : NoteListEvent<Nothing>()
+    object OnDestroy : NoteListEvent<Nothing>()
 }

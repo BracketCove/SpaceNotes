@@ -70,15 +70,13 @@ class NoteDetailView : Fragment(), INoteDetailContract.View {
 
     lateinit var logic: INoteDetailContract.Logic
 
-
-
     override fun onStart() {
         super.onStart()
         logic.event(NoteDetailEvent.OnStart)
     }
 
     override fun onDestroy() {
-        logic.clear()
+        logic.event(NoteDetailEvent.OnDestroy)
         super.onDestroy()
     }
 
@@ -95,7 +93,7 @@ class NoteDetailView : Fragment(), INoteDetailContract.View {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        logic.bind()
+        logic.event(NoteDetailEvent.OnBind)
 
         imb_toolbar_done.setOnClickListener { logic.event(NoteDetailEvent.OnDoneClick) }
         imb_toolbar_back.setOnClickListener { logic.event(NoteDetailEvent.OnBackClick) }

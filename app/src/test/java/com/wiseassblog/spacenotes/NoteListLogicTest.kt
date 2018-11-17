@@ -176,7 +176,7 @@ class NoteListLogicTest {
 
         coEvery { auth.getCurrentUser(locator) } returns Result.build { getUser() }
 
-        logic.bind()
+        logic.event(NoteListEvent.OnBind)
 
         coVerify { auth.getCurrentUser(locator) }
         verify { vModel.setUserState(getUser()) }
@@ -194,7 +194,7 @@ class NoteListLogicTest {
 
         coEvery { auth.getCurrentUser(locator) } returns Result.build { null }
 
-        logic.bind()
+        logic.event(NoteListEvent.OnBind)
 
         coVerify { auth.getCurrentUser(locator) }
         verify { vModel.setUserState(null) }
@@ -232,6 +232,25 @@ class NoteListLogicTest {
         verify { adapter.submitList(getNoteList) }
         coVerify { private.getNotes(locator) }
     }
+
+    /**
+     * For empty list, leave the loading animation active.
+     */
+    @Test
+    fun `On Start a with empty list`() = runBlocking {
+        every { dispatcher.provideUIContext() } returns Dispatchers.Unconfined
+        every { vModel.getIsPrivateMode() } returns true
+        coEvery { auth.getCurrentUser(locator) } returns Result.build { getUser() }
+        coEvery { private.getNotes(locator) } returns Result.build { emptyList<Note>() }
+
+        logic.event(NoteListEvent.OnStart)
+
+        verify { vModel.getIsPrivateMode() }
+        verify { view.showEmptyState() }
+        verify { adapter.submitList(emptyList<Note>()) }
+        coVerify { private.getNotes(locator) }
+    }
+
 
     /**
      * b:

@@ -57,16 +57,21 @@ dependencies {
     implementation deps.android.design
     implementation deps.room.runtime
 
+    implementation deps.play_services.auth
+    implementation deps.firebase.auth
+
     implementation deps.kotlin.kotlin_jre
     implementation deps.kotlin.coroutines_core
     implementation deps.kotlin.coroutines_android
 
+    implementation 'androidx.appcompat:appcompat:1.0.0-alpha1'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.2'
     kapt deps.room.compiler
 
     testImplementation deps.test.junit
     testImplementation deps.test.mockk
     testImplementation deps.test.kotlin_junit
     testImplementation 'org.junit.jupiter:junit-jupiter-api'
-
-
 }
+
+apply plugin: 'com.google.gms.google-services'

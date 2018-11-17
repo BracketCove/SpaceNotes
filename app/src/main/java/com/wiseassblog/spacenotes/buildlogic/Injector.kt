@@ -2,6 +2,8 @@ package com.wiseassblog.spacenotes.buildlogic
 
 import android.content.Context
 import androidx.lifecycle.ViewModelProviders
+import com.google.firebase.FirebaseApp
+import com.wiseassblog.data.auth.FirebaseAuthSourceImpl
 import com.wiseassblog.data.note.*
 import com.wiseassblog.domain.ServiceLocator
 import com.wiseassblog.domain.interactor.PrivateNoteSource
@@ -14,6 +16,9 @@ import com.wiseassblog.spacenotes.notedetail.*
 import com.wiseassblog.spacenotes.notelist.*
 
 class Injector(private val activityContext: Context) {
+    init {
+        FirebaseApp.initializeApp(activityContext)
+    }
 
     //must be val
     private val local: INoteRepository by lazy {

@@ -27,12 +27,19 @@ versions.design = "1.0.0-rc01"
 versions.appcompat = "1.0.0"
 versions.ktx_fragment = "1.0.0"
 versions.rec_view = "1.0.0"
+versions.firebase_auth = "16.0.5"
+versions.firebase_rtdb = "16.0.4"
+versions.play_services_auth = "16.0.1"
 versions.constraint_layout = "2.0.0-alpha2"
 versions.coroutine_version = "1.0.0-RC1"
 versions.android_gradle_plugin = "3.2.1"
-versions.kotlin = "1.3.0-rc-146"
+versions.kotlin = "1.3.0-rc-190"
 
 def deps = [:]
+
+def play_services = [:]
+play_services.auth =  "com.google.android.gms:play-services-auth:$versions.play_services_auth"
+deps.play_services = play_services
 
 def android = [:]
 
@@ -49,6 +56,11 @@ def room = [:]
 room.runtime = "androidx.room:room-runtime:$versions.room"
 room.compiler = "androidx.room:room-compiler:$versions.room"
 deps.room = room
+
+def firebase = [:]
+firebase.auth = "com.google.firebase:firebase-auth:$versions.firebase_auth"
+firebase.rtdb = "com.google.firebase:firebase-database:$versions.firebase_rtdb"
+deps.firebase = firebase
 
 def test = [:]
 

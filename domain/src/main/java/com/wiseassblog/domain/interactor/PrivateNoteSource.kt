@@ -15,6 +15,9 @@ class PrivateNoteSource {
             locator.local.getNotes()
         }
 
+        locator.remote.getNotes()
+
+
         localResult.await()
     }
 
