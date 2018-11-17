@@ -9,4 +9,8 @@ interface IAuthSource {
 
     suspend fun getCurrentUser(): Result<Exception, User?>
 
+    suspend fun signOutCurrentUser(): Result<Exception, Boolean>
+
+    suspend fun deleteCurrentUser(): Result<Exception, Boolean>
+
 }

@@ -11,4 +11,13 @@ class AuthSource {
         return locator.authSource.getCurrentUser()
     }
 
+    suspend fun deleteCurrentUser(locator: ServiceLocator): Result<Exception, Boolean>{
+        return locator.authSource.deleteCurrentUser()
+    }
+
+    suspend fun signOutCurrentUser(locator: ServiceLocator): Result<Exception, Boolean>{
+        return locator.authSource.signOutCurrentUser()
+    }
+
+
 }

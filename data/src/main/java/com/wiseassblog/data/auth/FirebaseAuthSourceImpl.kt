@@ -8,6 +8,14 @@ import com.wiseassblog.domain.repository.IAuthSource
 import java.lang.Exception
 
 class FirebaseAuthSourceImpl : IAuthSource {
+    override suspend fun signOutCurrentUser(): Result<Exception, Boolean> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override suspend fun deleteCurrentUser(): Result<Exception, Boolean> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
     override suspend fun getCurrentUser(): Result<Exception, User?> {
         val auth = getAuth()
 
@@ -22,6 +30,8 @@ class FirebaseAuthSourceImpl : IAuthSource {
             )
         }
     }
+
+
 
     fun getAuth(): FirebaseAuth {
         return FirebaseAuth.getInstance()
