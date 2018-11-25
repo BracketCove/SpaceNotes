@@ -13,6 +13,7 @@ import com.wiseassblog.spacenotes.R
 import com.wiseassblog.spacenotes.buildlogic.Injector
 import com.wiseassblog.spacenotes.common.*
 import com.wiseassblog.spacenotes.notelist.NoteListActivity
+
 import kotlinx.android.synthetic.main.fragment_note_detail.*
 
 

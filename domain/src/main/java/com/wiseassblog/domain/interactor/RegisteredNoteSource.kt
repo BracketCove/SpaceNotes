@@ -8,8 +8,8 @@ import kotlinx.coroutines.channels.Channel
 import java.nio.channels.Channels
 
 
-class PrivateNoteSource {
-    suspend fun getNotes(locator: ServiceLocator): Result<Exception, List<Note>> = coroutineScope {
+class RegisteredNoteSource {
+    suspend fun getNotes(locator: ServiceLocator): Result<Exception, List<Note>> = runBlocking {
 
         val localResult = async(Dispatchers.IO) {
             locator.local.getNotes()

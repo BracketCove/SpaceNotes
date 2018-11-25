@@ -89,7 +89,7 @@
         app:layout_constraintTop_toBottomOf="@+id/tlb_list_activity" />
 
     <ImageView
-        android:id="@+id/imv_satellite"
+        android:id="@+id/imv_satellite_animation"
         android:layout_width="128dp"
         android:layout_height="128dp"
         android:visibility="visible"

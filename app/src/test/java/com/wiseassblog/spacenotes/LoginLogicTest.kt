@@ -1,11 +1,14 @@
 package com.wiseassblog.spacenotes
 
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.auth.api.signin.GoogleSignInResult
+import com.google.android.gms.tasks.Task
+import com.wiseassblog.domain.DispatcherProvider
 import com.wiseassblog.domain.ServiceLocator
 import com.wiseassblog.domain.domainmodel.Result
 import com.wiseassblog.domain.domainmodel.User
-import com.wiseassblog.domain.interactor.AuthSource
-import com.wiseassblog.domain.DispatcherProvider
 import com.wiseassblog.domain.error.SpaceNotesError
+import com.wiseassblog.domain.interactor.AuthSource
 import com.wiseassblog.spacenotes.login.*
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
@@ -30,11 +33,16 @@ class LoginLogicTest {
 
     private val view: ILoginContract.View = mockk(relaxed = true)
 
+    private val task: Task<GoogleSignInResult> = mockk()
 
     private val auth: AuthSource = mockk()
 
+    private val testAccount: GoogleSignInAccount = mockk()
+
 
     private lateinit var logic: LoginLogic
+
+    val testIdToken: String = "8675309"
 
 
     fun getUser(uid: String = "8675309",
@@ -136,7 +144,7 @@ class LoginLogicTest {
 
 
         coVerify { auth.getCurrentUser(locator) }
-        verify { view.setLoginStatus(NETWORK_UNAVAILABLE) }
+        verify { view.setLoginStatus(ERROR_NETWORK_UNAVAILABLE) }
         verify { view.setStatusDrawable(ANTENNA_EMPTY) }
         verify { view.setAuthButton(RETRY) }
     }
@@ -192,7 +200,7 @@ class LoginLogicTest {
 
         coEvery {
             auth.signOutCurrentUser(locator)
-        } returns Result.build { true }
+        } returns Result.build { Unit }
 
 
         logic.event(LoginEvent.OnAuthButtonClick)
@@ -226,7 +234,7 @@ class LoginLogicTest {
 
 
         coVerify { auth.getCurrentUser(locator) }
-        verify { view.setLoginStatus(NETWORK_UNAVAILABLE) }
+        verify { view.setLoginStatus(ERROR_NETWORK_UNAVAILABLE) }
         verify { view.setStatusDrawable(ANTENNA_EMPTY) }
         verify { view.setAuthButton(RETRY) }
     }
@@ -241,20 +249,67 @@ class LoginLogicTest {
 
     /**
      * When the user wishes to create Sign In or create a new account, the result of this
-     * action will pop up in onActivityResult(), which is called prior to onResume()
+     * action will pop up in onActivityResult(), which is called prior to onResume(). Since
+     * we're already preferring pragmatism over separation of concerns in this feature due to tight
+     * coupling with Activities, I've chosen to attempt to retrieve the user account from in the
+     * activity. After that, it's up to the Logic class and backend to figure things out.
      *
-     * a. If requestCode from onActivityResult is RC_SIGN_IN, we're good to go
-     * b. Else, indicate that Sign in was not successful
+     * a. GoogleSignInAccount succesfully retrieved
+     * b. GoogleSignInAcccount was null, or the task threw an exception
      *
-     * 1. Check requestCode value
+     * 1. Pass LoginResult to Logic:
+     * 2. Check request code. If RC_SIGN_IN, we know that the result has to do with
+     * Signing In.
+     * 3.
      *
      */
     @Test
-    fun `On Sign In Result RC_SIGN_IN`() = runBlocking {
-        logic.event(LoginEvent.OnBackClick)
+    fun `On Sign In Result RC_SIGN_IN account idToken acquired`() = runBlocking {
 
-        verify { view.startListFeature() }
+        val loginResult = LoginResult(RC_SIGN_IN, testAccount)
+
+        every {
+            testAccount.idToken
+        } returns testIdToken
+
+        every {
+            dispatcher.provideUIContext()
+        } returns Dispatchers.Unconfined
+
+        coEvery {
+            auth.getCurrentUser(locator)
+        } returns Result.build { getUser() }
+
+        coEvery {
+            auth.createGoogleUser(testIdToken, locator)
+        } returns Result.build { true }
+
+
+        logic.event(LoginEvent.OnGoogleSignInResult(loginResult))
+
+        coVerify { auth.createGoogleUser(testIdToken, locator) }
+        verify { view.setLoginStatus(SIGNED_IN) }
+        verify { view.showLoopAnimation() }
+        verify { view.setAuthButton(SIGN_OUT) }
     }
 
+    /**
+     * b.
+     */
+    @Test
+    fun `On Sign In Result RC_SIGN_IN account null`() = runBlocking {
+
+        val loginResult = LoginResult(RC_SIGN_IN, null)
+
+        every {
+            dispatcher.provideUIContext()
+        } returns Dispatchers.Unconfined
+
+        logic.event(LoginEvent.OnGoogleSignInResult(loginResult))
+
+        verify { view.setLoginStatus(ERROR_AUTH) }
+        verify { view.setStatusDrawable(ANTENNA_EMPTY) }
+        verify { view.setAuthButton(RETRY) }
+    }
 
 }

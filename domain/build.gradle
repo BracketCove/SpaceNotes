@@ -3,6 +3,10 @@ apply plugin: 'kotlin'
 
 dependencies {
     implementation deps.kotlin.coroutines_core
+
+    testImplementation deps.test.junit
+    testImplementation deps.test.mockk
+    testImplementation deps.test.kotlin_junit
 }
 
 sourceCompatibility = "1.8"

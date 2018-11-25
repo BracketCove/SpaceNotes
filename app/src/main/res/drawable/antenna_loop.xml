@@ -2,8 +2,8 @@
 <animation-list xmlns:android="http://schemas.android.com/apk/res/android"
     android:oneshot="false"
     >
-    <item android:drawable="@drawable/antenna_empty" android:duration="2000" />
-    <item android:drawable="@drawable/antenna_half" android:duration="2000" />
-    <item android:drawable="@drawable/antenna_full" android:duration="2000" />
+    <item android:drawable="@drawable/antenna_empty" android:duration="1500" />
+    <item android:drawable="@drawable/antenna_half" android:duration="1500" />
+    <item android:drawable="@drawable/antenna_full" android:duration="1500" />
 
 </animation-list>

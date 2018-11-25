@@ -4,7 +4,7 @@ import com.wiseassblog.domain.ServiceLocator
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.Result
 import com.wiseassblog.domain.interactor.AuthSource
-import com.wiseassblog.domain.interactor.PrivateNoteSource
+import com.wiseassblog.domain.interactor.RegisteredNoteSource
 import com.wiseassblog.domain.interactor.PublicNoteSource
 import com.wiseassblog.spacenotes.common.BaseLogic
 import com.wiseassblog.domain.DispatcherProvider
@@ -19,7 +19,7 @@ class NoteListLogic(dispatcher: DispatcherProvider,
                     val vModel: INoteListContract.ViewModel,
                     var adapter: NoteListAdapter,
                     val view: INoteListContract.View,
-                    val privateNoteSource: PrivateNoteSource,
+                    val registeredNoteSource: RegisteredNoteSource,
                     val publicNoteSource: PublicNoteSource,
                     val authSource: AuthSource)
     : BaseLogic(dispatcher, locator),
@@ -86,7 +86,7 @@ class NoteListLogic(dispatcher: DispatcherProvider,
     }
 
     suspend fun getPrivateListData():Result<Exception, List<Note>> {
-        return privateNoteSource.getNotes(locator)
+        return registeredNoteSource.getNotes(locator)
     }
 
     fun renderView(list: List<Note>) {

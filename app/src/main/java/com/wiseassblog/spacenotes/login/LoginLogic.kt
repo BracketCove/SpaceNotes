@@ -3,6 +3,7 @@ package com.wiseassblog.spacenotes.login
 import com.wiseassblog.domain.DispatcherProvider
 import com.wiseassblog.domain.ServiceLocator
 import com.wiseassblog.domain.domainmodel.Result
+import com.wiseassblog.domain.error.SpaceNotesError
 import com.wiseassblog.domain.interactor.AuthSource
 import com.wiseassblog.spacenotes.common.BaseLogic
 import kotlinx.coroutines.CoroutineScope
@@ -24,11 +25,30 @@ class LoginLogic(dispatcher: DispatcherProvider,
         get() = dispatcher.provideUIContext() + jobTracker
 
 
-    override fun event(event: LoginEvent) {
+    override fun event(event: LoginEvent<LoginResult>) {
         when (event) {
             is LoginEvent.OnStart -> onStart()
+            is LoginEvent.OnDestroy -> jobTracker.cancel()
             is LoginEvent.OnBackClick -> onBackClick()
             is LoginEvent.OnAuthButtonClick -> onAuthButtonClick()
+            is LoginEvent.OnGoogleSignInResult -> onSignInResult(event.result)
+        }
+    }
+
+    private fun onSignInResult(result: LoginResult) = launch {
+        if (result.requestCode == RC_SIGN_IN && result.account != null) {
+
+            val createGoogleUserResult = authSource.createGoogleUser(
+                    result.account.idToken!!,
+                    locator
+            )
+
+            when (createGoogleUserResult) {
+                is Result.Value -> onStart()
+                is Result.Error -> handleError(createGoogleUserResult.error)
+            }
+        } else {
+            renderErrorState(ERROR_AUTH)
         }
     }
 
@@ -41,17 +61,27 @@ class LoginLogic(dispatcher: DispatcherProvider,
                 else signUserOut()
             }
 
-            is Result.Error -> renderErrorState()
+            is Result.Error -> handleError(authResult.error)
         }
 
     }
 
-    private suspend fun signUserOut()  {
+    private fun handleError(error: Exception) {
+        when (error) {
+            is SpaceNotesError.NetworkUnavailableException -> renderErrorState(
+                    ERROR_NETWORK_UNAVAILABLE
+            )
+
+            else -> renderErrorState(ERROR_AUTH)
+        }
+    }
+
+    private suspend fun signUserOut() {
         val signOutResult = authSource.signOutCurrentUser(locator)
 
-        when (signOutResult){
+        when (signOutResult) {
             is Result.Value -> renderNullUser()
-            is Result.Error -> renderErrorState()
+            is Result.Error -> renderErrorState(ERROR_AUTH)
         }
 
     }
@@ -69,7 +99,7 @@ class LoginLogic(dispatcher: DispatcherProvider,
                 else renderActiveUser()
             }
 
-            is Result.Error -> renderErrorState()
+            is Result.Error -> handleError(authResult.error)
         }
     }
 
@@ -85,11 +115,11 @@ class LoginLogic(dispatcher: DispatcherProvider,
         view.setLoginStatus(SIGNED_OUT)
     }
 
-    private fun renderErrorState() {
+    private fun renderErrorState(message: String) {
         //TODO handle different types of errors
         view.setStatusDrawable(ANTENNA_EMPTY)
         view.setAuthButton(RETRY)
-        view.setLoginStatus(NETWORK_UNAVAILABLE)
+        view.setLoginStatus(message)
 
     }
 

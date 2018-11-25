@@ -11,13 +11,11 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.ListAdapter
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.spacenotes.R
-import com.wiseassblog.spacenotes.R.id.*
 import com.wiseassblog.spacenotes.buildlogic.Injector
 import com.wiseassblog.spacenotes.common.BOOLEAN_EXTRA_IS_PRIVATE
 import com.wiseassblog.spacenotes.common.STRING_EXTRA_NOTE_ID
+import com.wiseassblog.spacenotes.login.LoginActivity
 import com.wiseassblog.spacenotes.notedetail.NoteDetailActivity
-import com.wiseassblog.spacenotes.notedetail.NoteDetailEvent
-import com.wiseassblog.spacenotes.userauth.UserAuthActivity
 import kotlinx.android.synthetic.main.fragment_note_list.*
 
 
@@ -28,7 +26,7 @@ class NoteListView : Fragment(), INoteListContract.View {
     }
 
     override fun startUserAuthActivity() {
-        val i = Intent(this.activity, UserAuthActivity::class.java)
+        val i = Intent(this.activity, LoginActivity::class.java)
         this.activity?.finish()
         startActivity(i)
     }
@@ -41,19 +39,19 @@ class NoteListView : Fragment(), INoteListContract.View {
     override fun showLoadingView() {
         rec_list_activity.visibility = View.INVISIBLE
         fab_create_new_item.hide()
-        imv_satellite.visibility = View.VISIBLE
+        imv_satellite_animation.visibility = View.VISIBLE
 
         //set loading animation
-        val satelliteLoop = imv_satellite.drawable as AnimationDrawable
+        val satelliteLoop = imv_satellite_animation.drawable as AnimationDrawable
         satelliteLoop.start()
     }
 
     override fun showEmptyState() {
         rec_list_activity.visibility = View.INVISIBLE
         fab_create_new_item.show()
-        imv_satellite.visibility = View.VISIBLE
+        imv_satellite_animation.visibility = View.VISIBLE
 
-        val satelliteLoop = imv_satellite.drawable as AnimationDrawable
+        val satelliteLoop = imv_satellite_animation.drawable as AnimationDrawable
         satelliteLoop.start()
     }
 
@@ -61,9 +59,9 @@ class NoteListView : Fragment(), INoteListContract.View {
     override fun showList() {
         rec_list_activity.visibility = View.VISIBLE
         fab_create_new_item.show()
-        imv_satellite.visibility = View.INVISIBLE
+        imv_satellite_animation.visibility = View.INVISIBLE
 
-        val satelliteLoop = imv_satellite.drawable as AnimationDrawable
+        val satelliteLoop = imv_satellite_animation.drawable as AnimationDrawable
         satelliteLoop.stop()
     }
 
@@ -103,6 +101,7 @@ class NoteListView : Fragment(), INoteListContract.View {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         logic.event(NoteListEvent.OnBind)
 
+        imv_toolbar_auth.setOnClickListener { logic.event((NoteListEvent.OnLoginClick)) }
         fab_create_new_item.setOnClickListener { logic.event(NoteListEvent.OnNewNoteClick) }
 
         val spaceLoop = imv_space_background.drawable as AnimationDrawable

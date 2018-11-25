@@ -7,6 +7,7 @@ sealed class SpaceNotesError: Exception() {
     object LocalIOException: SpaceNotesError()
     object RemoteIOException: SpaceNotesError()
     object NetworkUnavailableException: SpaceNotesError()
+    object AuthError: SpaceNotesError()
 
 }
 

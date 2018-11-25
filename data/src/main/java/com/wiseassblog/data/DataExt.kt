@@ -1,10 +1,14 @@
 package com.wiseassblog.data
 
 import android.net.Uri
+import com.google.android.gms.tasks.Task
 import com.wiseassblog.data.note.FirebaseNote
 import com.wiseassblog.data.note.RoomNote
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.User
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 //Since this.creator is of type Note?, we must give it a default value in such cases.
 internal val Note.safeGetUid: String

@@ -5,7 +5,7 @@ import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.Result
 import com.wiseassblog.domain.domainmodel.User
 import com.wiseassblog.domain.interactor.AuthSource
-import com.wiseassblog.domain.interactor.PrivateNoteSource
+import com.wiseassblog.domain.interactor.RegisteredNoteSource
 import com.wiseassblog.domain.interactor.PublicNoteSource
 import com.wiseassblog.domain.DispatcherProvider
 import com.wiseassblog.spacenotes.common.MESSAGE_DELETE_SUCCESSFUL
@@ -37,7 +37,7 @@ class NoteDetailLogicTest {
 
     private val view: INoteDetailContract.View = mockk(relaxed = true)
 
-    private val private: PrivateNoteSource = mockk()
+    private val registered: RegisteredNoteSource = mockk()
 
     private val public: PublicNoteSource = mockk()
 
@@ -72,7 +72,7 @@ class NoteDetailLogicTest {
             locator,
             vModel,
             view,
-            private,
+            registered,
             public,
             auth,
             id,
@@ -98,7 +98,7 @@ class NoteDetailLogicTest {
      * c. User is logged in
      * d. User is not logged in
      *
-     * 1. Check if the note is private: true
+     * 1. Check if the note is registered: true
      * 2. Check for currently logged in user: false (not sure if this should be a backend concern or not)
      * 3. Create a copy of the note in vM, with update content value
      * 3. exit to list activity
@@ -123,7 +123,7 @@ class NoteDetailLogicTest {
         } returns Dispatchers.Unconfined
 
         coEvery {
-            private.updateNote(getNote(), locator)
+            registered.updateNote(getNote(), locator)
         } returns Result.build { true }
 
         //TODO() figure out if this is a backend concern or not
@@ -140,7 +140,7 @@ class NoteDetailLogicTest {
         verify { vModel.getNoteState() }
         verify { vModel.getIsPrivateMode() }
      //   coVerify { auth.getCurrentUser(locator) }
-        coVerify { private.updateNote(getNote(), locator) }
+        coVerify { registered.updateNote(getNote(), locator) }
         verify { view.startListFeature() }
     }
 
@@ -171,7 +171,7 @@ class NoteDetailLogicTest {
 //        } returns Dispatchers.Unconfined
 //
 //        coEvery {
-//            private.insertOrUpdateNote(getNote(), locator)
+//            registered.insertOrUpdateNote(getNote(), locator)
 //        } returns Result.build { true }
 //
 //        //call the unit to be tested
@@ -218,7 +218,7 @@ class NoteDetailLogicTest {
         } returns Dispatchers.Unconfined
 
         coEvery {
-            private.deleteNote(getNote(), locator)
+            registered.deleteNote(getNote(), locator)
         } returns Result.build { true }
 
         logic.event(NoteDetailEvent.OnDeleteConfirmed)
@@ -237,7 +237,7 @@ class NoteDetailLogicTest {
      *
      * 1a. viewmodel returns null for it's note value
      * 1b. viewmodel contains a note
-     * 2a. get id from viewmodel and use it to call privateNoteSource
+     * 2a. get id from viewmodel and use it to call registeredNoteSource
      * 2b. render the view
      * 3a. update view and viewmodel with result
      */
@@ -257,13 +257,13 @@ class NoteDetailLogicTest {
         } returns Dispatchers.Unconfined
 
         coEvery {
-            private.getNoteById(getNote().creationDate, locator)
+            registered.getNoteById(getNote().creationDate, locator)
         } returns Result.build { getNote() }
 
         logic.event(NoteDetailEvent.OnStart)
 
         verify { vModel.setNoteState(any()) }
-        coVerify { private.getNoteById(getNote().creationDate, locator) }
+        coVerify { registered.getNoteById(getNote().creationDate, locator) }
         verify { view.setBackgroundImage(getNote().imageUrl) }
         verify { view.setDateLabel(getNote().creationDate) }
         verify { view.setNoteBody(getNote().contents) }
@@ -407,7 +407,7 @@ class NoteDetailLogicTest {
         } returns Dispatchers.Unconfined
 
         coEvery {
-            private.getNoteById(getNote().creationDate, locator)
+            registered.getNoteById(getNote().creationDate, locator)
         } returns Result.build { getNote() }
 
         logic.event(NoteDetailEvent.OnBind)
@@ -415,7 +415,7 @@ class NoteDetailLogicTest {
         verify { vModel.setIsPrivateMode(true) }
         verify { vModel.setId(getNote().creationDate) }
         verify { vModel.setNoteState(getNote()) }
-        coVerify { private.getNoteById(getNote().creationDate, locator) }
+        coVerify { registered.getNoteById(getNote().creationDate, locator) }
     }
 
     /**

@@ -4,7 +4,7 @@ import com.wiseassblog.domain.ServiceLocator
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.Result
 import com.wiseassblog.domain.interactor.AuthSource
-import com.wiseassblog.domain.interactor.PrivateNoteSource
+import com.wiseassblog.domain.interactor.RegisteredNoteSource
 import com.wiseassblog.domain.interactor.PublicNoteSource
 import com.wiseassblog.spacenotes.common.BaseLogic
 import com.wiseassblog.domain.DispatcherProvider
@@ -19,7 +19,7 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
                       locator: ServiceLocator,
                       val vModel: INoteDetailContract.ViewModel,
                       val view: INoteDetailContract.View,
-                      val privateNoteSource: PrivateNoteSource,
+                      val registeredNoteSource: RegisteredNoteSource,
                       val publicNoteSource: PublicNoteSource,
                       val authSource: AuthSource,
                       id: String,
@@ -85,7 +85,7 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
 
         val updatedNote = vModel.getNoteState()!!.copy(contents = view.getNoteBody())
 
-        val result = privateNoteSource.updateNote(updatedNote, locator)
+        val result = registeredNoteSource.updateNote(updatedNote, locator)
 
         when (result) {
             is Result.Value -> view.startListFeature()
@@ -95,9 +95,10 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
 
     suspend fun preparePublicRepoUpdate(){
 
-        val updatedNote = vModel.getNoteState()!!.copy(contents = view.getNoteBody())
+        val updatedNote = vModel.getNoteState()!!
+                .copy(contents = view.getNoteBody())
 
-        val result = privateNoteSource.updateNote(updatedNote, locator)
+        val result = registeredNoteSource.updateNote(updatedNote, locator)
 
         when (result) {
             is Result.Value -> view.startListFeature()
@@ -131,7 +132,7 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
     }
 
     fun getNoteFromSource(id: String) = launch {
-        val result = privateNoteSource.getNoteById(id, locator)
+        val result = registeredNoteSource.getNoteById(id, locator)
 
         when (result) {
             is Result.Value -> {
@@ -161,7 +162,7 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
         if (currentNote == null) {
             view.restartFeature()
         } else {
-            val result = privateNoteSource.deleteNote(currentNote, locator)
+            val result = registeredNoteSource.deleteNote(currentNote, locator)
 
             when (result) {
                 is Result.Value -> {

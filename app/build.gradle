@@ -71,7 +71,6 @@ dependencies {
     testImplementation deps.test.junit
     testImplementation deps.test.mockk
     testImplementation deps.test.kotlin_junit
-    testImplementation 'org.junit.jupiter:junit-jupiter-api'
 }
 
 apply plugin: 'com.google.gms.google-services'

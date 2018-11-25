@@ -5,7 +5,7 @@ import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.Result
 import com.wiseassblog.domain.domainmodel.User
 import com.wiseassblog.domain.interactor.AuthSource
-import com.wiseassblog.domain.interactor.PrivateNoteSource
+import com.wiseassblog.domain.interactor.RegisteredNoteSource
 import com.wiseassblog.domain.interactor.PublicNoteSource
 import com.wiseassblog.domain.DispatcherProvider
 import com.wiseassblog.spacenotes.common.MODE_PRIVATE
@@ -30,10 +30,9 @@ class NoteListLogicTest {
 
     private val adapter: NoteListAdapter = mockk(relaxed = true)
 
-
     private val view: INoteListContract.View = mockk(relaxed = true)
 
-    private val private: PrivateNoteSource = mockk()
+    private val registered: RegisteredNoteSource = mockk()
 
     private val public: PublicNoteSource = mockk()
 
@@ -85,7 +84,7 @@ class NoteListLogicTest {
                 vModel,
                 adapter,
                 view,
-                private,
+                registered,
                 public,
                 auth
         )
@@ -103,7 +102,7 @@ class NoteListLogicTest {
     /**
      * New Note events will have two possible event streams, based on whether or not the auth is
      * in "public mode", and Public mode is only available when the auth is logged in.
-     * a: User is in private storage mode (logged in or not)
+     * a: User is in registered storage mode (logged in or not)
      *
      * 1a. check isPrivate status on vModel: false
      * 2a. startDetailActivity with empty string as extra
@@ -122,7 +121,7 @@ class NoteListLogicTest {
     }
 
     /**
-     * b: auth is logged in, and in private mode
+     * b: auth is logged in, and in registered mode
      *
      * 1b. check isPrivate status on vModel: true
      * 2b. pass empty string and true as extra
@@ -207,9 +206,9 @@ class NoteListLogicTest {
     /**
      *
      * On start basically means that we want to render the UI. This depends on whether the auth
-     * is currently logged in, and if they are in private mode or not:
-     * a. auth is logged in and in private mode
-     * b. no auth found, start in private mode
+     * is currently logged in, and if they are in registered mode or not:
+     * a. auth is logged in and in registered mode
+     * b. no auth found, start in registered mode
      * c. auth is logged in and in public mode
      *
      * a:
@@ -223,14 +222,14 @@ class NoteListLogicTest {
         every { dispatcher.provideUIContext() } returns Dispatchers.Unconfined
         every { vModel.getIsPrivateMode() } returns true
         coEvery { auth.getCurrentUser(locator) } returns Result.build { getUser() }
-        coEvery { private.getNotes(locator) } returns Result.build { getNoteList }
+        coEvery { registered.getNotes(locator) } returns Result.build { getNoteList }
 
         logic.event(NoteListEvent.OnStart)
 
         verify { vModel.getIsPrivateMode() }
         verify { view.showList() }
         verify { adapter.submitList(getNoteList) }
-        coVerify { private.getNotes(locator) }
+        coVerify { registered.getNotes(locator) }
     }
 
     /**
@@ -241,14 +240,14 @@ class NoteListLogicTest {
         every { dispatcher.provideUIContext() } returns Dispatchers.Unconfined
         every { vModel.getIsPrivateMode() } returns true
         coEvery { auth.getCurrentUser(locator) } returns Result.build { getUser() }
-        coEvery { private.getNotes(locator) } returns Result.build { emptyList<Note>() }
+        coEvery { registered.getNotes(locator) } returns Result.build { emptyList<Note>() }
 
         logic.event(NoteListEvent.OnStart)
 
         verify { vModel.getIsPrivateMode() }
         verify { view.showEmptyState() }
         verify { adapter.submitList(emptyList<Note>()) }
-        coVerify { private.getNotes(locator) }
+        coVerify { registered.getNotes(locator) }
     }
 
 
@@ -265,14 +264,14 @@ class NoteListLogicTest {
         every { dispatcher.provideUIContext() } returns Dispatchers.Unconfined
         every { vModel.getIsPrivateMode() } returns true
         coEvery { auth.getCurrentUser(locator) } returns Result.build { null }
-        coEvery { private.getNotes(locator) } returns Result.build { getNoteList }
+        coEvery { registered.getNotes(locator) } returns Result.build { getNoteList }
 
         logic.event(NoteListEvent.OnStart)
 
         verify { vModel.getIsPrivateMode() }
         verify { view.showList() }
         verify { adapter.submitList(getNoteList) }
-        coVerify { private.getNotes(locator) }
+        coVerify { registered.getNotes(locator) }
     }
 
     /**

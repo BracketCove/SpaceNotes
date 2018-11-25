@@ -1,7 +1,5 @@
 package com.wiseassblog.spacenotes.login
 
-import com.wiseassblog.spacenotes.notedetail.NoteDetailEvent
-
 interface ILoginContract {
 
     interface View {
@@ -14,25 +12,32 @@ interface ILoginContract {
     }
 
     interface Logic {
-        fun event(event: LoginEvent)
+        fun event(event: LoginEvent<LoginResult>)
     }
 
 }
 
-const val SIGN_OUT = "SIGN OUT"
-const val SIGN_IN = "SIGN IN"
-const val SIGNED_IN = "Signed In"
-const val SIGNED_OUT = "Signed Out"
-const val NETWORK_UNAVAILABLE = "Network Unavailable"
-const val ERROR_AUTH = "An Error Has Occured"
-const val RETRY = "RETRY"
-const val ANTENNA_EMPTY = "antenna_empty"
-const val ANTENNA_FULL = "antenna_full"
+internal const val SIGN_OUT = "SIGN OUT"
+internal const val SIGN_IN = "SIGN IN"
+internal const val SIGNED_IN = "Signed In"
+internal const val SIGNED_OUT = "Signed Out"
+internal const val ERROR_NETWORK_UNAVAILABLE = "Network Unavailable"
+internal const val ERROR_AUTH = "An Error Has Occured"
+internal const val RETRY = "RETRY"
+internal const val ANTENNA_EMPTY = "antenna_empty"
+internal const val ANTENNA_FULL = "antenna_full"
 
-sealed class LoginEvent {
-    object OnAuthButtonClick : LoginEvent()
-    object OnBackClick : LoginEvent()
-    object OnStart : LoginEvent()
-    object OnSignInResult : LoginEvent()
-    object OnDestroy : LoginEvent()
+/**
+ * This value is just a constant to denote our sign in request; It can be any int.
+ * Would have been great if that was explained in the docs, I assumed at first that it had to
+ * be a specific value.
+ */
+internal const val RC_SIGN_IN = 1337
+
+sealed class LoginEvent<out T> {
+    object OnAuthButtonClick : LoginEvent<Nothing>()
+    object OnBackClick : LoginEvent<Nothing>()
+    object OnStart : LoginEvent<Nothing>()
+    data class OnGoogleSignInResult<out LoginResult>(val result: LoginResult) : LoginEvent<LoginResult>()
+    object OnDestroy : LoginEvent<Nothing>()
 }

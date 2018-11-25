@@ -6,12 +6,15 @@ import com.google.firebase.FirebaseApp
 import com.wiseassblog.data.auth.FirebaseAuthSourceImpl
 import com.wiseassblog.data.note.*
 import com.wiseassblog.domain.ServiceLocator
-import com.wiseassblog.domain.interactor.PrivateNoteSource
+import com.wiseassblog.domain.interactor.RegisteredNoteSource
 import com.wiseassblog.domain.interactor.PublicNoteSource
 import com.wiseassblog.domain.interactor.AuthSource
 import com.wiseassblog.domain.repository.INoteRepository
 import com.wiseassblog.domain.repository.IAuthSource
 import com.wiseassblog.domain.DispatcherProvider
+import com.wiseassblog.spacenotes.login.ILoginContract
+import com.wiseassblog.spacenotes.login.LoginActivity
+import com.wiseassblog.spacenotes.login.LoginLogic
 import com.wiseassblog.spacenotes.notedetail.*
 import com.wiseassblog.spacenotes.notelist.*
 
@@ -44,8 +47,17 @@ class Injector(private val activityContext: Context) {
                 ViewModelProviders.of(activityContext as NoteListActivity).get(NoteListViewModel::class.java),
                 NoteListAdapter(),
                 view,
-                PrivateNoteSource(),
+                RegisteredNoteSource(),
                 PublicNoteSource(),
+                AuthSource()
+        )
+    }
+
+    fun provideLoginLogic(view: LoginActivity): ILoginContract.Logic {
+        return LoginLogic(
+                DispatcherProvider,
+                ServiceLocator(local, remote, auth),
+                view,
                 AuthSource()
         )
     }
@@ -57,7 +69,7 @@ class Injector(private val activityContext: Context) {
                 ViewModelProviders.of(activityContext as NoteDetailActivity)
                         .get(NoteDetailViewModel::class.java),
                 view,
-                PrivateNoteSource(),
+                RegisteredNoteSource(),
                 PublicNoteSource(),
                 AuthSource(),
                 id,

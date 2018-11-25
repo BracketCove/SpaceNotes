@@ -6,10 +6,5 @@ data class Note(val creationDate:String,
                 val upVotes: Int,
                 //why String? some times it will be Int from Android Resources, or URL String
                 val imageUrl: String,
-                val creator: User?){
-
-    override fun hashCode(): Int {
-        return super.hashCode()
-    }
-}
+                val creator: User?)
 
