@@ -1,6 +1,7 @@
 package com.wiseassblog.data.note
 
 import androidx.room.*
+import com.wiseassblog.data.entities.RoomNote
 
 @Dao
 interface RoomNoteDao {

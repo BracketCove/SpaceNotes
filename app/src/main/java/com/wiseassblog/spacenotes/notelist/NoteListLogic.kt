@@ -1,13 +1,14 @@
 package com.wiseassblog.spacenotes.notelist
 
+import com.wiseassblog.domain.DispatcherProvider
 import com.wiseassblog.domain.ServiceLocator
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.Result
+import com.wiseassblog.domain.interactor.AnonymousNoteSource
 import com.wiseassblog.domain.interactor.AuthSource
-import com.wiseassblog.domain.interactor.RegisteredNoteSource
 import com.wiseassblog.domain.interactor.PublicNoteSource
+import com.wiseassblog.domain.interactor.RegisteredNoteSource
 import com.wiseassblog.spacenotes.common.BaseLogic
-import com.wiseassblog.domain.DispatcherProvider
 import com.wiseassblog.spacenotes.common.MODE_PRIVATE
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -19,6 +20,7 @@ class NoteListLogic(dispatcher: DispatcherProvider,
                     val vModel: INoteListContract.ViewModel,
                     var adapter: NoteListAdapter,
                     val view: INoteListContract.View,
+                    val anonymousNoteSource: AnonymousNoteSource,
                     val registeredNoteSource: RegisteredNoteSource,
                     val publicNoteSource: PublicNoteSource,
                     val authSource: AuthSource)
@@ -44,12 +46,9 @@ class NoteListLogic(dispatcher: DispatcherProvider,
         }
     }
 
-    private fun onNewNoteClick() {
-        val isPrivate = vModel.getIsPrivateMode()
+    private fun onNewNoteClick() = view.startDetailActivity("", vModel.getIsPrivateMode())
 
-        view.startDetailActivity("", isPrivate)
 
-    }
 
     private fun getDate(): String {
         return System.currentTimeMillis().toString()
@@ -81,12 +80,13 @@ class NoteListLogic(dispatcher: DispatcherProvider,
         }
     }
 
-    suspend fun getPublicListData():Result<Exception, List<Note>>  {
-        return publicNoteSource.getNotes(locator)
+    suspend fun getPublicListData(): Result<Exception, List<Note>> {
+        return publicNoteSource.getNotes(locator, dispatcher)
     }
 
-    suspend fun getPrivateListData():Result<Exception, List<Note>> {
-        return registeredNoteSource.getNotes(locator)
+    suspend fun getPrivateListData(): Result<Exception, List<Note>> {
+        return if (vModel.getUserState() == null) anonymousNoteSource.getNotes(locator, dispatcher)
+        else registeredNoteSource.getNotes(locator, dispatcher)
     }
 
     fun renderView(list: List<Note>) {
@@ -111,7 +111,7 @@ class NoteListLogic(dispatcher: DispatcherProvider,
     }
 
 
-     fun bind() {
+    fun bind() {
         view.setToolbarTitle(MODE_PRIVATE)
         view.showLoadingView()
         adapter.logic = this

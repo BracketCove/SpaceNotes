@@ -10,23 +10,23 @@ import kotlinx.coroutines.runBlocking
 class AuthSource {
 
     suspend fun getCurrentUser(locator: ServiceLocator): Result<Exception, User?> {
-        return locator.authSource.getCurrentUser()
+        return locator.authRepository.getCurrentUser()
     }
 
     suspend fun deleteCurrentUser(locator: ServiceLocator): Result<Exception, Boolean> = runBlocking {
         val result = async(Dispatchers.IO) {
-            locator.authSource.deleteCurrentUser()
+            locator.authRepository.deleteCurrentUser()
         }
 
         result.await()
     }
 
     suspend fun signOutCurrentUser(locator: ServiceLocator): Result<Exception, Unit> {
-        return locator.authSource.signOutCurrentUser()
+        return locator.authRepository.signOutCurrentUser()
     }
 
     suspend fun createGoogleUser(idToken: String, locator: ServiceLocator): Result<Exception, Boolean> {
-        return locator.authSource.createGoogleUser(idToken)
+        return locator.authRepository.createGoogleUser(idToken)
     }
 
 }

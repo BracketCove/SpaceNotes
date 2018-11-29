@@ -1,13 +1,14 @@
 package com.wiseassblog.spacenotes.notedetail
 
+import com.wiseassblog.domain.DispatcherProvider
 import com.wiseassblog.domain.ServiceLocator
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.Result
+import com.wiseassblog.domain.interactor.AnonymousNoteSource
 import com.wiseassblog.domain.interactor.AuthSource
-import com.wiseassblog.domain.interactor.RegisteredNoteSource
 import com.wiseassblog.domain.interactor.PublicNoteSource
+import com.wiseassblog.domain.interactor.RegisteredNoteSource
 import com.wiseassblog.spacenotes.common.BaseLogic
-import com.wiseassblog.domain.DispatcherProvider
 import com.wiseassblog.spacenotes.common.MESSAGE_DELETE_SUCCESSFUL
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -19,6 +20,7 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
                       locator: ServiceLocator,
                       val vModel: INoteDetailContract.ViewModel,
                       val view: INoteDetailContract.View,
+                      val anonymousNoteSource: AnonymousNoteSource,
                       val registeredNoteSource: RegisteredNoteSource,
                       val publicNoteSource: PublicNoteSource,
                       val authSource: AuthSource,
@@ -85,7 +87,7 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
 
         val updatedNote = vModel.getNoteState()!!.copy(contents = view.getNoteBody())
 
-        val result = registeredNoteSource.updateNote(updatedNote, locator)
+        val result = registeredNoteSource.updateNote(updatedNote, locator, dispatcher)
 
         when (result) {
             is Result.Value -> view.startListFeature()
@@ -98,7 +100,7 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
         val updatedNote = vModel.getNoteState()!!
                 .copy(contents = view.getNoteBody())
 
-        val result = registeredNoteSource.updateNote(updatedNote, locator)
+        val result = registeredNoteSource.updateNote(updatedNote, locator, dispatcher)
 
         when (result) {
             is Result.Value -> view.startListFeature()
@@ -132,7 +134,7 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
     }
 
     fun getNoteFromSource(id: String) = launch {
-        val result = registeredNoteSource.getNoteById(id, locator)
+        val result = registeredNoteSource.getNoteById(id, locator, dispatcher)
 
         when (result) {
             is Result.Value -> {
@@ -162,7 +164,7 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
         if (currentNote == null) {
             view.restartFeature()
         } else {
-            val result = registeredNoteSource.deleteNote(currentNote, locator)
+            val result = registeredNoteSource.deleteNote(currentNote, locator, dispatcher)
 
             when (result) {
                 is Result.Value -> {

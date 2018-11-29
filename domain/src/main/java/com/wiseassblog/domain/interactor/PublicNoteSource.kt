@@ -1,5 +1,6 @@
 package com.wiseassblog.domain.interactor
 
+import com.wiseassblog.domain.DispatcherProvider
 import com.wiseassblog.domain.ServiceLocator
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.Result
@@ -8,7 +9,8 @@ import kotlinx.coroutines.channels.Channel
 
 
 class PublicNoteSource {
-    suspend fun getNotes(locator: ServiceLocator): Result<Exception, List<Note>> {
+    suspend fun getNotes(locator: ServiceLocator,
+                         dispatcher: DispatcherProvider): Result<Exception, List<Note>> {
         val listener = Channel<Result<Exception, List<Note>>>()
 
 //    launch {
@@ -23,7 +25,8 @@ class PublicNoteSource {
     }
 
     suspend fun getNoteById(id: String,
-                            locator: ServiceLocator): Result<Exception, Note> {
+                            locator: ServiceLocator,
+                            dispatcher: DispatcherProvider): Result<Exception, Note> {
 
 
         return Result.build {
@@ -41,7 +44,8 @@ class PublicNoteSource {
     }
 
     suspend fun updateNote(note: Note,
-                           locator: ServiceLocator): Result<Exception, Boolean> {
+                           locator: ServiceLocator,
+                           dispatcher: DispatcherProvider): Result<Exception, Boolean> {
         val listener = Channel<Result<Exception, Boolean>>()
 
 //    launch {
@@ -56,7 +60,8 @@ class PublicNoteSource {
     }
 
     suspend fun deleteNote(id: String,
-                           locator: ServiceLocator): Result<Exception, Boolean> {
+                           locator: ServiceLocator,
+                           dispatcher: DispatcherProvider): Result<Exception, Boolean> {
         val listener = Channel<Result<Exception, Boolean>>()
 
 //    launch {

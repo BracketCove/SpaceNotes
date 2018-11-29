@@ -3,15 +3,16 @@ package com.wiseassblog.spacenotes.buildlogic
 import android.content.Context
 import androidx.lifecycle.ViewModelProviders
 import com.google.firebase.FirebaseApp
-import com.wiseassblog.data.auth.FirebaseAuthSourceImpl
+import com.wiseassblog.data.auth.FirebaseAuthRepositoryImpl
 import com.wiseassblog.data.note.*
-import com.wiseassblog.domain.ServiceLocator
-import com.wiseassblog.domain.interactor.RegisteredNoteSource
-import com.wiseassblog.domain.interactor.PublicNoteSource
-import com.wiseassblog.domain.interactor.AuthSource
-import com.wiseassblog.domain.repository.INoteRepository
-import com.wiseassblog.domain.repository.IAuthSource
 import com.wiseassblog.domain.DispatcherProvider
+import com.wiseassblog.domain.ServiceLocator
+import com.wiseassblog.domain.interactor.AnonymousNoteSource
+import com.wiseassblog.domain.interactor.AuthSource
+import com.wiseassblog.domain.interactor.PublicNoteSource
+import com.wiseassblog.domain.interactor.RegisteredNoteSource
+import com.wiseassblog.domain.repository.IAuthRepository
+import com.wiseassblog.domain.repository.INoteRepository
 import com.wiseassblog.spacenotes.login.ILoginContract
 import com.wiseassblog.spacenotes.login.LoginActivity
 import com.wiseassblog.spacenotes.login.LoginLogic
@@ -23,30 +24,38 @@ class Injector(private val activityContext: Context) {
         FirebaseApp.initializeApp(activityContext)
     }
 
-    //must be val
-    private val local: INoteRepository by lazy {
-        RoomNoteRepositoryImpl(noteDao)
+    //For non-registered user persistence
+    private val localAnon: INoteRepository by lazy {
+        RoomLocalAnonymousRepositoryImpl(noteDao)
     }
 
-    private val remote: INoteRepository by lazy {
+    //For registered user remote persistence (Source of Truth)
+    private val remoteReg: INoteRepository by lazy {
         FirebaseNoteRepositoryImpl()
     }
 
-    private val auth: IAuthSource by lazy {
-        FirebaseAuthSourceImpl()
+    //For registered user local persistience (cache)
+    private val cacheReg: INoteRepository by lazy {
+        RoomLocalRegisteredCacheImpl(noteDao)
+    }
+
+    //For user management
+    private val auth: IAuthRepository by lazy {
+        FirebaseAuthRepositoryImpl()
     }
 
     private val noteDao: RoomNoteDao by lazy {
-        NoteDatabase.getInstance(activityContext).roomNoteDao()
+        AnonymousNoteDatabase.getInstance(activityContext).roomNoteDao()
     }
 
     fun provideNoteListLogic(view: NoteListView): INoteListContract.Logic {
         return NoteListLogic(
                 DispatcherProvider,
-                ServiceLocator(local, remote, auth),
+                ServiceLocator(localAnon, remoteReg, cacheReg, auth),
                 ViewModelProviders.of(activityContext as NoteListActivity).get(NoteListViewModel::class.java),
                 NoteListAdapter(),
                 view,
+                AnonymousNoteSource(),
                 RegisteredNoteSource(),
                 PublicNoteSource(),
                 AuthSource()
@@ -56,7 +65,7 @@ class Injector(private val activityContext: Context) {
     fun provideLoginLogic(view: LoginActivity): ILoginContract.Logic {
         return LoginLogic(
                 DispatcherProvider,
-                ServiceLocator(local, remote, auth),
+                ServiceLocator(localAnon, remoteReg, cacheReg, auth),
                 view,
                 AuthSource()
         )
@@ -65,10 +74,11 @@ class Injector(private val activityContext: Context) {
     fun provideNoteDetailLogic(view: NoteDetailView, id: String, isPrivate:Boolean): INoteDetailContract.Logic {
         return NoteDetailLogic(
                 DispatcherProvider,
-                ServiceLocator(local, remote, auth),
+                ServiceLocator(localAnon, remoteReg, cacheReg, auth),
                 ViewModelProviders.of(activityContext as NoteDetailActivity)
                         .get(NoteDetailViewModel::class.java),
                 view,
+                AnonymousNoteSource(),
                 RegisteredNoteSource(),
                 PublicNoteSource(),
                 AuthSource(),

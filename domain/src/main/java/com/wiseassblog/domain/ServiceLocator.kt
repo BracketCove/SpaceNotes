@@ -1,8 +1,9 @@
 package com.wiseassblog.domain
 
 import com.wiseassblog.domain.repository.INoteRepository
-import com.wiseassblog.domain.repository.IAuthSource
+import com.wiseassblog.domain.repository.IAuthRepository
 
-class ServiceLocator(val local: INoteRepository,
-                     val remote: INoteRepository,
-                     val authSource: IAuthSource)
+class ServiceLocator(val localAnon: INoteRepository,
+                     val remoteReg: INoteRepository,
+                     val cacheReg: INoteRepository,
+                     val authRepository: IAuthRepository)

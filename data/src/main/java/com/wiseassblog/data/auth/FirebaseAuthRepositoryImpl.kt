@@ -7,10 +7,10 @@ import com.wiseassblog.data.defaultIfEmpty
 import com.wiseassblog.domain.domainmodel.Result
 import com.wiseassblog.domain.domainmodel.User
 import com.wiseassblog.domain.error.SpaceNotesError
-import com.wiseassblog.domain.repository.IAuthSource
+import com.wiseassblog.domain.repository.IAuthRepository
 import java.util.concurrent.TimeUnit
 
-class FirebaseAuthSourceImpl : IAuthSource {
+class FirebaseAuthRepositoryImpl : IAuthRepository {
     override suspend fun createGoogleUser(idToken: String): Result<Exception, Boolean> {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
 

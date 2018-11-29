@@ -1,13 +1,14 @@
 package com.wiseassblog.spacenotes
 
+import com.wiseassblog.domain.DispatcherProvider
 import com.wiseassblog.domain.ServiceLocator
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.Result
 import com.wiseassblog.domain.domainmodel.User
+import com.wiseassblog.domain.interactor.AnonymousNoteSource
 import com.wiseassblog.domain.interactor.AuthSource
-import com.wiseassblog.domain.interactor.RegisteredNoteSource
 import com.wiseassblog.domain.interactor.PublicNoteSource
-import com.wiseassblog.domain.DispatcherProvider
+import com.wiseassblog.domain.interactor.RegisteredNoteSource
 import com.wiseassblog.spacenotes.common.MODE_PRIVATE
 import com.wiseassblog.spacenotes.notelist.INoteListContract
 import com.wiseassblog.spacenotes.notelist.NoteListAdapter
@@ -16,9 +17,8 @@ import com.wiseassblog.spacenotes.notelist.NoteListLogic
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
-import org.junit.Before
-import org.junit.Test
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 
 class NoteListLogicTest {
 
@@ -32,6 +32,8 @@ class NoteListLogicTest {
 
     private val view: INoteListContract.View = mockk(relaxed = true)
 
+    private val anonymous: AnonymousNoteSource = mockk()
+
     private val registered: RegisteredNoteSource = mockk()
 
     private val public: PublicNoteSource = mockk()
@@ -39,8 +41,17 @@ class NoteListLogicTest {
     private val auth: AuthSource = mockk()
 
 
-    private lateinit var logic: NoteListLogic
-
+    private val logic = NoteListLogic(
+            dispatcher,
+            locator,
+            vModel,
+            adapter,
+            view,
+            anonymous,
+            registered,
+            public,
+            auth
+    )
 
     //Shout out to Philipp Hauer @philipp_hauer for the snippet below (creating test data) with
     //a default argument wrapper function:
@@ -75,40 +86,25 @@ class NoteListLogicTest {
     )
 
 
-    @Before
-    fun build() {
-
-        logic = NoteListLogic(
-                dispatcher,
-                locator,
-                vModel,
-                adapter,
-                view,
-                registered,
-                public,
-                auth
-        )
-
-        every { dispatcher.provideUIContext() } returns Dispatchers.Unconfined
-
-    }
-
     @BeforeEach
-    fun clear() {
+    fun build() {
         clearMocks()
-
+        every { dispatcher.provideUIContext() } returns Dispatchers.Unconfined
     }
 
     /**
-     * New Note events will have two possible event streams, based on whether or not the auth is
-     * in "public mode", and Public mode is only available when the auth is logged in.
-     * a: User is in registered storage mode (logged in or not)
+     * New Note events will have two possible event streams, based on whether or not the user is
+     * in private or public mode
+     * a: User is in private mode (could be logged in or anonymous, either case is fine)
+     * c: User is in public mode (must be logged in, but we'll check in the other activity to avoid
+     * shared mutable state issues)
      *
-     * 1a. check isPrivate status on vModel: false
-     * 2a. startDetailActivity with empty string as extra
+     * a:
+     * 1. check isPrivate status from ViewModel: true
+     * 2. startDetailActivity with empty string as extra
      */
     @Test
-    fun `On New Note Click a`() {
+    fun `On New Note Click Private`() {
         //prepare mock interactions
         every { vModel.getIsPrivateMode() } returns true
 
@@ -116,80 +112,41 @@ class NoteListLogicTest {
         logic.event(NoteListEvent.OnNewNoteClick)
 
         //verify interactions and state if necessary
-        verify { vModel.getIsPrivateMode() }
         verify { view.startDetailActivity("", true) }
     }
 
     /**
-     * b: auth is logged in, and in registered mode
-     *
-     * 1b. check isPrivate status on vModel: true
-     * 2b. pass empty string and true as extra
-
+     * b:
+     * 1.
+     * 2. startDetailActivity with empty string as extra
      */
     @Test
-    fun `On New Note Click b`() {
+    fun `On New Note Click Public`() {
+        //prepare mock interactions
         every { vModel.getIsPrivateMode() } returns false
 
         //call the unit to be tested
         logic.event(NoteListEvent.OnNewNoteClick)
 
         //verify interactions and state if necessary
-        verify { vModel.getIsPrivateMode() }
         verify { view.startDetailActivity("", false) }
-
     }
 
     /**
-     * c: auth is logged in, and in public mode
+     * On bind process, called by view in onCreate. Check current user state, write that result to
+     * vModel, show loading graphic, perform some initialization
      *
-     * This will be implemented in a later iteration
-     */
-    @Test
-    fun `On New Note Click c`() = runBlocking {
-        //        every {vModel.getUserState()} returns getUser()
-//
-//        //call the unit to be tested
-//        logic.event(NoteListEvent.OnNewNoteClick)
-//
-//        //verify interactions and state if necessary
-//        verify { vModel.getUserState() }
-//        verify { view.startDetailActivity(getUser().uid, true) }
-
-    }
-
-
-    /**
-     * On bind process, called by view in onCreate:
+     * a. User is Anonymous
+     * b. User is Registered
+     *
+     * a:
      * 1. Display Loading View
-     * 2. Check for a logged in auth
-     * 3a. if User logged in, write that auth to vM
-     * 3b. if User not logged in, leave auth null in vM
+     * 2. Check for a logged in user from auth: null
+     * 3. write null to vModel user state
      * 4. call On start process
-     * 5.
      */
     @Test
-    fun `On bind a`() = runBlocking {
-
-        every { dispatcher.provideUIContext() } returns Dispatchers.Unconfined
-
-        coEvery { auth.getCurrentUser(locator) } returns Result.build { getUser() }
-
-        logic.event(NoteListEvent.OnBind)
-
-        coVerify { auth.getCurrentUser(locator) }
-        verify { vModel.setUserState(getUser()) }
-        verify { view.showLoadingView() }
-        verify { view.setToolbarTitle(MODE_PRIVATE) }
-        verify { view.setAdapter(adapter) }
-        verify { adapter.logic = logic }
-
-    }
-
-    @Test
-    fun `On bind b`() = runBlocking {
-        every { dispatcher.provideUIContext() } returns Dispatchers.Unconfined
-
+    fun `On bind User anonymous`() = runBlocking {
 
         coEvery { auth.getCurrentUser(locator) } returns Result.build { null }
 
@@ -198,6 +155,22 @@ class NoteListLogicTest {
         coVerify { auth.getCurrentUser(locator) }
         verify { vModel.setUserState(null) }
         verify { view.showLoadingView() }
+        verify { view.setToolbarTitle(MODE_PRIVATE) }
+        verify { view.setAdapter(adapter) }
+        verify { adapter.logic = logic }
+
+    }
+
+    @Test
+    fun `On bind user registered`() = runBlocking {
+
+        coEvery { auth.getCurrentUser(locator) } returns Result.build { getUser() }
+
+        logic.event(NoteListEvent.OnBind)
+
+        coVerify { auth.getCurrentUser(locator) }
+        verify { vModel.setUserState(getUser()) }
+        verify { view.showLoadingView() }
         verify { view.setAdapter(adapter) }
         verify { view.setToolbarTitle(MODE_PRIVATE) }
         verify { adapter.logic = logic }
@@ -205,11 +178,11 @@ class NoteListLogicTest {
 
     /**
      *
-     * On start basically means that we want to render the UI. This depends on whether the auth
-     * is currently logged in, and if they are in registered mode or not:
-     * a. auth is logged in and in registered mode
-     * b. no auth found, start in registered mode
-     * c. auth is logged in and in public mode
+     * On start basically means that we want to render the UI. This depends on whether the user is
+     * anonymous, or registered (logged out or in), and if they are in public or private mode
+     * a. User is anonymous (always private in that case)
+     * b. User is registered, private mode
+     * c. User is registered, public mode
      *
      * a:
      *1. Check isPrivate status: true
@@ -218,38 +191,19 @@ class NoteListLogicTest {
      *4. draw view accordingly
      */
     @Test
-    fun `On Start a`() = runBlocking {
-        every { dispatcher.provideUIContext() } returns Dispatchers.Unconfined
+    fun `On Start anonymous`() = runBlocking {
         every { vModel.getIsPrivateMode() } returns true
-        coEvery { auth.getCurrentUser(locator) } returns Result.build { getUser() }
-        coEvery { registered.getNotes(locator) } returns Result.build { getNoteList }
+        every { vModel.getUserState() } returns null
+        coEvery { anonymous.getNotes(locator, dispatcher) } returns Result.build { getNoteList }
 
         logic.event(NoteListEvent.OnStart)
 
         verify { vModel.getIsPrivateMode() }
+        verify { vModel.getUserState() }
         verify { view.showList() }
         verify { adapter.submitList(getNoteList) }
-        coVerify { registered.getNotes(locator) }
+        coVerify { anonymous.getNotes(locator, dispatcher) }
     }
-
-    /**
-     * For empty list, leave the loading animation active.
-     */
-    @Test
-    fun `On Start a with empty list`() = runBlocking {
-        every { dispatcher.provideUIContext() } returns Dispatchers.Unconfined
-        every { vModel.getIsPrivateMode() } returns true
-        coEvery { auth.getCurrentUser(locator) } returns Result.build { getUser() }
-        coEvery { registered.getNotes(locator) } returns Result.build { emptyList<Note>() }
-
-        logic.event(NoteListEvent.OnStart)
-
-        verify { vModel.getIsPrivateMode() }
-        verify { view.showEmptyState() }
-        verify { adapter.submitList(emptyList<Note>()) }
-        coVerify { registered.getNotes(locator) }
-    }
-
 
     /**
      * b:
@@ -260,18 +214,36 @@ class NoteListLogicTest {
      *
      */
     @Test
-    fun `On Start b`() = runBlocking {
-        every { dispatcher.provideUIContext() } returns Dispatchers.Unconfined
+    fun `On Start Registered Private`() = runBlocking {
         every { vModel.getIsPrivateMode() } returns true
-        coEvery { auth.getCurrentUser(locator) } returns Result.build { null }
-        coEvery { registered.getNotes(locator) } returns Result.build { getNoteList }
+        every { vModel.getUserState() } returns getUser()
+        coEvery { registered.getNotes(locator, dispatcher) } returns Result.build { getNoteList }
 
         logic.event(NoteListEvent.OnStart)
 
         verify { vModel.getIsPrivateMode() }
+        verify { vModel.getUserState() }
         verify { view.showList() }
         verify { adapter.submitList(getNoteList) }
-        coVerify { registered.getNotes(locator) }
+        coVerify { registered.getNotes(locator, dispatcher) }
+    }
+
+    /**
+     * For empty list, leave the loading animation active.
+     */
+    @Test
+    fun `On Start a with empty list`() = runBlocking {
+        every { vModel.getIsPrivateMode() } returns true
+        every { vModel.getUserState() } returns getUser()
+        coEvery { registered.getNotes(locator, dispatcher) } returns Result.build { emptyList<Note>() }
+
+        logic.event(NoteListEvent.OnStart)
+
+        verify { vModel.getIsPrivateMode() }
+        verify { vModel.getUserState() }
+        verify { view.showEmptyState() }
+        verify { adapter.submitList(emptyList<Note>()) }
+        coVerify { registered.getNotes(locator, dispatcher) }
     }
 
     /**
@@ -281,13 +253,16 @@ class NoteListLogicTest {
      *3.  parse datasources accordingly
      */
     @Test
-    fun `On Start c`() = runBlocking {
-        //        every { vModel.getUserState() } returns getUser()
-//
-//        logic.event(NoteListEvent.OnStart)
-//
-//        verify { vModel.getUserState() }
-//        verify { view.startDetailActivity("", true) }
+    fun `On Start Public Mode`() = runBlocking {
+        every { vModel.getIsPrivateMode() } returns false
+        coEvery { public.getNotes(locator, dispatcher) } returns Result.build { getNoteList }
+
+        logic.event(NoteListEvent.OnStart)
+
+        verify { vModel.getIsPrivateMode() }
+        verify { view.showList() }
+        verify { adapter.submitList(getNoteList) }
+        coVerify { public.getNotes(locator, dispatcher) }
     }
 
 

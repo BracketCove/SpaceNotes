@@ -4,6 +4,13 @@ import com.wiseassblog.domain.interactor.RegisteredNoteSource
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
 
+/**
+ * Registered Note Source is for users which have authenticated via appropriate sign in functions.
+ * Registered users have access to:
+ * - A remote repository to share notes across devices, which is the source of truth for state
+ * - A local repository to cache the most recent snap shot of the remote data, and to store offline
+ * transactions to be pushed to the remote database.
+ */
 class RegisteredNoteSourceTest {
 
 
