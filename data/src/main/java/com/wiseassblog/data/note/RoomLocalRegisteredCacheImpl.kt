@@ -6,10 +6,10 @@ import com.wiseassblog.data.toRoomNote
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.Result
 import com.wiseassblog.domain.error.SpaceNotesError
-import com.wiseassblog.domain.repository.INoteRepository
+import com.wiseassblog.domain.repository.ILocalNoteRepository
 
 
-class RoomLocalRegisteredCacheImpl(private val noteDao: RoomNoteDao) : INoteRepository {
+class RoomLocalRegisteredCacheImpl(private val noteDao: RoomNoteDao) : ILocalNoteRepository {
 
     override suspend fun updateNote(note: Note): Result<Exception, Boolean> {
         val updated = noteDao.insertOrUpdateNote(note.toRoomNote)

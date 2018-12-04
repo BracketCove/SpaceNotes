@@ -4,7 +4,7 @@ import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.Result
 import kotlinx.coroutines.channels.Channel
 
-interface INoteRepository {
+interface ILocalNoteRepository {
     suspend fun getNotes():Result<Exception, List<Note>>
 
     suspend fun getNote(id: String): Result<Exception, Note?>

@@ -2,56 +2,96 @@ package com.wiseassblog.domain.interactor
 
 import com.wiseassblog.domain.DispatcherProvider
 import com.wiseassblog.domain.ServiceLocator
-import com.wiseassblog.domain.domainmodel.Note
-import com.wiseassblog.domain.domainmodel.Result
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.runBlocking
+import com.wiseassblog.domain.domainmodel.*
+import com.wiseassblog.domain.repository.IRemoteNoteRepository
+import com.wiseassblog.domain.repository.ITransactionRepository
+import kotlinx.coroutines.*
 
 
 class RegisteredNoteSource {
     suspend fun getNotes(locator: ServiceLocator,
-                         dispatcher:DispatcherProvider): Result<Exception, List<Note>> = runBlocking {
+                         dispatcher: DispatcherProvider): Result<Exception, List<Note>> = runBlocking {
 
-        val localResult = async(dispatcher.provideIOContext()) {
-            locator.remoteReg.getNotes()
+        val notesResult = async(dispatcher.provideIOContext()) {
+            val transactionResult = locator.transactionReg.getTransactions()
+
+            when (transactionResult) {
+                is Result.Value -> {
+                    //if items exist in transaction cache:
+                    if (transactionResult.value.size != 0) synchronizeTransactionCache(
+                            transactionResult.value,
+                            locator.remoteReg,
+                            locator.transactionReg
+                    )
+                }
+
+                is Result.Error -> {
+                    //For now we'll just continue to ask remote for the latest data
+                }
+            }
+
+                locator.remoteReg.getNotes()
         }
 
-        locator.cacheReg.getNotes()
 
+        notesResult.await()
+    }
 
-        localResult.await()
+    private suspend fun synchronizeTransactionCache(
+            transactions: List<NoteTransaction>,
+            remoteReg: IRemoteNoteRepository,
+            transactionReg: ITransactionRepository) {
+
+        val synchronizationResult = remoteReg.synchronizeTransactions(transactions)
+
+        //if synchronization was successful, delete items from the transaction cache
+        when (synchronizationResult) {
+            is Result.Value -> transactionReg.deleteTransactions()
+            is Result.Error -> {
+                //"Again, not necessarily a fatal error"
+            }
+        }
     }
 
     suspend fun getNoteById(id: String,
                             locator: ServiceLocator,
                             dispatcher: DispatcherProvider): Result<Exception, Note?> = coroutineScope {
 
-        val localResult = async(dispatcher.provideIOContext()) {
+        val noteResult = async(dispatcher.provideIOContext()) {
             locator.remoteReg.getNote(id)
         }
 
-        localResult.await()
+        noteResult.await()
     }
 
     suspend fun updateNote(note: Note,
                            locator: ServiceLocator,
                            dispatcher: DispatcherProvider): Result<Exception, Boolean> = coroutineScope {
-        val localResult = async(dispatcher.provideIOContext()) {
-            locator.remoteReg.updateNote(note)
+        val updateResult = async(dispatcher.provideIOContext()) {
+            val remoteResult = locator.remoteReg.updateNote(note)
+
+            if (remoteResult is Result.Value) return@async remoteResult
+            else return@async locator.transactionReg.updateTransactions(
+                    note.toTransaction(TransactionType.UPDATE)
+            )
         }
 
-        localResult.await()
+        updateResult.await()
     }
 
     suspend fun deleteNote(note: Note,
                            locator: ServiceLocator,
                            dispatcher: DispatcherProvider): Result<Exception, Boolean> = coroutineScope {
-        val localResult = async(dispatcher.provideIOContext()) {
-            locator.remoteReg.deleteNote(note)
+        val deleteResult = async(dispatcher.provideIOContext()) {
+            val remoteResult = locator.remoteReg.deleteNote(note)
+
+            if (remoteResult is Result.Value) return@async remoteResult
+            else return@async locator.transactionReg.updateTransactions(
+                    note.toTransaction(TransactionType.DELETE)
+            )
         }
 
-        localResult.await()
+        deleteResult.await()
 
     }
 }

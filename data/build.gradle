@@ -43,6 +43,7 @@ android {
 }
 
 dependencies {
+    //to talk to another module within the project:
     implementation project(":domain")
 
     implementation deps.room.runtime

@@ -1,15 +1,12 @@
 package com.wiseassblog.data.note
 
-import androidx.room.ColumnInfo
-import androidx.room.PrimaryKey
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.Result
-import com.wiseassblog.domain.repository.INoteRepository
-import kotlinx.coroutines.channels.Channel
+import com.wiseassblog.domain.repository.ILocalNoteRepository
 
-class FirebaseNoteRepositoryImpl : INoteRepository {
+class FirebaseNoteRepositoryImpl : ILocalNoteRepository {
     fun getTable(): DatabaseReference = FirebaseDatabase.getInstance().getReference("remote_notes")
 
 

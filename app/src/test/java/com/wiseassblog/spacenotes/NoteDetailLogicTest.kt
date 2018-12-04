@@ -16,8 +16,8 @@ import com.wiseassblog.spacenotes.notedetail.NoteDetailLogic
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
-import org.junit.Test
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 
 
 /**
@@ -68,6 +68,13 @@ class NoteDetailLogicTest {
             creator = creator
     )
 
+    fun getUser(uid: String = "8675309",
+                name: String = "Ajahn Chah",
+                profilePicUrl: String = ""
+    ) = User(uid,
+            name,
+            profilePicUrl)
+
     fun getLogic(id: String = getNote().creationDate,
                  isPrivate: Boolean = true) = NoteDetailLogic(
             dispatcher,
@@ -94,21 +101,21 @@ class NoteDetailLogicTest {
 
     /**
      * When auth presses done, they are finished editing their note. They will be returned to a list
-     * view of all notes. Depending on if the note isPrivate, it will either be written to the
-     * privateDataSource, or the publicDataSOurce.
+     * view of all notes. Depending on if the note isPrivate, and whether or not the user is
+     * anonymous, will dictate where the note is written to.
      *
-     * a. isPrivate: true
-     * b. isPrivate: false
-     * c. User is logged in
-     * d. User is not logged in
+     * a. isPrivate: true, user: null
+     * b. isPrivate: false, user: not null
+     * c. isPrivate: true, user: not null
      *
-     * 1. Check if the note is registered: true
-     * 2. Check for currently logged in user: false (not sure if this should be a backend concern or not)
-     * 3. Create a copy of the note in vM, with update content value
-     * 3. exit to list activity
+     * 1. Check current user status: null (anonymous), isPrivate is beside the point if null user
+     * 2. Create a copy of the note in vM, with updated "content" value
+     * 3. exit to list activity upon completion
      */
     @Test
     fun `On Done Click private, not logged in`() = runBlocking {
+
+        logic = getLogic()
 
         every {
             view.getNoteBody()
@@ -118,22 +125,13 @@ class NoteDetailLogicTest {
             vModel.getNoteState()
         } returns getNote()
 
-        every {
-            vModel.getIsPrivateMode()
-        } returns true
-
-        every {
-            dispatcher.provideUIContext()
-        } returns Dispatchers.Unconfined
-
         coEvery {
-            registered.updateNote(getNote(), locator, dispatcher)
+            anonymous.updateNote(getNote(), locator, dispatcher)
         } returns Result.build { true }
 
-        //TODO() figure out if this is a backend concern or not
-//        coEvery {
-//            auth.getCurrentUser(locator)
-//        } returns Result.build { null }
+        coEvery {
+            auth.getCurrentUser(locator)
+        } returns Result.build { null }
 
         //call the unit to be tested
         logic.event(NoteDetailEvent.OnDoneClick)
@@ -142,51 +140,47 @@ class NoteDetailLogicTest {
 
         verify { view.getNoteBody() }
         verify { vModel.getNoteState() }
-        verify { vModel.getIsPrivateMode() }
-     //   coVerify { auth.getCurrentUser(locator) }
-        coVerify { registered.updateNote(getNote(), locator, dispatcher) }
+        coVerify { auth.getCurrentUser(locator) }
+        coVerify { anonymous.updateNote(getNote(), locator, dispatcher) }
         verify { view.startListFeature() }
     }
 
     /**
-     * a. isPrivate: true
-    * b. isPrivate: false
-    * c. User is logged in
-    * d. User is not logged in
-    *
-    * 1. get current value of noteBody
-    * 2. write updated note to repositories
-    * 3. exit to list activity
-    */
+     *b:
+     * 1. get current value of noteBody
+     * 2. write updated note to repositories
+     * 3. exit to list activity
+     */
     @Test
-    fun `On Done Click public, not logged in`() = runBlocking {
-//
-//        every {
-//            view.getNoteBody()
-//        } returns getNote().contents
-//
-//
-//        every {
-//            vModel.getNoteState()
-//        } returns getNote()
-//
-//        every {
-//            dispatcher.provideUIContext()
-//        } returns Dispatchers.Unconfined
-//
-//        coEvery {
-//            registered.insertOrUpdateNote(getNote(), locator)
-//        } returns Result.build { true }
-//
-//        //call the unit to be tested
-//        logic.event(NoteDetailEvent.OnDoneClick)
-//
-//        //verify interactions and state if necessary
-//
-//        verify { view.getNoteBody() }
-//        verify { vModel.getNoteState() }
-//        verify { view.startListFeature() }
-//        coVerify {  }
+    fun `On Done Click private, logged in`() = runBlocking {
+        logic = getLogic()
+
+        every {
+            view.getNoteBody()
+        } returns getNote().contents
+
+        every {
+            vModel.getNoteState()
+        } returns getNote()
+
+        coEvery {
+            registered.updateNote(getNote(), locator, dispatcher)
+        } returns Result.build { true }
+
+        coEvery {
+            auth.getCurrentUser(locator)
+        } returns Result.build { getUser() }
+
+        //call the unit to be tested
+        logic.event(NoteDetailEvent.OnDoneClick)
+
+        //verify interactions and state if necessary
+
+        verify { view.getNoteBody() }
+        verify { vModel.getNoteState() }
+        coVerify { auth.getCurrentUser(locator) }
+        coVerify { registered.updateNote(getNote(), locator, dispatcher) }
+        verify { view.startListFeature() }
     }
 
     /**
@@ -194,6 +188,8 @@ class NoteDetailLogicTest {
      */
     @Test
     fun `On Delete Click`() = runBlocking {
+        logic = getLogic()
+
         every {
             view.showConfirmDeleteSnackbar()
         } returns Unit
@@ -204,22 +200,72 @@ class NoteDetailLogicTest {
     }
 
     /**
-     * When auth confirms that they wish to delete a note, delete the note.
+     * When user confirms that they wish to delete a note, delete the note. There are three possible
+     * places to delete from:
+     * a. Private Anonymous Repo
+     * b. Private Registered Repo
+     * c. Public Repo
      *
-     * 1. auth confirms
-     * 2. delete note
-     * 3. show message note deleted
+     * a:
+     * 1. Check status of current user: null
+     * 2. delete Note from anonymous repo
+     * 3. show message to indicate if operation was successful
      * 3. startListFeature
      */
     @Test
-    fun `On Delete Confirmation successful`() {
+    fun `On Delete Confirmation successful anonymous`() {
+        logic = getLogic()
+
+        every {
+            vModel.getNoteState()
+        } returns getNote()
+
+        coEvery {
+            auth.getCurrentUser(locator)
+        } returns Result.build { null }
+
+        coEvery {
+            anonymous.deleteNote(getNote(), locator, dispatcher)
+        } returns Result.build { true }
+
+        logic.event(NoteDetailEvent.OnDeleteConfirmed)
+
+        verify { vModel.getNoteState() }
+        verify { view.showMessage(MESSAGE_DELETE_SUCCESSFUL) }
+        verify { view.startListFeature() }
+        coVerify { anonymous.deleteNote(getNote(), locator, dispatcher) }
+        coVerify { auth.getCurrentUser(locator) }
+    }
+
+    /**
+     * When user confirms that they wish to delete a note, delete the note. There are three possible
+     * places to delete from:
+     * a. Private Anonymous Repo
+     * b. Private Registered Repo
+     * c. Public Repo
+     *
+     * a:
+     * 1. Check status of current user: not null
+     * 2. check isPrivate: true
+     * 2. delete Note from registered repo
+     * 3. show message to indicate if operation was successful
+     * 3. startListFeature
+     */
+    @Test
+    fun `On Delete Confirmation successful registered`() {
+        logic = getLogic()
+
         every {
             vModel.getNoteState()
         } returns getNote()
 
         every {
-            dispatcher.provideUIContext()
-        } returns Dispatchers.Unconfined
+            vModel.getIsPrivateMode()
+        } returns true
+
+        coEvery {
+            auth.getCurrentUser(locator)
+        } returns Result.build { getUser() }
 
         coEvery {
             registered.deleteNote(getNote(), locator, dispatcher)
@@ -230,66 +276,52 @@ class NoteDetailLogicTest {
         verify { vModel.getNoteState() }
         verify { view.showMessage(MESSAGE_DELETE_SUCCESSFUL) }
         verify { view.startListFeature() }
+        coVerify { registered.deleteNote(getNote(), locator, dispatcher) }
+        coVerify { auth.getCurrentUser(locator) }
     }
 
-    /**On start  can be considered as a generic event to represent the view telling the presenter
-     *to that it's time to rock'n'roll.
+    /**
      *
-     * Two scenarios may occur when bind is called.
-     * a: first time it is called
-     * b: n number of times it is called afterwards, as only the view should need to be recreated
-     *
-     * 1a. viewmodel returns null for it's note value
-     * 1b. viewmodel contains a note
-     * 2a. get id from viewmodel and use it to call registeredNoteSource
-     * 2b. render the view
-     * 3a. update view and viewmodel with result
+     * a:
+     * 1. Check status of current user: not null
+     * 2. check isPrivate: false
+     * 2. delete Note from public repo
+     * 3. show message to indicate if operation was successful
+     * 3. startListFeature
      */
-
     @Test
-    fun `On start a`() = runBlocking {
-        every {
-            vModel.getNoteState()
-        } returns null
-
-        every {
-            vModel.getId()
-        } returns getNote().creationDate
-
-        every {
-            dispatcher.provideUIContext()
-        } returns Dispatchers.Unconfined
-
-        coEvery {
-            registered.getNoteById(getNote().creationDate, locator, dispatcher)
-        } returns Result.build { getNote() }
-
-        logic.event(NoteDetailEvent.OnStart)
-
-        verify { vModel.setNoteState(any()) }
-        coVerify { registered.getNoteById(getNote().creationDate, locator, dispatcher) }
-        verify { view.setBackgroundImage(getNote().imageUrl) }
-        verify { view.setDateLabel(getNote().creationDate) }
-        verify { view.setNoteBody(getNote().contents) }
+    fun `On Delete Confirmation successful public`() {
+//        logic = getLogic()
+//
+//        every {
+//            vModel.getNoteState()
+//        } returns getNote()
+//
+//        every {
+//            vModel.getIsPrivateMode()
+//        } returns false
+//
+//        coEvery {
+//            auth.getCurrentUser(locator)
+//        } returns Result.build { getUser() }
+//
+//        coEvery {
+//            public.deleteNote( locator, dispatcher)
+//        } returns Result.build { true }
+//
+//        logic.event(NoteDetailEvent.OnDeleteConfirmed)
+//
+//        verify { vModel.getNoteState() }
+//        verify { view.showMessage(MESSAGE_DELETE_SUCCESSFUL) }
+//        verify { view.startListFeature() }
+//        coVerify { public.deleteNote(getNote(), locator, dispatcher) }
+//        coVerify { auth.getCurrentUser(locator) }
     }
-
-    @Test
-    fun `On start b`() {
-        every {
-            vModel.getNoteState()
-        } returns getNote()
-
-        logic.event(NoteDetailEvent.OnStart)
-
-        verify { vModel.getNoteState() }
-        verify { view.setBackgroundImage(getNote().imageUrl) }
-        verify { view.setDateLabel(getNote().creationDate) }
-        verify { view.setNoteBody(getNote().contents) }
-    }
-
 
     @Test
     fun `On Back Click`() {
+        logic = getLogic()
+
         logic.event(NoteDetailEvent.OnBackClick)
 
         verify { view.startListFeature() }
@@ -297,23 +329,21 @@ class NoteDetailLogicTest {
 
 
     /**
-     * On bind process for detail view:
-     * a. if onbind starts with an empty note id, this means that the user has elected to create a
-     * new note instead of editing a note which already exists
-     * b. if onbind starts with an id, this means the user wants to edit an existing note
-     * c. if onbind starts with isPrivate true, parse and write to privateDataSource
-     * d. if onbind starts with isPrivate false, parse and write to publicDataSource
+     * In on bind, we need to check the status of arguments sent in to the feature via intent,
+     * check the user status, and call onStart() to render the view.
      *
-     * 1. Check arguments from activity
-     * 2. Check note state
-     * 3. Check User state if necessary
-     * 4. call OnStart
-     *
+     * a. get id from vModel: "" or null
+     * b. get id from vModel: not null
+     * c. get user from auth: null
+     * d. get user from auth: not null
+     * e. get isPrivate from vModel: true
+     * f. get isPrivate from vModel: false
      *
      * a/c:
-     * 1. Check arguments from activity: note id = "", isPrivate = true
-     * 2. Create new note with date and null user, store in vModel
-     * 3. render view
+     * 1. Check User state: null
+     * 2. Check arguments from activity: note id = "", isPrivate = true
+     * 3. Create new note with date and null user, store in vModel
+     * 4. render view
      * - back set to invisible (only delete or save allowed for new notes
      * - start satellite animation
      * - set creation date
@@ -335,60 +365,65 @@ class NoteDetailLogicTest {
             vModel.getIsPrivateMode()
         } returns true
 
+        coEvery {
+            auth.getCurrentUser(locator)
+        } returns Result.build { null }
+
         logic.event(NoteDetailEvent.OnBind)
 
         //creatorId should be null for new note. It will be added if the user saves the note while
         //logged in
         verify { vModel.setNoteState(getNote(creator = null, contents = "", imageUrl = "satellite_beam")) }
         verify { vModel.setIsPrivateMode(true) }
+        coVerify { auth.getCurrentUser(locator) }
         verify { vModel.setId("") }
-        verify { vModel.setId(getNote().creationDate) }
+        verify { view.getTime() }
+        verify { view.hideBackButton() }
+    }
+
+    /**
+     *a: Not new Note
+     *d: Not null user
+     */
+    @Test
+    fun `On bind a and d`() {
+        logic = getLogic("", true)
+
+        every {
+            view.getTime()
+        } returns getNote().creationDate
+
+        every {
+            vModel.getId()
+        } returns ""
+
+        every {
+            vModel.getIsPrivateMode()
+        } returns true
+
+        coEvery {
+            auth.getCurrentUser(locator)
+        } returns Result.build { getUser() }
+
+        logic.event(NoteDetailEvent.OnBind)
+
+        //creatorId should be null for new note. It will be added if the user saves the note while
+        //logged in
+        verify { vModel.setNoteState(getNote(creator = getUser(), contents = "", imageUrl = "satellite_beam")) }
+        verify { vModel.setIsPrivateMode(true) }
+        coVerify { auth.getCurrentUser(locator) }
+        verify { vModel.setId("") }
         verify { view.getTime() }
         verify { view.hideBackButton() }
     }
 
     /**
      *b: Not new Note
-     *d: Not Private Mode
-     */
-    @Test
-    fun `On bind a and d`() {
-//        logic = getLogic("", true)
-//
-//        every {
-//            view.getTime()
-//        } returns getNote().creationDate
-//
-//        every {
-//            vModel.getId()
-//        } returns ""
-//
-//        every {
-//            vModel.getIsPrivateMode()
-//        } returns true
-//
-//        logic.bind()
-//
-//        //creatorId should be null for new note. It will be added if the user saves the note while
-//        //logged in
-//        verify { vModel.setNoteState(getNote(creatorId = null, contents = "")) }
-//        verify { vModel.setIsPrivateMode(true) }
-//        verify { vModel.setId("") }
-//        verify { vModel.setId(getNote().creationDate) }
-//        verify { view.getTime() }
-//        verify { view.hideBackButton() }
-    }
-
-    /**
-     *b: Not new Note
-     *c: isPrivate = true
+     *c: User is null
      *
-     * 1. Check arguments from activity: note id = note id, isPrivate = true
-     * 2. Retrieve Note from appropriate repository
-     * 3. render view
-     * - back set to invisible (only delete or save allowed for new notes
-     * - start satellite animation
-     * - set creation date
+     * 1. Get current user: null
+     * 2. Check id: not null
+     * 3. Query anonymous datasource based on id
      */
     @Test
     fun `On bind b and c`() {
@@ -402,24 +437,22 @@ class NoteDetailLogicTest {
             vModel.getIsPrivateMode()
         } returns true
 
-        every {
-            vModel.getNoteState()
-        } returns null
-
-        every {
-            dispatcher.provideUIContext()
-        } returns Dispatchers.Unconfined
+        coEvery {
+            auth.getCurrentUser(locator)
+        } returns Result.build { null }
 
         coEvery {
-            registered.getNoteById(getNote().creationDate, locator, dispatcher)
+            anonymous.getNoteById(getNote().creationDate, locator, dispatcher)
         } returns Result.build { getNote() }
 
         logic.event(NoteDetailEvent.OnBind)
 
-        verify { vModel.setIsPrivateMode(true) }
-        verify { vModel.setId(getNote().creationDate) }
+        //creatorId should be null for new note. It will be added if the user saves the note while
+        //logged in
         verify { vModel.setNoteState(getNote()) }
-        coVerify { registered.getNoteById(getNote().creationDate, locator, dispatcher) }
+        verify { vModel.setIsPrivateMode(true) }
+        coVerify { auth.getCurrentUser(locator) }
+        verify { vModel.setId(getNote().creationDate) }
     }
 
     /**
@@ -429,5 +462,27 @@ class NoteDetailLogicTest {
     @Test
     fun `On bind b and d`() {
 
+    }
+
+    /**On start  can be considered as a generic event to represent the view telling the logic
+     * that it's time to rock'n'roll.
+     *
+     * 1. Get value of the Note from VM
+     * 2. Render View
+     */
+    @Test
+    fun `On start`() = runBlocking {
+        logic = getLogic(id = getNote().creationDate)
+
+        every {
+            vModel.getNoteState()
+        } returns getNote()
+
+        logic.event(NoteDetailEvent.OnStart)
+
+        verify { vModel.getNoteState() }
+        verify { view.setBackgroundImage(getNote().imageUrl) }
+        verify { view.setDateLabel(getNote().creationDate) }
+        verify { view.setNoteBody(getNote().contents) }
     }
 }

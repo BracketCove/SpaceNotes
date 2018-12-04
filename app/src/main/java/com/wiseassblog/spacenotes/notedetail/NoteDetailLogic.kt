@@ -4,12 +4,14 @@ import com.wiseassblog.domain.DispatcherProvider
 import com.wiseassblog.domain.ServiceLocator
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.Result
+import com.wiseassblog.domain.domainmodel.User
 import com.wiseassblog.domain.interactor.AnonymousNoteSource
 import com.wiseassblog.domain.interactor.AuthSource
 import com.wiseassblog.domain.interactor.PublicNoteSource
 import com.wiseassblog.domain.interactor.RegisteredNoteSource
 import com.wiseassblog.spacenotes.common.BaseLogic
 import com.wiseassblog.spacenotes.common.MESSAGE_DELETE_SUCCESSFUL
+import com.wiseassblog.spacenotes.common.MESSAGE_GENERIC_ERROR
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -34,34 +36,12 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
         jobTracker = Job()
     }
 
-    fun bind() {
-        if (vModel.getId() == "" || vModel.getId() == null){
-            vModel.setNoteState(
-                    Note(
-                            view.getTime(),
-                            "",
-                            0,
-                            "satellite_beam",
-                            null
-                    )
-            )
-
-            //only save or delete with new note
-            view.hideBackButton()
-        }
-
-        event(NoteDetailEvent.OnStart)
-    }
-
     fun clear() {
         jobTracker.cancel()
     }
 
-
-
     override val coroutineContext: CoroutineContext
         get() = dispatcher.provideUIContext() + jobTracker
-
 
     override fun event(event: NoteDetailEvent) {
         when (event) {
@@ -76,14 +56,31 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
     }
 
     fun onDoneClick() = launch {
-        if (vModel.getIsPrivateMode()) {
-            preparePrivateRepoUpdate()
-        } else {
-            preparePublicRepoUpdate()
+
+        val userResult = authSource.getCurrentUser(locator)
+
+        when (userResult) {
+            is Result.Value -> {
+                //if null, user is anonymous
+                if (userResult.value == null) prepareAnonymousRepoUpdate()
+                else prepareRegisteredRepoUpdate()
+            }
+        }
+
+    }
+
+    private suspend fun prepareAnonymousRepoUpdate() {
+        val updatedNote = vModel.getNoteState()!!.copy(contents = view.getNoteBody())
+
+        val result = anonymousNoteSource.updateNote(updatedNote, locator, dispatcher)
+
+        when (result) {
+            is Result.Value -> view.startListFeature()
+            is Result.Error -> view.showMessage(result.error.toString())
         }
     }
 
-    suspend fun preparePrivateRepoUpdate(){
+    suspend fun prepareRegisteredRepoUpdate() {
 
         val updatedNote = vModel.getNoteState()!!.copy(contents = view.getNoteBody())
 
@@ -95,7 +92,7 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
         }
     }
 
-    suspend fun preparePublicRepoUpdate(){
+    suspend fun preparePublicRepoUpdate() {
 
         val updatedNote = vModel.getNoteState()!!
                 .copy(contents = view.getNoteBody())
@@ -108,22 +105,69 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
         }
     }
 
-    fun onStart() {
-        if (jobTracker.isCancelled) jobTracker = Job()
+    fun bind() = launch {
 
+        val userResult = authSource.getCurrentUser(locator)
+
+        when (userResult) {
+            is Result.Value -> {
+                val id = vModel.getId()
+                if (id == "" || id == null) createNewNote(userResult.value)
+                else getNoteFromSource(id, userResult.value)
+            }
+
+            is Result.Error -> {
+                //TODO(Implement this son)
+            }
+        }
+    }
+
+    fun createNewNote(user: User?) {
+
+        vModel.setNoteState(
+                Note(
+                        view.getTime(),
+                        "",
+                        0,
+                        "satellite_beam",
+                        user
+                )
+        )
+
+        //only save or delete with new note
+        view.hideBackButton()
+
+        onStart()
+    }
+
+    fun getNoteFromSource(id: String, user: User?) = launch {
+        val noteResult: Result<Exception, Note?>
+
+        if (user == null) noteResult = anonymousNoteSource.getNoteById(id, locator, dispatcher)
+        else noteResult = registeredNoteSource.getNoteById(id, locator, dispatcher)
+
+        when (noteResult) {
+            is Result.Value -> {
+                vModel.setNoteState(noteResult.value!!)
+                onStart()
+            }
+
+            is Result.Error -> {
+                val message = noteResult.error.message ?: "An error has occured."
+                view.showMessage(message)
+            }
+        }
+    }
+
+    fun onStart() {
         val state = vModel.getNoteState()
 
         //LiveData requires null checks due to nullable return types
-        if (state == null) {
-            val id = vModel.getId()
-
-            if (id == null) {
-                view.startListFeature()
-            } else {
-                getNoteFromSource(id)
-            }
-        } else {
+        if (state != null) {
             renderView(state)
+        } else {
+            view.showMessage(MESSAGE_GENERIC_ERROR)
+            view.startListFeature()
         }
     }
 
@@ -131,22 +175,6 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
         view.setBackgroundImage(state.imageUrl)
         view.setDateLabel(state.creationDate)
         view.setNoteBody(state.contents)
-    }
-
-    fun getNoteFromSource(id: String) = launch {
-        val result = registeredNoteSource.getNoteById(id, locator, dispatcher)
-
-        when (result) {
-            is Result.Value -> {
-                vModel.setNoteState(result.value!!)
-                renderView(result.value!!)
-            }
-
-            is Result.Error -> {
-                val message = result.error.message ?: "An error has occured."
-                view.showMessage(message)
-            }
-        }
     }
 
     fun onBackClick() {
@@ -158,13 +186,35 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
     }
 
     fun onDeleteConfirmed() = launch {
+
         val currentNote = vModel.getNoteState()
 
         //if VM data is null, we're in a bad spot
         if (currentNote == null) {
+            view.showMessage(MESSAGE_GENERIC_ERROR)
             view.restartFeature()
         } else {
-            val result = registeredNoteSource.deleteNote(currentNote, locator, dispatcher)
+            val userResult = authSource.getCurrentUser(locator)
+
+            when (userResult) {
+                is Result.Value -> {
+
+
+                    if (userResult.value == null) prepareAnonymousRepoDelete(currentNote)
+                    else if (vModel.getIsPrivateMode()) prepareRegisteredRepoDelete(currentNote)
+                    else preparePublicRepoDelete(currentNote)
+                }
+
+                is Result.Error -> {
+                    //TODO(Implement this son)
+                }
+            }
+        }
+    }
+
+    private fun preparePublicRepoDelete(note: Note) = launch {
+        //TODO(Implement properly)
+            val result = publicNoteSource.deleteNote(note.creationDate, locator, dispatcher)
 
             when (result) {
                 is Result.Value -> {
@@ -173,7 +223,31 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
                 }
                 is Result.Error -> view.showMessage(result.error.toString())
             }
-        }
     }
+
+    private fun prepareRegisteredRepoDelete(note: Note) = launch {
+            val result = registeredNoteSource.deleteNote(note, locator, dispatcher)
+
+            when (result) {
+                is Result.Value -> {
+                    view.showMessage(MESSAGE_DELETE_SUCCESSFUL)
+                    view.startListFeature()
+                }
+                is Result.Error -> view.showMessage(result.error.toString())
+            }
+    }
+
+    private fun prepareAnonymousRepoDelete(note: Note) = launch {
+            val result = anonymousNoteSource.deleteNote(note, locator, dispatcher)
+
+            when (result) {
+                is Result.Value -> {
+                    view.showMessage(MESSAGE_DELETE_SUCCESSFUL)
+                    view.startListFeature()
+                }
+                is Result.Error -> view.showMessage(result.error.toString())
+            }
+    }
+
 
 }

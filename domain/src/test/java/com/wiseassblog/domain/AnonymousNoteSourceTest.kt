@@ -5,11 +5,10 @@ import com.wiseassblog.domain.domainmodel.Result
 import com.wiseassblog.domain.domainmodel.User
 import com.wiseassblog.domain.error.SpaceNotesError
 import com.wiseassblog.domain.interactor.AnonymousNoteSource
-import com.wiseassblog.domain.repository.INoteRepository
+import com.wiseassblog.domain.repository.ILocalNoteRepository
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -24,15 +23,13 @@ import kotlin.test.assertTrue
 
 class AnonymousNoteSourceTest {
 
-
     val dispatcher: DispatcherProvider = mockk()
 
     val anonSource = AnonymousNoteSource()
 
     val locator: ServiceLocator = mockk()
 
-    val noteRepo: INoteRepository = mockk()
-
+    val localNoteRepo: ILocalNoteRepository = mockk()
 
     //Shout out to Philipp Hauer @philipp_hauer for the snippet below (creating test data) with
     //a default argument wrapper function:
@@ -68,7 +65,7 @@ class AnonymousNoteSourceTest {
      * b. Error cases
      *
      * a:
-     *1. Request data from noteRepo
+     *1. Request data from localNoteRepo
      *2.
      *
      */
@@ -78,9 +75,9 @@ class AnonymousNoteSourceTest {
 
         val testList = listOf(getNote(), getNote(), getNote())
 
-        every { locator.localAnon } returns noteRepo
+        every { locator.localAnon } returns localNoteRepo
 
-        coEvery { noteRepo.getNotes() } returns Result.build { testList }
+        coEvery { localNoteRepo.getNotes() } returns Result.build { testList }
 
         //2 Call the Unit to be tested
         val result: Result<Exception, List<Note>> = anonSource.getNotes(locator, dispatcher)
@@ -88,7 +85,7 @@ class AnonymousNoteSourceTest {
         //3 Verify behaviour and state
         verify { dispatcher.provideIOContext() }
         verify { locator.localAnon }
-        coVerify { noteRepo.getNotes() }
+        coVerify { localNoteRepo.getNotes() }
 
         if (result is Result.Value) assertEquals(result.value, testList)
         else assertTrue { false }
@@ -103,9 +100,9 @@ class AnonymousNoteSourceTest {
     @Test
     fun `On Get Notes Error`() = runBlocking {
 
-        every { locator.localAnon } returns noteRepo
+        every { locator.localAnon } returns localNoteRepo
 
-        coEvery { noteRepo.getNotes() } returns Result.build { throw SpaceNotesError.LocalIOException }
+        coEvery { localNoteRepo.getNotes() } returns Result.build { throw SpaceNotesError.LocalIOException }
 
         //2 Call the Unit to be tested
         val result: Result<Exception, List<Note>> = anonSource.getNotes(locator, dispatcher)
@@ -113,7 +110,7 @@ class AnonymousNoteSourceTest {
         //3 Verify behaviour and state
         verify { dispatcher.provideIOContext() }
         verify { locator.localAnon }
-        coVerify { noteRepo.getNotes() }
+        coVerify { localNoteRepo.getNotes() }
 
         assert(result is Result.Error)
     }
@@ -130,9 +127,9 @@ class AnonymousNoteSourceTest {
 
         val testNote = getNote()
 
-        every { locator.localAnon } returns noteRepo
+        every { locator.localAnon } returns localNoteRepo
 
-        coEvery { noteRepo.getNote(testNote.creationDate) } returns Result.build {
+        coEvery { localNoteRepo.getNote(testNote.creationDate) } returns Result.build {
             testNote
         }
 
@@ -146,7 +143,7 @@ class AnonymousNoteSourceTest {
         //3 Verify behaviour and state
         verify { dispatcher.provideIOContext() }
         verify { locator.localAnon }
-        coVerify { noteRepo.getNote(testNote.creationDate) }
+        coVerify { localNoteRepo.getNote(testNote.creationDate) }
 
         if (result is Result.Value) assertEquals(result.value, testNote)
         else assertTrue { false }
@@ -160,9 +157,9 @@ class AnonymousNoteSourceTest {
 
         val testId = getNote().creationDate
 
-        every { locator.localAnon } returns noteRepo
+        every { locator.localAnon } returns localNoteRepo
 
-        coEvery { noteRepo.getNote(testId) } returns Result.build { throw SpaceNotesError.LocalIOException }
+        coEvery { localNoteRepo.getNote(testId) } returns Result.build { throw SpaceNotesError.LocalIOException }
 
         //2 Call the Unit to be tested
         val result: Result<Exception, Note?> = anonSource.getNoteById(testId, locator, dispatcher)
@@ -170,7 +167,7 @@ class AnonymousNoteSourceTest {
         //3 Verify behaviour and state
         verify { dispatcher.provideIOContext() }
         verify { locator.localAnon }
-        coVerify { noteRepo.getNote(testId) }
+        coVerify { localNoteRepo.getNote(testId) }
 
         assert(result is Result.Error)
     }
@@ -186,9 +183,9 @@ class AnonymousNoteSourceTest {
 
         val testNote = getNote()
 
-        every { locator.localAnon } returns noteRepo
+        every { locator.localAnon } returns localNoteRepo
 
-        coEvery { noteRepo.updateNote(testNote) } returns Result.build {
+        coEvery { localNoteRepo.updateNote(testNote) } returns Result.build {
             true
         }
 
@@ -202,7 +199,7 @@ class AnonymousNoteSourceTest {
         //3 Verify behaviour and state
         verify { dispatcher.provideIOContext() }
         verify { locator.localAnon }
-        coVerify { noteRepo.updateNote(testNote) }
+        coVerify { localNoteRepo.updateNote(testNote) }
 
         if (result is Result.Value) assert(result.value)
         else assertTrue { false }
@@ -216,9 +213,9 @@ class AnonymousNoteSourceTest {
 
         val testNote = getNote()
 
-        every { locator.localAnon } returns noteRepo
+        every { locator.localAnon } returns localNoteRepo
 
-        coEvery { noteRepo.updateNote(testNote) } returns Result.build {
+        coEvery { localNoteRepo.updateNote(testNote) } returns Result.build {
             throw SpaceNotesError.LocalIOException
         }
 
@@ -232,7 +229,7 @@ class AnonymousNoteSourceTest {
         //3 Verify behaviour and state
         verify { dispatcher.provideIOContext() }
         verify { locator.localAnon }
-        coVerify { noteRepo.updateNote(testNote) }
+        coVerify { localNoteRepo.updateNote(testNote) }
 
         assertTrue(result is Result.Error)
     }
@@ -248,9 +245,9 @@ class AnonymousNoteSourceTest {
 
         val testNote = getNote()
 
-        every { locator.localAnon } returns noteRepo
+        every { locator.localAnon } returns localNoteRepo
 
-        coEvery { noteRepo.deleteNote(testNote) } returns Result.build {
+        coEvery { localNoteRepo.deleteNote(testNote) } returns Result.build {
             true
         }
 
@@ -264,7 +261,7 @@ class AnonymousNoteSourceTest {
         //3 Verify behaviour and state
         verify { dispatcher.provideIOContext() }
         verify { locator.localAnon }
-        coVerify { noteRepo.deleteNote(testNote) }
+        coVerify { localNoteRepo.deleteNote(testNote) }
 
         if (result is Result.Value) assert(result.value)
         else assertTrue { false }
@@ -278,9 +275,9 @@ class AnonymousNoteSourceTest {
 
         val testNote = getNote()
 
-        every { locator.localAnon } returns noteRepo
+        every { locator.localAnon } returns localNoteRepo
 
-        coEvery { noteRepo.deleteNote(testNote) } returns Result.build {
+        coEvery { localNoteRepo.deleteNote(testNote) } returns Result.build {
             throw SpaceNotesError.LocalIOException
         }
 
@@ -294,7 +291,7 @@ class AnonymousNoteSourceTest {
         //3 Verify behaviour and state
         verify { dispatcher.provideIOContext() }
         verify { locator.localAnon }
-        coVerify { noteRepo.deleteNote(testNote) }
+        coVerify { localNoteRepo.deleteNote(testNote) }
 
         assertTrue(result is Result.Error)
     }

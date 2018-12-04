@@ -8,6 +8,9 @@ sealed class SpaceNotesError: Exception() {
     object RemoteIOException: SpaceNotesError()
     object NetworkUnavailableException: SpaceNotesError()
     object AuthError: SpaceNotesError()
+    object TransactionIOException : SpaceNotesError()
+
+
 
 }
 

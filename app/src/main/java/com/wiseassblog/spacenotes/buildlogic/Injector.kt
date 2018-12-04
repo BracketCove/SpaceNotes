@@ -12,7 +12,7 @@ import com.wiseassblog.domain.interactor.AuthSource
 import com.wiseassblog.domain.interactor.PublicNoteSource
 import com.wiseassblog.domain.interactor.RegisteredNoteSource
 import com.wiseassblog.domain.repository.IAuthRepository
-import com.wiseassblog.domain.repository.INoteRepository
+import com.wiseassblog.domain.repository.ILocalNoteRepository
 import com.wiseassblog.spacenotes.login.ILoginContract
 import com.wiseassblog.spacenotes.login.LoginActivity
 import com.wiseassblog.spacenotes.login.LoginLogic
@@ -25,17 +25,17 @@ class Injector(private val activityContext: Context) {
     }
 
     //For non-registered user persistence
-    private val localAnon: INoteRepository by lazy {
-        RoomLocalAnonymousRepositoryImpl(noteDao)
+    private val localAnon: ILocalNoteRepository by lazy {
+        RoomLocalAnonymousDatabase(noteDao)
     }
 
     //For registered user remote persistence (Source of Truth)
-    private val remoteReg: INoteRepository by lazy {
+    private val remoteReg: ILocalNoteRepository by lazy {
         FirebaseNoteRepositoryImpl()
     }
 
     //For registered user local persistience (cache)
-    private val cacheReg: INoteRepository by lazy {
+    private val cacheReg: ILocalNoteRepository by lazy {
         RoomLocalRegisteredCacheImpl(noteDao)
     }
 
