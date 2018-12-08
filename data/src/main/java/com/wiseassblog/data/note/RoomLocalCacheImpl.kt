@@ -9,7 +9,17 @@ import com.wiseassblog.domain.error.SpaceNotesError
 import com.wiseassblog.domain.repository.ILocalNoteRepository
 
 
-class RoomLocalRegisteredCacheImpl(private val noteDao: RoomNoteDao) : ILocalNoteRepository {
+/**
+ * This datasource is used by the RegisteredNoteRepository
+ */
+class RoomLocalCacheImpl(private val noteDao: RoomNoteDao) : ILocalNoteRepository {
+    override suspend fun deleteAll(): Result<Exception, Boolean> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override suspend fun updateAll(list: List<Note>): Result<Exception, Boolean> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 
     override suspend fun updateNote(note: Note): Result<Exception, Boolean> {
         val updated = noteDao.insertOrUpdateNote(note.toRoomNote)

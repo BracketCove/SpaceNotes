@@ -13,6 +13,8 @@ import com.wiseassblog.domain.interactor.PublicNoteSource
 import com.wiseassblog.domain.interactor.RegisteredNoteSource
 import com.wiseassblog.domain.repository.IAuthRepository
 import com.wiseassblog.domain.repository.ILocalNoteRepository
+import com.wiseassblog.domain.repository.IRemoteNoteRepository
+import com.wiseassblog.domain.repository.ITransactionRepository
 import com.wiseassblog.spacenotes.login.ILoginContract
 import com.wiseassblog.spacenotes.login.LoginActivity
 import com.wiseassblog.spacenotes.login.LoginLogic
@@ -26,17 +28,22 @@ class Injector(private val activityContext: Context) {
 
     //For non-registered user persistence
     private val localAnon: ILocalNoteRepository by lazy {
-        RoomLocalAnonymousDatabase(noteDao)
+        RoomLocalAnonymousRepositoryImpl(noteDao)
     }
 
     //For registered user remote persistence (Source of Truth)
-    private val remoteReg: ILocalNoteRepository by lazy {
-        FirebaseNoteRepositoryImpl()
+    private val remoteReg: IRemoteNoteRepository by lazy {
+        FirestoreRemoteNoteImpl()
     }
 
     //For registered user local persistience (cache)
     private val cacheReg: ILocalNoteRepository by lazy {
-        RoomLocalRegisteredCacheImpl(noteDao)
+        RoomLocalCacheImpl(noteDao)
+    }
+
+    //For registered user local persistience (cache)
+    private val transactionReg: ITransactionRepository by lazy {
+        RoomTransactionRepositoryImpl()
     }
 
     //For user management
@@ -51,13 +58,12 @@ class Injector(private val activityContext: Context) {
     fun provideNoteListLogic(view: NoteListView): INoteListContract.Logic {
         return NoteListLogic(
                 DispatcherProvider,
-                ServiceLocator(localAnon, remoteReg, cacheReg, auth),
+                ServiceLocator(localAnon, remoteReg, transactionReg, auth),
                 ViewModelProviders.of(activityContext as NoteListActivity).get(NoteListViewModel::class.java),
                 NoteListAdapter(),
                 view,
                 AnonymousNoteSource(),
-                RegisteredNoteSource(),
-                PublicNoteSource(),
+                RegisteredNoteSource(),                PublicNoteSource(),
                 AuthSource()
         )
     }
@@ -65,7 +71,7 @@ class Injector(private val activityContext: Context) {
     fun provideLoginLogic(view: LoginActivity): ILoginContract.Logic {
         return LoginLogic(
                 DispatcherProvider,
-                ServiceLocator(localAnon, remoteReg, cacheReg, auth),
+                ServiceLocator(localAnon, remoteReg, transactionReg, auth),
                 view,
                 AuthSource()
         )
@@ -74,7 +80,7 @@ class Injector(private val activityContext: Context) {
     fun provideNoteDetailLogic(view: NoteDetailView, id: String, isPrivate:Boolean): INoteDetailContract.Logic {
         return NoteDetailLogic(
                 DispatcherProvider,
-                ServiceLocator(localAnon, remoteReg, cacheReg, auth),
+                ServiceLocator(localAnon, remoteReg, transactionReg, auth),
                 ViewModelProviders.of(activityContext as NoteDetailActivity)
                         .get(NoteDetailViewModel::class.java),
                 view,

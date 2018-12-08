@@ -11,17 +11,16 @@ import com.wiseassblog.spacenotes.notedetail.NoteDetailView
 import com.wiseassblog.spacenotes.notelist.NoteListActivity
 import java.util.*
 
-internal fun String.toEditable(): Editable =  Editable.Factory.getInstance().newEditable(this)
+internal fun String.toEditable(): Editable = Editable.Factory.getInstance().newEditable(this)
 
 
-
-internal fun Activity.attachFragment(manager: FragmentManager, containerId: Int, view: Fragment, tag:String) {
-    manager .beginTransaction()
+internal fun Activity.attachFragment(manager: FragmentManager, containerId: Int, view: Fragment, tag: String) {
+    manager.beginTransaction()
             .replace(containerId, view, tag)
             .commitNowAllowingStateLoss()
 }
 
-internal fun Fragment.getCalendarTime():String {
+internal fun Fragment.getCalendarTime(): String {
     val cal = Calendar.getInstance(TimeZone.getDefault())
     val builder = StringBuilder()
     builder.append(cal.get(Calendar.HOUR_OF_DAY))
@@ -37,7 +36,8 @@ internal fun Fragment.getCalendarTime():String {
     builder.append(", ")
     builder.append(cal.get(Calendar.YEAR))
 
-    return builder.toString()}
+    return builder.toString()
+}
 
 internal fun Fragment.makeToast(value: String) {
     Toast.makeText(activity, value, Toast.LENGTH_SHORT).show()
@@ -45,7 +45,7 @@ internal fun Fragment.makeToast(value: String) {
 
 internal fun Fragment.restartCurrentFeature() {
     val i: Intent
-    when (this){
+    when (this) {
         is NoteDetailView -> {
             i = Intent(this.activity, NoteDetailActivity::class.java)
         }

@@ -5,6 +5,7 @@ import com.wiseassblog.data.entities.RoomNote
 import com.wiseassblog.data.note.FirebaseNote
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.User
+import com.wiseassblog.domain.repository.ILocalNoteRepository
 
 //Since this.creator is of type Note?, we must give it a default value in such cases.
 internal val Note.safeGetUid: String
@@ -57,5 +58,4 @@ internal val FirebaseNote.toNote: Note
 
 internal fun List<RoomNote>.toNoteList(): List<Note> = this.flatMap {
     listOf(it.toNote)
-
 }

@@ -89,7 +89,6 @@ class AnonymousNoteSourceTest {
 
         if (result is Result.Value) assertEquals(result.value, testList)
         else assertTrue { false }
-
     }
 
     /**

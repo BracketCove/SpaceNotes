@@ -3,10 +3,16 @@ package com.wiseassblog.data.note
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.wiseassblog.domain.domainmodel.Note
+import com.wiseassblog.domain.domainmodel.NoteTransaction
 import com.wiseassblog.domain.domainmodel.Result
 import com.wiseassblog.domain.repository.ILocalNoteRepository
+import com.wiseassblog.domain.repository.IRemoteNoteRepository
 
-class FirebaseNoteRepositoryImpl : ILocalNoteRepository {
+class FirestoreRemoteNoteImpl : IRemoteNoteRepository {
+    override suspend fun synchronizeTransactions(transactions: List<NoteTransaction>): Result<Exception, Boolean> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
     fun getTable(): DatabaseReference = FirebaseDatabase.getInstance().getReference("remote_notes")
 
 
