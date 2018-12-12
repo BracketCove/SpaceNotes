@@ -1,30 +1,32 @@
 package com.wiseassblog.data.auth
 
 import com.google.android.gms.tasks.Tasks
+import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+import com.wiseassblog.data.asDeferred
 import com.wiseassblog.data.defaultIfEmpty
 import com.wiseassblog.domain.domainmodel.Result
 import com.wiseassblog.domain.domainmodel.User
 import com.wiseassblog.domain.error.SpaceNotesError
 import com.wiseassblog.domain.repository.IAuthRepository
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.util.concurrent.TimeUnit
 
 class FirebaseAuthRepositoryImpl : IAuthRepository {
-    override suspend fun createGoogleUser(idToken: String): Result<Exception, Boolean> {
+    override suspend fun createGoogleUser(idToken: String): Result<Exception, Boolean>  {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
 
-        return try {
-            val task = auth.signInWithCredential(credential)
+        try {
+            val authResult = auth.signInWithCredential(credential).asDeferred().await()
+            return Result.build { true }
 
-            Tasks.await(task, 1000, TimeUnit.MILLISECONDS)
-
-            if (task.isSuccessful) Result.build { true }
-            else Result.build { throw SpaceNotesError.AuthError }
-        } catch (exception: Exception) {
-            Result.build { throw exception }
-
+        } catch (e: Exception){
+            return Result.build { throw e }
         }
+
     }
 
     override suspend fun signOutCurrentUser(): Result<Exception, Unit> {
@@ -38,7 +40,7 @@ class FirebaseAuthRepositoryImpl : IAuthRepository {
 
             val task = user.delete()
 
-            Tasks.await(task, 1000, TimeUnit.MILLISECONDS)
+            Tasks.await(task, 5000, TimeUnit.MILLISECONDS)
 
             if (task.isSuccessful) Result.build { true }
             else Result.build { throw SpaceNotesError.AuthError }

@@ -5,7 +5,8 @@ import com.wiseassblog.domain.ServiceLocator
 import com.wiseassblog.domain.domainmodel.*
 import com.wiseassblog.domain.repository.IRemoteNoteRepository
 import com.wiseassblog.domain.repository.ITransactionRepository
-import kotlinx.coroutines.*
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 
 
 class RegisteredNoteSource {
@@ -30,7 +31,7 @@ class RegisteredNoteSource {
                 }
             }
 
-                locator.remoteReg.getNotes()
+            locator.remoteReg.getNotes()
         }
 
 
@@ -55,7 +56,7 @@ class RegisteredNoteSource {
 
     suspend fun getNoteById(id: String,
                             locator: ServiceLocator,
-                            dispatcher: DispatcherProvider): Result<Exception, Note?> = coroutineScope {
+                            dispatcher: DispatcherProvider): Result<Exception, Note?> = runBlocking {
 
         val noteResult = async(dispatcher.provideIOContext()) {
             locator.remoteReg.getNote(id)
@@ -66,7 +67,7 @@ class RegisteredNoteSource {
 
     suspend fun updateNote(note: Note,
                            locator: ServiceLocator,
-                           dispatcher: DispatcherProvider): Result<Exception, Boolean> = coroutineScope {
+                           dispatcher: DispatcherProvider): Result<Exception, Unit> = runBlocking {
         val updateResult = async(dispatcher.provideIOContext()) {
             val remoteResult = locator.remoteReg.updateNote(note)
 
@@ -81,7 +82,7 @@ class RegisteredNoteSource {
 
     suspend fun deleteNote(note: Note,
                            locator: ServiceLocator,
-                           dispatcher: DispatcherProvider): Result<Exception, Boolean> = coroutineScope {
+                           dispatcher: DispatcherProvider): Result<Exception, Unit> = runBlocking {
         val deleteResult = async(dispatcher.provideIOContext()) {
             val remoteResult = locator.remoteReg.deleteNote(note)
 

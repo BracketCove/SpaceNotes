@@ -6,7 +6,7 @@ import com.wiseassblog.domain.domainmodel.NoteTransaction
 interface ITransactionRepository {
     suspend fun getTransactions():Result<Exception, List<NoteTransaction>>
 
-    suspend fun deleteTransactions(): Result<Exception, Boolean>
+    suspend fun deleteTransactions(): Result<Exception, Unit>
 
-    suspend fun updateTransactions(transaction: NoteTransaction):Result<Exception, Boolean>
+    suspend fun updateTransactions(transaction: NoteTransaction):Result<Exception, Unit>
 }

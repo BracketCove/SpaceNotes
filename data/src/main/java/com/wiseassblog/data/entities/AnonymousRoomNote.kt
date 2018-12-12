@@ -8,10 +8,10 @@ import androidx.room.PrimaryKey
 //If you're Data Models for a given API require API specific code, then create a separate Data
 //Model instead of polluting your domain with platform specific APIs.
 @Entity(
-        tableName = "local_notes",
+        tableName = "anonymous_notes",
         indices = [Index("creation_date")]
 )
-data class RoomNote(
+data class AnonymousRoomNote(
 
         @PrimaryKey
         @ColumnInfo(name = "creation_date")
@@ -26,6 +26,6 @@ data class RoomNote(
         @ColumnInfo(name = "image_url")
         val imageUrl: String,
 
-        @ColumnInfo(name = "creatorId")
+        @ColumnInfo(name = "creator_id")
         val creatorId: String
 )

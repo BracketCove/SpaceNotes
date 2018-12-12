@@ -1,12 +1,8 @@
 package com.wiseassblog.data
 
-import com.wiseassblog.data.note.FirestoreRemoteNoteImpl
-import com.wiseassblog.data.note.RegisteredNoteRepositoryImpl
-import com.wiseassblog.data.note.RoomLocalCacheImpl
+import com.wiseassblog.data.note.registered.RegisteredNoteRepositoryImpl
 import com.wiseassblog.domain.DispatcherProvider
-import com.wiseassblog.domain.domainmodel.Note
-import com.wiseassblog.domain.domainmodel.Result
-import com.wiseassblog.domain.domainmodel.User
+import com.wiseassblog.domain.domainmodel.*
 import com.wiseassblog.domain.error.SpaceNotesError
 import com.wiseassblog.domain.repository.ILocalNoteRepository
 import com.wiseassblog.domain.repository.IRemoteNoteRepository
@@ -45,6 +41,26 @@ class RegisteredNoteRepositoryTest {
             creator = creator
     )
 
+    fun getTransaction(
+            creationDate: String = "28/10/2018",
+            contents: String = "When I understand that this glass is already broken, every moment with it becomes precious.",
+            upVotes: Int = 0,
+            imageUrl: String = "",
+            creator: User? = User(
+                    "8675309",
+                    "Ajahn Chah",
+                    ""
+            ),
+            transactionType: TransactionType = TransactionType.UPDATE
+    ) = NoteTransaction(
+            creationDate = creationDate,
+            contents = contents,
+            upVotes = upVotes,
+            imageUrl = imageUrl,
+            creator = creator,
+            transactionType = transactionType
+    )
+
     @BeforeEach
     fun setUpRedundantMocks() {
         clearMocks()
@@ -69,8 +85,8 @@ class RegisteredNoteRepositoryTest {
 
         coEvery { remote.getNotes() } returns Result.build { testList }
 
-        coEvery { cache.updateAll(testList) } returns Result.build { true }
-        coEvery { cache.deleteAll() } returns Result.build { true }
+        coEvery { cache.updateAll(testList) } returns Result.build { Unit }
+        coEvery { cache.deleteAll() } returns Result.build { Unit }
 
         val result = repo.getNotes()
 
@@ -159,14 +175,14 @@ class RegisteredNoteRepositoryTest {
      *
      * a:
      * 1. Delete Data from Remote: Success
-     * 2. Return: true
+     * 2. Return: Success
      */
     @Test
     fun `Delete Note Success`() = runBlocking {
         val testNote = getNote()
 
         coEvery { remote.deleteNote(testNote) } returns Result.build {
-            true
+            Unit
         }
 
         val result = repo.deleteNote(testNote)
@@ -203,14 +219,14 @@ class RegisteredNoteRepositoryTest {
      *
      * a:
      * 1. Update Data from Remote: Success
-     * 2. Return: true
+     * 2. Return: Success
      */
     @Test
     fun `Update Note Success`() = runBlocking {
         val testNote = getNote()
 
         coEvery { remote.updateNote(testNote) } returns Result.build {
-            true
+            Unit
         }
 
         val result = repo.updateNote(testNote)
@@ -236,6 +252,65 @@ class RegisteredNoteRepositoryTest {
         val result = repo.updateNote(testNote)
 
         coVerify { remote.updateNote(testNote) }
+
+        assertTrue { result is Result.Error }
+    }
+
+    /**
+     * On Synchronize Transactions, we want to map transactions to Note objects, and push them
+     * all to the Remote Repo:
+     * a: Success
+     * b: Fail
+     *
+     * a:
+     * 1. Pass Data to Remote: Success
+     * 2. Return: Unit
+     */
+    @Test
+    fun `Synchronize Transactions Success`() = runBlocking {
+        val updateTransaction = getTransaction()
+        val deleteTransaction = getTransaction(transactionType = TransactionType.DELETE)
+        val testList = listOf(updateTransaction, deleteTransaction)
+
+        coEvery { remote.updateNote(updateTransaction.toNote) } returns Result.build {
+            Unit
+        }
+
+        coEvery { remote.deleteNote(deleteTransaction.toNote) } returns Result.build {
+            Unit
+        }
+
+        val result = repo.synchronizeTransactions(testList)
+
+        coVerify { remote.updateNote(updateTransaction.toNote) }
+        coVerify { remote.deleteNote(deleteTransaction.toNote) }
+
+        assertTrue { result is Result.Value }
+    }
+
+    /**
+     * b:
+     * 1. Pass Data from Remote: Success (once), Fail (once)
+     * 2. Return: Error
+     */
+    @Test
+    fun `Synchronize Transactions Fail`() = runBlocking {
+        val updateTransaction = getTransaction()
+        val deleteTransaction = getTransaction(transactionType = TransactionType.DELETE)
+        val testList = listOf(updateTransaction, deleteTransaction)
+
+        coEvery { remote.updateNote(updateTransaction.toNote) } returns Result.build {
+            Unit
+        }
+
+        coEvery { remote.deleteNote(deleteTransaction.toNote) } returns Result.build {
+            throw SpaceNotesError.RemoteIOException
+        }
+
+        val result = repo.synchronizeTransactions(testList)
+
+        coVerify { remote.updateNote(updateTransaction.toNote) }
+        coVerify { remote.deleteNote(deleteTransaction.toNote) }
 
         assertTrue { result is Result.Error }
     }

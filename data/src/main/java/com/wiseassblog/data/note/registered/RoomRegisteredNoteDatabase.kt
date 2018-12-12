@@ -1,19 +1,24 @@
-package com.wiseassblog.data.note
+package com.wiseassblog.data.note.registered
 
 import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.wiseassblog.data.entities.RoomNote
+import com.wiseassblog.data.entities.AnonymousRoomNote
+import com.wiseassblog.data.entities.RegisteredRoomNote
+import com.wiseassblog.data.note.anonymous.AnonymousNoteDao
 
-const val DATABASE_REG = "registered"
+private const val DATABASE_REG = "registered"
 
-@Database(entities = [RoomNote::class],
+/**
+ * This database is used as a "cache" for registered users.
+ */
+@Database(entities = [RegisteredRoomNote::class],
         version = 1,
         exportSchema = false)
 abstract class RegisteredNoteDatabase : RoomDatabase(){
     
-    abstract fun roomNoteDao(): RoomNoteDao
+    abstract fun roomNoteDao(): RegisteredNoteDao
 
     //code below courtesy of https://github.com/googlesamples/android-sunflower; it is open
     //source just like this application.
@@ -24,12 +29,13 @@ abstract class RegisteredNoteDatabase : RoomDatabase(){
 
         fun getInstance(context: Context): RegisteredNoteDatabase {
             return instance ?: synchronized(this) {
-                instance ?: buildDatabase(context).also { instance = it }
+                instance
+                        ?: buildDatabase(context).also { instance = it }
             }
         }
 
         private fun buildDatabase(context: Context): RegisteredNoteDatabase {
-            return Room.databaseBuilder(context, RegisteredNoteDatabase::class.java, DATABASE_ANON)
+            return Room.databaseBuilder(context, RegisteredNoteDatabase::class.java, DATABASE_REG)
                     .build()
         }
     }

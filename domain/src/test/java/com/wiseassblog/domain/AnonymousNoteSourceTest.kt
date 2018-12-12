@@ -11,6 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import kotlin.test.assert
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -52,7 +53,7 @@ class AnonymousNoteSourceTest {
 
 
     @BeforeEach
-    fun setUpRedundantMocks(){
+    fun setUpRedundantMocks() {
         clearMocks()
         every { dispatcher.provideIOContext() } returns Dispatchers.Unconfined
     }
@@ -185,11 +186,11 @@ class AnonymousNoteSourceTest {
         every { locator.localAnon } returns localNoteRepo
 
         coEvery { localNoteRepo.updateNote(testNote) } returns Result.build {
-            true
+            Unit
         }
 
         //2 Call the Unit to be tested
-        val result: Result<Exception, Boolean> = anonSource.updateNote(
+        val result: Result<Exception, Unit> = anonSource.updateNote(
                 testNote,
                 locator,
                 dispatcher
@@ -200,7 +201,7 @@ class AnonymousNoteSourceTest {
         verify { locator.localAnon }
         coVerify { localNoteRepo.updateNote(testNote) }
 
-        if (result is Result.Value) assert(result.value)
+        if (result is Result.Value) assertTrue(true)
         else assertTrue { false }
     }
 
@@ -219,7 +220,7 @@ class AnonymousNoteSourceTest {
         }
 
         //2 Call the Unit to be tested
-        val result: Result<Exception, Boolean> = anonSource.updateNote(
+        val result: Result<Exception, Unit> = anonSource.updateNote(
                 testNote,
                 locator,
                 dispatcher
@@ -247,11 +248,11 @@ class AnonymousNoteSourceTest {
         every { locator.localAnon } returns localNoteRepo
 
         coEvery { localNoteRepo.deleteNote(testNote) } returns Result.build {
-            true
+            Unit
         }
 
         //2 Call the Unit to be tested
-        val result: Result<Exception, Boolean> = anonSource.deleteNote(
+        val result: Result<Exception, Unit> = anonSource.deleteNote(
                 testNote,
                 locator,
                 dispatcher
@@ -262,7 +263,7 @@ class AnonymousNoteSourceTest {
         verify { locator.localAnon }
         coVerify { localNoteRepo.deleteNote(testNote) }
 
-        if (result is Result.Value) assert(result.value)
+        if (result is Result.Value) assertTrue(true)
         else assertTrue { false }
     }
 
@@ -281,7 +282,7 @@ class AnonymousNoteSourceTest {
         }
 
         //2 Call the Unit to be tested
-        val result: Result<Exception, Boolean> = anonSource.deleteNote(
+        val result: Result<Exception, Unit> = anonSource.deleteNote(
                 testNote,
                 locator,
                 dispatcher

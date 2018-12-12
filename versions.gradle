@@ -27,8 +27,9 @@ versions.design = "1.0.0-rc01"
 versions.appcompat = "1.0.0"
 versions.ktx_fragment = "1.0.0"
 versions.rec_view = "1.0.0"
-versions.firebase_auth = "16.0.5"
-versions.firebase_rtdb = "16.0.4"
+versions.firebase_auth = "16.1.0"
+versions.firebase_core = "16.0.6"
+versions.firebase_firestore = "17.1.4"
 versions.play_services_auth = "16.0.1"
 versions.constraint_layout = "2.0.0-alpha2"
 versions.coroutine_version = "1.0.0-RC1"
@@ -58,8 +59,9 @@ room.compiler = "androidx.room:room-compiler:$versions.room"
 deps.room = room
 
 def firebase = [:]
+firebase.core = "com.google.firebase:firebase-core:$versions.firebase_core"
 firebase.auth = "com.google.firebase:firebase-auth:$versions.firebase_auth"
-firebase.rtdb = "com.google.firebase:firebase-database:$versions.firebase_rtdb"
+firebase.firestore = "com.google.firebase:firebase-firestore:$versions.firebase_firestore"
 deps.firebase = firebase
 
 def test = [:]

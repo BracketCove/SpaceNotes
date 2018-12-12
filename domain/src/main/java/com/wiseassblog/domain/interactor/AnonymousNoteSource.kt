@@ -31,7 +31,7 @@ class AnonymousNoteSource {
     }
 
     suspend fun updateNote(note: Note, locator: ServiceLocator, dispatcher: DispatcherProvider):
-            Result<Exception, Boolean> = runBlocking {
+            Result<Exception, Unit> = runBlocking {
         val localResult = async(dispatcher.provideIOContext()) {
             locator.localAnon.updateNote(note)
         }
@@ -40,14 +40,11 @@ class AnonymousNoteSource {
     }
 
     suspend fun deleteNote(note: Note, locator: ServiceLocator, dispatcher: DispatcherProvider):
-            Result<Exception, Boolean> = runBlocking {
+            Result<Exception, Unit> = runBlocking {
         val localResult = async(dispatcher.provideIOContext()) {
             locator.localAnon.deleteNote(note)
         }
 
         localResult.await()
-
     }
-
-
 }

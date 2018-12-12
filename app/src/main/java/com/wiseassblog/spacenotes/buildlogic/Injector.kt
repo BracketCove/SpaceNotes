@@ -4,7 +4,12 @@ import android.content.Context
 import androidx.lifecycle.ViewModelProviders
 import com.google.firebase.FirebaseApp
 import com.wiseassblog.data.auth.FirebaseAuthRepositoryImpl
-import com.wiseassblog.data.note.*
+import com.wiseassblog.data.note.anonymous.AnonymousNoteDao
+import com.wiseassblog.data.note.anonymous.AnonymousNoteDatabase
+import com.wiseassblog.data.note.anonymous.RoomLocalAnonymousRepositoryImpl
+import com.wiseassblog.data.note.registered.*
+import com.wiseassblog.data.transaction.RoomRegisteredTransactionDatabase
+import com.wiseassblog.data.transaction.RoomTransactionRepositoryImpl
 import com.wiseassblog.domain.DispatcherProvider
 import com.wiseassblog.domain.ServiceLocator
 import com.wiseassblog.domain.interactor.AnonymousNoteSource
@@ -26,9 +31,21 @@ class Injector(private val activityContext: Context) {
         FirebaseApp.initializeApp(activityContext)
     }
 
+    private val anonNoteDao: AnonymousNoteDao by lazy {
+        AnonymousNoteDatabase.getInstance(activityContext).roomNoteDao()
+    }
+
+    private val regNoteDao: RegisteredNoteDao by lazy {
+        RegisteredNoteDatabase.getInstance(activityContext).roomNoteDao()
+    }
+
+    private val transactionDao: RegisteredTransactionDao by lazy {
+        RoomRegisteredTransactionDatabase.getInstance(activityContext).roomTransactionDao()
+    }
+
     //For non-registered user persistence
     private val localAnon: ILocalNoteRepository by lazy {
-        RoomLocalAnonymousRepositoryImpl(noteDao)
+        RoomLocalAnonymousRepositoryImpl(anonNoteDao)
     }
 
     //For registered user remote persistence (Source of Truth)
@@ -38,12 +55,18 @@ class Injector(private val activityContext: Context) {
 
     //For registered user local persistience (cache)
     private val cacheReg: ILocalNoteRepository by lazy {
-        RoomLocalCacheImpl(noteDao)
+        RoomLocalCacheImpl(regNoteDao)
     }
+
+    //For registered user remote persistence (Source of Truth)
+    private val remoteRepo: IRemoteNoteRepository by lazy {
+        RegisteredNoteRepositoryImpl(remoteReg, cacheReg)
+    }
+
 
     //For registered user local persistience (cache)
     private val transactionReg: ITransactionRepository by lazy {
-        RoomTransactionRepositoryImpl()
+        RoomTransactionRepositoryImpl(transactionDao)
     }
 
     //For user management
@@ -51,19 +74,17 @@ class Injector(private val activityContext: Context) {
         FirebaseAuthRepositoryImpl()
     }
 
-    private val noteDao: RoomNoteDao by lazy {
-        AnonymousNoteDatabase.getInstance(activityContext).roomNoteDao()
-    }
 
     fun provideNoteListLogic(view: NoteListView): INoteListContract.Logic {
         return NoteListLogic(
                 DispatcherProvider,
-                ServiceLocator(localAnon, remoteReg, transactionReg, auth),
+                ServiceLocator(localAnon, remoteRepo, transactionReg, auth),
                 ViewModelProviders.of(activityContext as NoteListActivity).get(NoteListViewModel::class.java),
                 NoteListAdapter(),
                 view,
                 AnonymousNoteSource(),
-                RegisteredNoteSource(),                PublicNoteSource(),
+                RegisteredNoteSource(),
+                PublicNoteSource(),
                 AuthSource()
         )
     }
@@ -71,16 +92,16 @@ class Injector(private val activityContext: Context) {
     fun provideLoginLogic(view: LoginActivity): ILoginContract.Logic {
         return LoginLogic(
                 DispatcherProvider,
-                ServiceLocator(localAnon, remoteReg, transactionReg, auth),
+                ServiceLocator(localAnon, remoteRepo, transactionReg, auth),
                 view,
                 AuthSource()
         )
     }
 
-    fun provideNoteDetailLogic(view: NoteDetailView, id: String, isPrivate:Boolean): INoteDetailContract.Logic {
+    fun provideNoteDetailLogic(view: NoteDetailView, id: String, isPrivate: Boolean): INoteDetailContract.Logic {
         return NoteDetailLogic(
                 DispatcherProvider,
-                ServiceLocator(localAnon, remoteReg, transactionReg, auth),
+                ServiceLocator(localAnon, remoteRepo, transactionReg, auth),
                 ViewModelProviders.of(activityContext as NoteDetailActivity)
                         .get(NoteDetailViewModel::class.java),
                 view,

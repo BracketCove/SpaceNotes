@@ -11,7 +11,6 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
@@ -145,7 +144,7 @@ class RegisteredNoteSourceTest {
         }
 
         coEvery { transactionRepository.deleteTransactions() } returns Result.build {
-            true
+            Unit
         }
 
         coEvery { noteRepository.getNotes() } returns Result.build {
@@ -153,7 +152,7 @@ class RegisteredNoteSourceTest {
         }
 
         coEvery { noteRepository.synchronizeTransactions(testTransactions) } returns Result.build {
-            true
+            Unit
         }
 
         val result = source.getNotes(locator, dispatcher)
@@ -230,7 +229,7 @@ class RegisteredNoteSourceTest {
      *
      * a:
      * 1. Delete Note from Remote: success
-     * 2. return true
+     * 2. return Success
      *
      */
     @Test
@@ -240,7 +239,7 @@ class RegisteredNoteSourceTest {
         every { locator.remoteReg } returns noteRepository
 
         coEvery { noteRepository.deleteNote(testNote) } returns Result.build {
-            true
+            Unit
         }
 
         val result = source.deleteNote(testNote, locator, dispatcher)
@@ -249,7 +248,7 @@ class RegisteredNoteSourceTest {
 
         if (result is Result.Value) {
             //assert the value as being "true"
-            assertTrue { result.value }
+            assertTrue { true }
         } else {
             assertTrue { false }
         }
@@ -259,7 +258,7 @@ class RegisteredNoteSourceTest {
      * b:
      * 1. Delete Note from Remote: fail
      * 2. Map to NoteTransaction and store in transactionRepository: success
-     * 3. return true
+     * 3. return Success
      */
     @Test
     fun `On Delete Note b`() = runBlocking {
@@ -275,7 +274,7 @@ class RegisteredNoteSourceTest {
         }
 
         coEvery { transactionRepository.updateTransactions(testTransaction) } returns Result.build {
-            true
+            Unit
         }
 
         val result = source.deleteNote(testNote, locator, dispatcher)
@@ -285,7 +284,7 @@ class RegisteredNoteSourceTest {
 
         if (result is Result.Value) {
             //assert the value as being "false"
-            assertTrue { result.value }
+            assertTrue { true }
         } else {
             assertTrue { false }
         }
@@ -331,7 +330,7 @@ class RegisteredNoteSourceTest {
      *
      * a:
      * 1. Update Note from Remote: success
-     * 2. return true
+     * 2. return Success
      *
      */
     @Test
@@ -341,7 +340,7 @@ class RegisteredNoteSourceTest {
         every { locator.remoteReg } returns noteRepository
 
         coEvery { noteRepository.updateNote(testNote) } returns Result.build {
-            true
+            Unit
         }
 
         val result = source.updateNote(testNote, locator, dispatcher)
@@ -350,7 +349,7 @@ class RegisteredNoteSourceTest {
 
         if (result is Result.Value) {
             //assert the value as being "true"
-            assertTrue { result.value }
+            assertTrue { true }
         } else {
             assertTrue { false }
         }
@@ -360,7 +359,7 @@ class RegisteredNoteSourceTest {
      * b:
      * 1. Delete Note from Remote: fail
      * 2. Map to NoteTransaction and store in transactionRepository: success
-     * 3. return true
+     * 3. return Success
      */
     @Test
     fun `On Update Note b`() = runBlocking {
@@ -375,7 +374,7 @@ class RegisteredNoteSourceTest {
         }
 
         coEvery { transactionRepository.updateTransactions(testTransaction) } returns Result.build {
-            true
+            Unit
         }
 
         val result = source.updateNote(testNote, locator, dispatcher)
@@ -385,7 +384,7 @@ class RegisteredNoteSourceTest {
 
         if (result is Result.Value) {
             //assert the value as being "false"
-            assertTrue { result.value }
+            assertTrue { true }
         } else {
             assertTrue { false }
         }

@@ -38,6 +38,8 @@ class LoginLogic(dispatcher: DispatcherProvider,
     private fun onSignInResult(result: LoginResult) = launch {
         if (result.requestCode == RC_SIGN_IN && result.account != null) {
 
+            view.showLoopAnimation()
+
             val createGoogleUserResult = authSource.createGoogleUser(
                     result.account.idToken!!,
                     locator

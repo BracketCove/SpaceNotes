@@ -1,6 +1,7 @@
 package com.wiseassblog.data
 
-import com.wiseassblog.data.entities.RoomNote
+import com.wiseassblog.data.entities.AnonymousRoomNote
+import com.wiseassblog.data.entities.RegisteredRoomNote
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.User
 import org.junit.Test
@@ -26,12 +27,25 @@ class ExtTest{
     )
 
 
-    fun getRoomNote(creationDate: String = "28/10/2018",
-                contents: String = "When I understand that this glass is already broken, every moment with it becomes precious.",
-                upVotes: Int = 0,
-                imageUrl: String = "",
-                creator: String = "8675309"
-    ) = RoomNote(
+    fun getAnonymousRoomNote(creationDate: String = "28/10/2018",
+                              contents: String = "When I understand that this glass is already broken, every moment with it becomes precious.",
+                              upVotes: Int = 0,
+                              imageUrl: String = "",
+                              creator: String = "8675309"
+    ) = AnonymousRoomNote(
+            creationDate = creationDate,
+            contents = contents,
+            upVotes = upVotes,
+            imageUrl = imageUrl,
+            creatorId = creator
+    )
+
+    fun getRegisteredRoomNote(creationDate: String = "28/10/2018",
+                             contents: String = "When I understand that this glass is already broken, every moment with it becomes precious.",
+                             upVotes: Int = 0,
+                             imageUrl: String = "",
+                             creator: String = "8675309"
+    ) = RegisteredRoomNote(
             creationDate = creationDate,
             contents = contents,
             upVotes = upVotes,
@@ -43,9 +57,9 @@ class ExtTest{
     @Test
     fun testExtensionFlatMap(){
         val noteList = listOf<Note>(getNote(), getNote(), getNote())
-        val roomNoteList = listOf<RoomNote>(getRoomNote(), getRoomNote(), getRoomNote())
+        val roomNoteList = listOf<AnonymousRoomNote>(getAnonymousRoomNote(), getAnonymousRoomNote(), getAnonymousRoomNote())
 
-        val result = roomNoteList.toNoteList()
+        val result = roomNoteList.toNoteListFromAnonymous()
 
         assertTrue { result == noteList }
 
