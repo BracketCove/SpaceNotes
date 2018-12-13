@@ -5,6 +5,7 @@ import com.wiseassblog.domain.domainmodel.Result
 import com.wiseassblog.domain.domainmodel.User
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.runBlocking
 
 class AuthSource {
@@ -34,9 +35,11 @@ class AuthSource {
 
     }
 
-    suspend fun createGoogleUser(idToken: String, locator: ServiceLocator): Result<Exception, Boolean> = runBlocking {
-        val result = async(Dispatchers.IO) {
-            locator.authRepository.createGoogleUser(idToken)        }
+    suspend fun createGoogleUser(idToken: String, locator: ServiceLocator): Result<Exception, User?> = runBlocking {
+        val result = async {
+            locator.authRepository.createGoogleUser(idToken)
+            locator.authRepository.getCurrentUser()
+        }
 
         result.await()
     }

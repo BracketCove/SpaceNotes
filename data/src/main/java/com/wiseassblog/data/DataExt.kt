@@ -17,14 +17,7 @@ import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
 
-fun <T> Task<T>.asDeferred(): Deferred<T> {
-    val deferred = CompletableDeferred<T>()
 
-    this.addOnSuccessListener { result -> deferred.complete(result) }
-    this.addOnFailureListener { exception -> deferred.completeExceptionally(exception) }
-
-    return deferred
-}
 
 //Since this.creator is of type Note?, we must give it a default value in such cases.
 internal val Note.safeGetUid: String

@@ -29,8 +29,8 @@ class LoginActivity : AppCompatActivity(), ILoginContract.View {
     }
 
 
-    override fun onStart() {
-        super.onStart()
+    override fun onResume() {
+        super.onResume()
         logic.event(LoginEvent.OnStart)
     }
 

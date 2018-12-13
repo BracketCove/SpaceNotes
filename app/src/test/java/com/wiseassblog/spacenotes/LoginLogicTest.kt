@@ -61,7 +61,8 @@ class LoginLogicTest {
     }
 
     /**
-     * In onstart, we ask firebase auth for the current user object. Based on that result we render
+     * In onstart, we give a channel to the firebaseauth backend which it can use to push the latest
+     * user state to logic.
      * the ui appropriately.
      * a. User is retrieved successfully
      * b. User is null
@@ -260,7 +261,9 @@ class LoginLogicTest {
      * 1. Pass LoginResult to Logic:
      * 2. Check request code. If RC_SIGN_IN, we know that the result has to do with
      * Signing In.
-     * 3.
+     * 3. Pass token to backend
+     * 4. Attempt to await response for auth sign in result. This may timeout.
+     * 5. Either way ask firebase for the current user
      *
      */
     @Test
@@ -282,12 +285,13 @@ class LoginLogicTest {
 
         coEvery {
             auth.createGoogleUser(testIdToken, locator)
-        } returns Result.build { true }
+        } returns Result.build { getUser() }
 
 
         logic.event(LoginEvent.OnGoogleSignInResult(loginResult))
 
         coVerify { auth.createGoogleUser(testIdToken, locator) }
+        coVerify { auth.getCurrentUser(locator) }
         verify { view.setLoginStatus(SIGNED_IN) }
         verify { view.showLoopAnimation() }
         verify { view.setAuthButton(SIGN_OUT) }
