@@ -11,31 +11,26 @@ import kotlinx.coroutines.runBlocking
 
 class RegisteredNoteSource {
     suspend fun getNotes(locator: ServiceLocator,
-                         dispatcher: DispatcherProvider): Result<Exception, List<Note>> = runBlocking {
+                         dispatcher: DispatcherProvider): Result<Exception, List<Note>> {
 
-        val notesResult = async(dispatcher.provideIOContext()) {
-            val transactionResult = locator.transactionReg.getTransactions()
+        val transactionResult = locator.transactionReg.getTransactions()
 
-            when (transactionResult) {
-                is Result.Value -> {
-                    //if items exist in transaction cache:
-                    if (transactionResult.value.size != 0) synchronizeTransactionCache(
-                            transactionResult.value,
-                            locator.remoteReg,
-                            locator.transactionReg
-                    )
-                }
-
-                is Result.Error -> {
-                    //For now we'll just continue to ask remote for the latest data
-                }
+        when (transactionResult) {
+            is Result.Value -> {
+                //if items exist in transaction cache:
+                if (transactionResult.value.size != 0) synchronizeTransactionCache(
+                        transactionResult.value,
+                        locator.remoteReg,
+                        locator.transactionReg
+                )
             }
 
-            locator.remoteReg.getNotes()
+            is Result.Error -> {
+                //For now we'll just continue to ask remote for the latest data
+            }
         }
 
-
-        notesResult.await()
+        return locator.remoteReg.getNotes()
     }
 
     private suspend fun synchronizeTransactionCache(
@@ -56,43 +51,28 @@ class RegisteredNoteSource {
 
     suspend fun getNoteById(id: String,
                             locator: ServiceLocator,
-                            dispatcher: DispatcherProvider): Result<Exception, Note?> = runBlocking {
-
-        val noteResult = async(dispatcher.provideIOContext()) {
-            locator.remoteReg.getNote(id)
-        }
-
-        noteResult.await()
-    }
+                            dispatcher: DispatcherProvider):
+            Result<Exception, Note?> = locator.remoteReg.getNote(id)
 
     suspend fun updateNote(note: Note,
                            locator: ServiceLocator,
-                           dispatcher: DispatcherProvider): Result<Exception, Unit> = runBlocking {
-        val updateResult = async(dispatcher.provideIOContext()) {
-            val remoteResult = locator.remoteReg.updateNote(note)
+                           dispatcher: DispatcherProvider): Result<Exception, Unit> {
+        val remoteResult = locator.remoteReg.updateNote(note)
 
-            if (remoteResult is Result.Value) return@async remoteResult
-            else return@async locator.transactionReg.updateTransactions(
-                    note.toTransaction(TransactionType.UPDATE)
-            )
-        }
-
-        updateResult.await()
+        if (remoteResult is Result.Value) return remoteResult
+        else return locator.transactionReg.updateTransactions(
+                note.toTransaction(TransactionType.UPDATE)
+        )
     }
 
     suspend fun deleteNote(note: Note,
                            locator: ServiceLocator,
-                           dispatcher: DispatcherProvider): Result<Exception, Unit> = runBlocking {
-        val deleteResult = async(dispatcher.provideIOContext()) {
-            val remoteResult = locator.remoteReg.deleteNote(note)
+                           dispatcher: DispatcherProvider): Result<Exception, Unit> {
+        val remoteResult = locator.remoteReg.deleteNote(note)
 
-            if (remoteResult is Result.Value) return@async remoteResult
-            else return@async locator.transactionReg.updateTransactions(
-                    note.toTransaction(TransactionType.DELETE)
-            )
-        }
-
-        deleteResult.await()
-
+        if (remoteResult is Result.Value) return remoteResult
+        else return locator.transactionReg.updateTransactions(
+                note.toTransaction(TransactionType.DELETE)
+        )
     }
 }

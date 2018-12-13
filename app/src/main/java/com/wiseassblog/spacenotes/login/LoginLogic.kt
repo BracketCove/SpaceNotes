@@ -44,7 +44,7 @@ class LoginLogic(dispatcher: DispatcherProvider,
             )
 
             when (createGoogleUserResult) {
-                is Result.Value -> {}
+                is Result.Value -> onStart()
                 is Result.Error -> handleError(createGoogleUserResult.error)
             }
         } else {

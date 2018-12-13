@@ -16,6 +16,6 @@ interface IAuthRepository {
 
     suspend fun deleteCurrentUser(): Result<Exception, Boolean>
 
-    suspend fun createGoogleUser(idToken: String): Result<Exception, Boolean>
+    suspend fun createGoogleUser(idToken: String): Result<Exception, Unit>
 
 }

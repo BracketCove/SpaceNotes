@@ -17,6 +17,25 @@ import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
 
+suspend fun <T> awaitTaskResult(task: Task<T>): T = suspendCoroutine { continuation ->
+    task.addOnCompleteListener { task ->
+        if (task.isSuccessful) {
+            continuation.resume(task.result!!)
+        } else {
+            continuation.resumeWithException(task.exception!!)
+        }
+    }
+}
+
+suspend fun <T> awaitTaskCompletable(task: Task<T>): Unit = suspendCoroutine { continuation ->
+    task.addOnCompleteListener { task ->
+        if (task.isSuccessful) {
+            continuation.resume(Unit)
+        } else {
+            continuation.resumeWithException(task.exception!!)
+        }
+    }
+}
 
 
 //Since this.creator is of type Note?, we must give it a default value in such cases.
