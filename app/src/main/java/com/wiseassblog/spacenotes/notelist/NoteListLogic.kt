@@ -1,7 +1,8 @@
 package com.wiseassblog.spacenotes.notelist
 
 import com.wiseassblog.domain.DispatcherProvider
-import com.wiseassblog.domain.ServiceLocator
+import com.wiseassblog.domain.NoteServiceLocator
+import com.wiseassblog.domain.UserServiceLocator
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.Result
 import com.wiseassblog.domain.interactor.AnonymousNoteSource
@@ -16,7 +17,9 @@ import kotlinx.coroutines.launch
 import kotlin.coroutines.CoroutineContext
 
 class NoteListLogic(dispatcher: DispatcherProvider,
-                    locator: ServiceLocator,
+                    val noteLocator: NoteServiceLocator,
+                    val userLocator: UserServiceLocator,
+                    val navigator: INoteListContract.Navigator,
                     val vModel: INoteListContract.ViewModel,
                     var adapter: NoteListAdapter,
                     val view: INoteListContract.View,
@@ -24,7 +27,7 @@ class NoteListLogic(dispatcher: DispatcherProvider,
                     val registeredNoteSource: RegisteredNoteSource,
                     val publicNoteSource: PublicNoteSource,
                     val authSource: AuthSource)
-    : BaseLogic(dispatcher, locator),
+    : BaseLogic(dispatcher),
         INoteListContract.Logic, CoroutineScope {
 
     init {
@@ -46,13 +49,7 @@ class NoteListLogic(dispatcher: DispatcherProvider,
         }
     }
 
-    private fun onNewNoteClick() = view.startDetailActivity("", vModel.getIsPrivateMode())
-
-
-
-    private fun getDate(): String {
-        return System.currentTimeMillis().toString()
-    }
+    private fun onNewNoteClick() = navigator.startNoteDetailFeatureWithExtras("", vModel.getIsPrivateMode())
 
     private fun onStart() {
         //similar to CompositeDisposable from RxJava 2
@@ -81,12 +78,12 @@ class NoteListLogic(dispatcher: DispatcherProvider,
     }
 
     suspend fun getPublicListData(): Result<Exception, List<Note>> {
-        return publicNoteSource.getNotes(locator, dispatcher)
+        return publicNoteSource.getNotes(noteLocator, dispatcher)
     }
 
     suspend fun getPrivateListData(): Result<Exception, List<Note>> {
-        return if (vModel.getUserState() == null) anonymousNoteSource.getNotes(locator, dispatcher)
-        else registeredNoteSource.getNotes(locator, dispatcher)
+        return if (vModel.getUserState() == null) anonymousNoteSource.getNotes(noteLocator, dispatcher)
+        else registeredNoteSource.getNotes(noteLocator, dispatcher)
     }
 
     fun renderView(list: List<Note>) {
@@ -101,13 +98,13 @@ class NoteListLogic(dispatcher: DispatcherProvider,
     }
 
     private fun onLoginClick() {
-        view.startUserAuthActivity()
+        navigator.startLoginFeature()
     }
 
     private fun onNoteItemClick(position: Int) {
         val listData = vModel.getAdapterState()
 
-        view.startDetailActivity(listData[position].creationDate, vModel.getIsPrivateMode())
+        navigator.startNoteDetailFeatureWithExtras(listData[position].creationDate, vModel.getIsPrivateMode())
     }
 
 
@@ -118,7 +115,7 @@ class NoteListLogic(dispatcher: DispatcherProvider,
         view.setAdapter(adapter)
 
         launch {
-            val result = authSource.getCurrentUser(locator)
+            val result = authSource.getCurrentUser(userLocator)
 
             when (result) {
                 //Note: Null does not constitute a failure, just no user found

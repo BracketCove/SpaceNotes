@@ -91,6 +91,8 @@ class FirestoreRemoteNoteImpl(
     }
 }
 
+//var and default arguments used due to firestore requiring a no argument constructor to
+//deserialize
 data class FirebaseNote(
         var creationDate: String? = "",
         var contents: String? = "",

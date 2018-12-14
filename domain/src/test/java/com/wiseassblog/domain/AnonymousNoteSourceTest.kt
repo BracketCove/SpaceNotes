@@ -11,7 +11,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import kotlin.test.assert
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -28,7 +27,7 @@ class AnonymousNoteSourceTest {
 
     val anonSource = AnonymousNoteSource()
 
-    val locator: ServiceLocator = mockk()
+    val locator: NoteServiceLocator = mockk()
 
     val localNoteRepo: ILocalNoteRepository = mockk()
 

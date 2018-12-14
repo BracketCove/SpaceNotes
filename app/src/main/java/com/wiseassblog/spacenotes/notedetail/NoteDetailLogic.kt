@@ -1,7 +1,8 @@
 package com.wiseassblog.spacenotes.notedetail
 
 import com.wiseassblog.domain.DispatcherProvider
-import com.wiseassblog.domain.ServiceLocator
+import com.wiseassblog.domain.NoteServiceLocator
+import com.wiseassblog.domain.UserServiceLocator
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.Result
 import com.wiseassblog.domain.domainmodel.User
@@ -19,7 +20,9 @@ import kotlin.coroutines.CoroutineContext
 
 
 class NoteDetailLogic(dispatcher: DispatcherProvider,
-                      locator: ServiceLocator,
+                      val noteLocator: NoteServiceLocator,
+                      val userLocator: UserServiceLocator,
+                      val navigator: INoteDetailContract.Navigator,
                       val vModel: INoteDetailContract.ViewModel,
                       val view: INoteDetailContract.View,
                       val anonymousNoteSource: AnonymousNoteSource,
@@ -28,7 +31,7 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
                       val authSource: AuthSource,
                       id: String,
                       isPrivate: Boolean)
-    : BaseLogic(dispatcher, locator), INoteDetailContract.Logic, CoroutineScope {
+    : BaseLogic(dispatcher), INoteDetailContract.Logic, CoroutineScope {
 
     init {
         vModel.setId(id)
@@ -57,7 +60,7 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
 
     fun onDoneClick() = launch {
 
-        val userResult = authSource.getCurrentUser(locator)
+        val userResult = authSource.getCurrentUser(userLocator)
 
         when (userResult) {
             is Result.Value -> {
@@ -72,10 +75,10 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
     private suspend fun prepareAnonymousRepoUpdate() {
         val updatedNote = vModel.getNoteState()!!.copy(contents = view.getNoteBody())
 
-        val result = anonymousNoteSource.updateNote(updatedNote, locator, dispatcher)
+        val result = anonymousNoteSource.updateNote(updatedNote, noteLocator, dispatcher)
 
         when (result) {
-            is Result.Value -> view.startListFeature()
+            is Result.Value -> navigator.startListFeature()
             is Result.Error -> view.showMessage(result.error.toString())
         }
     }
@@ -84,10 +87,10 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
 
         val updatedNote = vModel.getNoteState()!!.copy(contents = view.getNoteBody())
 
-        val result = registeredNoteSource.updateNote(updatedNote, locator, dispatcher)
+        val result = registeredNoteSource.updateNote(updatedNote, noteLocator, dispatcher)
 
         when (result) {
-            is Result.Value -> view.startListFeature()
+            is Result.Value -> navigator.startListFeature()
             is Result.Error -> view.showMessage(result.error.toString())
         }
     }
@@ -97,17 +100,17 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
         val updatedNote = vModel.getNoteState()!!
                 .copy(contents = view.getNoteBody())
 
-        val result = registeredNoteSource.updateNote(updatedNote, locator, dispatcher)
+        val result = registeredNoteSource.updateNote(updatedNote, noteLocator, dispatcher)
 
         when (result) {
-            is Result.Value -> view.startListFeature()
+            is Result.Value -> navigator.startListFeature()
             is Result.Error -> view.showMessage(result.error.toString())
         }
     }
 
     fun bind() = launch {
 
-        val userResult = authSource.getCurrentUser(locator)
+        val userResult = authSource.getCurrentUser(userLocator)
 
         when (userResult) {
             is Result.Value -> {
@@ -143,8 +146,8 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
     fun getNoteFromSource(id: String, user: User?) = launch {
         val noteResult: Result<Exception, Note?>
 
-        if (user == null) noteResult = anonymousNoteSource.getNoteById(id, locator, dispatcher)
-        else noteResult = registeredNoteSource.getNoteById(id, locator, dispatcher)
+        if (user == null) noteResult = anonymousNoteSource.getNoteById(id, noteLocator, dispatcher)
+        else noteResult = registeredNoteSource.getNoteById(id, noteLocator, dispatcher)
 
         when (noteResult) {
             is Result.Value -> {
@@ -167,7 +170,7 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
             renderView(state)
         } else {
             view.showMessage(MESSAGE_GENERIC_ERROR)
-            view.startListFeature()
+            navigator.startListFeature()
         }
     }
 
@@ -178,7 +181,7 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
     }
 
     fun onBackClick() {
-        view.startListFeature()
+        navigator.startListFeature()
     }
 
     fun onDeleteClick() {
@@ -194,7 +197,7 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
             view.showMessage(MESSAGE_GENERIC_ERROR)
             view.restartFeature()
         } else {
-            val userResult = authSource.getCurrentUser(locator)
+            val userResult = authSource.getCurrentUser(userLocator)
 
             when (userResult) {
                 is Result.Value -> {
@@ -214,36 +217,36 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
 
     private fun preparePublicRepoDelete(note: Note) = launch {
         //TODO(Implement properly)
-            val result = publicNoteSource.deleteNote(note.creationDate, locator, dispatcher)
+            val result = publicNoteSource.deleteNote(note.creationDate, noteLocator, dispatcher)
 
             when (result) {
                 is Result.Value -> {
                     view.showMessage(MESSAGE_DELETE_SUCCESSFUL)
-                    view.startListFeature()
+                    navigator.startListFeature()
                 }
                 is Result.Error -> view.showMessage(result.error.toString())
             }
     }
 
     private fun prepareRegisteredRepoDelete(note: Note) = launch {
-            val result = registeredNoteSource.deleteNote(note, locator, dispatcher)
+            val result = registeredNoteSource.deleteNote(note, noteLocator, dispatcher)
 
             when (result) {
                 is Result.Value -> {
                     view.showMessage(MESSAGE_DELETE_SUCCESSFUL)
-                    view.startListFeature()
+                    navigator.startListFeature()
                 }
                 is Result.Error -> view.showMessage(result.error.toString())
             }
     }
 
     private fun prepareAnonymousRepoDelete(note: Note) = launch {
-            val result = anonymousNoteSource.deleteNote(note, locator, dispatcher)
+            val result = anonymousNoteSource.deleteNote(note, noteLocator, dispatcher)
 
             when (result) {
                 is Result.Value -> {
                     view.showMessage(MESSAGE_DELETE_SUCCESSFUL)
-                    view.startListFeature()
+                    navigator.startListFeature()
                 }
                 is Result.Error -> view.showMessage(result.error.toString())
             }

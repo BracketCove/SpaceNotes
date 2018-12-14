@@ -32,7 +32,7 @@ class RegisteredNoteSourceTest {
     //Contains Remote (SoT) and Local (State Cache)
     val noteRepository: IRemoteNoteRepository = mockk()
 
-    val locator: ServiceLocator = mockk()
+    val locator: NoteServiceLocator = mockk()
 
     fun getNote(creationDate: String = "28/10/2018",
                 contents: String = "When I understand that this glass is already broken, every moment with it becomes precious.",

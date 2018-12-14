@@ -1,4 +1,4 @@
-package com.wiseassblog.spacenotes.buildlogic
+package com.wiseassblog.spacenotes.notelist.buildlogic
 
 import android.content.Context
 import androidx.lifecycle.ViewModelProviders
@@ -11,7 +11,8 @@ import com.wiseassblog.data.note.registered.*
 import com.wiseassblog.data.transaction.RoomRegisteredTransactionDatabase
 import com.wiseassblog.data.transaction.RoomTransactionRepositoryImpl
 import com.wiseassblog.domain.DispatcherProvider
-import com.wiseassblog.domain.ServiceLocator
+import com.wiseassblog.domain.NoteServiceLocator
+import com.wiseassblog.domain.UserServiceLocator
 import com.wiseassblog.domain.interactor.AnonymousNoteSource
 import com.wiseassblog.domain.interactor.AuthSource
 import com.wiseassblog.domain.interactor.PublicNoteSource
@@ -20,13 +21,9 @@ import com.wiseassblog.domain.repository.IAuthRepository
 import com.wiseassblog.domain.repository.ILocalNoteRepository
 import com.wiseassblog.domain.repository.IRemoteNoteRepository
 import com.wiseassblog.domain.repository.ITransactionRepository
-import com.wiseassblog.spacenotes.login.ILoginContract
-import com.wiseassblog.spacenotes.login.LoginActivity
-import com.wiseassblog.spacenotes.login.LoginLogic
-import com.wiseassblog.spacenotes.notedetail.*
 import com.wiseassblog.spacenotes.notelist.*
 
-class Injector(private val activityContext: Context) {
+class NoteListInjector(private val activityContext: Context) {
     init {
         FirebaseApp.initializeApp(activityContext)
     }
@@ -78,39 +75,17 @@ class Injector(private val activityContext: Context) {
     fun provideNoteListLogic(view: NoteListView): INoteListContract.Logic {
         return NoteListLogic(
                 DispatcherProvider,
-                ServiceLocator(localAnon, remoteRepo, transactionReg, auth),
-                ViewModelProviders.of(activityContext as NoteListActivity).get(NoteListViewModel::class.java),
+                NoteServiceLocator(localAnon, remoteRepo, transactionReg),
+                UserServiceLocator(auth),
+                NoteListNavigator(activityContext as NoteListActivity),
+                ViewModelProviders.of(activityContext)
+                        .get(NoteListViewModel::class.java),
                 NoteListAdapter(),
                 view,
                 AnonymousNoteSource(),
                 RegisteredNoteSource(),
                 PublicNoteSource(),
                 AuthSource()
-        )
-    }
-
-    fun provideLoginLogic(view: LoginActivity): ILoginContract.Logic {
-        return LoginLogic(
-                DispatcherProvider,
-                ServiceLocator(localAnon, remoteRepo, transactionReg, auth),
-                view,
-                AuthSource()
-        )
-    }
-
-    fun provideNoteDetailLogic(view: NoteDetailView, id: String, isPrivate: Boolean): INoteDetailContract.Logic {
-        return NoteDetailLogic(
-                DispatcherProvider,
-                ServiceLocator(localAnon, remoteRepo, transactionReg, auth),
-                ViewModelProviders.of(activityContext as NoteDetailActivity)
-                        .get(NoteDetailViewModel::class.java),
-                view,
-                AnonymousNoteSource(),
-                RegisteredNoteSource(),
-                PublicNoteSource(),
-                AuthSource(),
-                id,
-                isPrivate
         )
     }
 }

@@ -8,6 +8,9 @@ interface ILoginContract {
         fun showLoopAnimation()
         fun setStatusDrawable(imageURL: String)
         fun startSignInFlow()
+    }
+
+    interface Navigator {
         fun startListFeature()
     }
 

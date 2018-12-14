@@ -1,7 +1,8 @@
 package com.wiseassblog.spacenotes
 
 import com.wiseassblog.domain.DispatcherProvider
-import com.wiseassblog.domain.ServiceLocator
+import com.wiseassblog.domain.NoteServiceLocator
+import com.wiseassblog.domain.UserServiceLocator
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.Result
 import com.wiseassblog.domain.domainmodel.User
@@ -24,7 +25,11 @@ class NoteListLogicTest {
 
     private val dispatcher: DispatcherProvider = mockk()
 
-    private val locator: ServiceLocator = mockk()
+    private val noteLocator: NoteServiceLocator = mockk()
+
+    private val userLocator: UserServiceLocator = mockk()
+
+    private val navigator: INoteListContract.Navigator = mockk(relaxed = true)
 
     private val vModel: INoteListContract.ViewModel = mockk(relaxed = true)
 
@@ -43,7 +48,9 @@ class NoteListLogicTest {
 
     private val logic = NoteListLogic(
             dispatcher,
-            locator,
+            noteLocator,
+            userLocator,
+            navigator,
             vModel,
             adapter,
             view,
@@ -101,7 +108,7 @@ class NoteListLogicTest {
      *
      * a:
      * 1. check isPrivate status from ViewModel: true
-     * 2. startDetailActivity with empty string as extra
+     * 2. startNoteDetailFeatureWithExtras with empty string as extra
      */
     @Test
     fun `On New Note Click Private`() {
@@ -112,13 +119,13 @@ class NoteListLogicTest {
         logic.event(NoteListEvent.OnNewNoteClick)
 
         //verify interactions and state if necessary
-        verify { view.startDetailActivity("", true) }
+        verify { navigator.startNoteDetailFeatureWithExtras("", true) }
     }
 
     /**
      * b:
      * 1.
-     * 2. startDetailActivity with empty string as extra
+     * 2. startNoteDetailFeatureWithExtras with empty string as extra
      */
     @Test
     fun `On New Note Click Public`() {
@@ -129,7 +136,7 @@ class NoteListLogicTest {
         logic.event(NoteListEvent.OnNewNoteClick)
 
         //verify interactions and state if necessary
-        verify { view.startDetailActivity("", false) }
+        verify { navigator.startNoteDetailFeatureWithExtras("", false) }
     }
 
     /**
@@ -148,11 +155,11 @@ class NoteListLogicTest {
     @Test
     fun `On bind User anonymous`() = runBlocking {
 
-        coEvery { auth.getCurrentUser(locator) } returns Result.build { null }
+        coEvery { auth.getCurrentUser(userLocator) } returns Result.build { null }
 
         logic.event(NoteListEvent.OnBind)
 
-        coVerify { auth.getCurrentUser(locator) }
+        coVerify { auth.getCurrentUser(userLocator) }
         verify { vModel.setUserState(null) }
         verify { view.showLoadingView() }
         verify { view.setToolbarTitle(MODE_PRIVATE) }
@@ -164,11 +171,11 @@ class NoteListLogicTest {
     @Test
     fun `On bind user registered`() = runBlocking {
 
-        coEvery { auth.getCurrentUser(locator) } returns Result.build { getUser() }
+        coEvery { auth.getCurrentUser(userLocator) } returns Result.build { getUser() }
 
         logic.event(NoteListEvent.OnBind)
 
-        coVerify { auth.getCurrentUser(locator) }
+        coVerify { auth.getCurrentUser(userLocator) }
         verify { vModel.setUserState(getUser()) }
         verify { view.showLoadingView() }
         verify { view.setAdapter(adapter) }
@@ -194,7 +201,7 @@ class NoteListLogicTest {
     fun `On Start anonymous`() = runBlocking {
         every { vModel.getIsPrivateMode() } returns true
         every { vModel.getUserState() } returns null
-        coEvery { anonymous.getNotes(locator, dispatcher) } returns Result.build { getNoteList }
+        coEvery { anonymous.getNotes(noteLocator, dispatcher) } returns Result.build { getNoteList }
 
         logic.event(NoteListEvent.OnStart)
 
@@ -202,7 +209,7 @@ class NoteListLogicTest {
         verify { vModel.getUserState() }
         verify { view.showList() }
         verify { adapter.submitList(getNoteList) }
-        coVerify { anonymous.getNotes(locator, dispatcher) }
+        coVerify { anonymous.getNotes(noteLocator, dispatcher) }
     }
 
     /**
@@ -217,7 +224,7 @@ class NoteListLogicTest {
     fun `On Start Registered Private`() = runBlocking {
         every { vModel.getIsPrivateMode() } returns true
         every { vModel.getUserState() } returns getUser()
-        coEvery { registered.getNotes(locator, dispatcher) } returns Result.build { getNoteList }
+        coEvery { registered.getNotes(noteLocator, dispatcher) } returns Result.build { getNoteList }
 
         logic.event(NoteListEvent.OnStart)
 
@@ -225,7 +232,7 @@ class NoteListLogicTest {
         verify { vModel.getUserState() }
         verify { view.showList() }
         verify { adapter.submitList(getNoteList) }
-        coVerify { registered.getNotes(locator, dispatcher) }
+        coVerify { registered.getNotes(noteLocator, dispatcher) }
     }
 
     /**
@@ -235,7 +242,7 @@ class NoteListLogicTest {
     fun `On Start a with empty list`() = runBlocking {
         every { vModel.getIsPrivateMode() } returns true
         every { vModel.getUserState() } returns getUser()
-        coEvery { registered.getNotes(locator, dispatcher) } returns Result.build { emptyList<Note>() }
+        coEvery { registered.getNotes(noteLocator, dispatcher) } returns Result.build { emptyList<Note>() }
 
         logic.event(NoteListEvent.OnStart)
 
@@ -243,7 +250,7 @@ class NoteListLogicTest {
         verify { vModel.getUserState() }
         verify { view.showEmptyState() }
         verify { adapter.submitList(emptyList<Note>()) }
-        coVerify { registered.getNotes(locator, dispatcher) }
+        coVerify { registered.getNotes(noteLocator, dispatcher) }
     }
 
     /**
@@ -255,14 +262,14 @@ class NoteListLogicTest {
     @Test
     fun `On Start Public Mode`() = runBlocking {
         every { vModel.getIsPrivateMode() } returns false
-        coEvery { public.getNotes(locator, dispatcher) } returns Result.build { getNoteList }
+        coEvery { public.getNotes(noteLocator, dispatcher) } returns Result.build { getNoteList }
 
         logic.event(NoteListEvent.OnStart)
 
         verify { vModel.getIsPrivateMode() }
         verify { view.showList() }
         verify { adapter.submitList(getNoteList) }
-        coVerify { public.getNotes(locator, dispatcher) }
+        coVerify { public.getNotes(noteLocator, dispatcher) }
     }
 
 
@@ -276,7 +283,7 @@ class NoteListLogicTest {
 
         logic.event(NoteListEvent.OnLoginClick)
 
-        verify { view.startUserAuthActivity() }
+        verify { navigator.startLoginFeature() }
     }
 
     /**
@@ -298,7 +305,7 @@ class NoteListLogicTest {
 
         logic.event(clickEvent)
 
-        verify { view.startDetailActivity(getNote().creationDate, true) }
+        verify { navigator.startNoteDetailFeatureWithExtras(getNote().creationDate, true) }
         verify { vModel.getAdapterState() }
         verify { vModel.getIsPrivateMode() }
     }
@@ -321,7 +328,7 @@ class NoteListLogicTest {
 
         logic.event(clickEvent)
 
-        verify { view.startDetailActivity(getNote().creationDate, false) }
+        verify { navigator.startNoteDetailFeatureWithExtras(getNote().creationDate, false) }
         verify { vModel.getAdapterState() }
         verify { vModel.getIsPrivateMode() }
     }

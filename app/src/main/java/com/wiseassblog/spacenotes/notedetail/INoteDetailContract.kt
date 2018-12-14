@@ -15,7 +15,6 @@ interface INoteDetailContract {
         fun hideBackButton()
         fun getNoteBody(): String
         fun getTime(): String
-        fun startListFeature()
         fun restartFeature()
         fun showMessage(message: String)
         fun showConfirmDeleteSnackbar()
@@ -33,6 +32,10 @@ interface INoteDetailContract {
         fun setId(id: String)
 
         fun getId(): String?
+    }
+
+    interface Navigator {
+        fun startListFeature()
     }
 
     interface Logic {

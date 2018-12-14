@@ -5,10 +5,10 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.wiseassblog.spacenotes.R
-import com.wiseassblog.spacenotes.buildlogic.Injector
 import com.wiseassblog.spacenotes.common.BOOLEAN_EXTRA_IS_PRIVATE
 import com.wiseassblog.spacenotes.common.STRING_EXTRA_NOTE_ID
 import com.wiseassblog.spacenotes.common.attachFragment
+import com.wiseassblog.spacenotes.notedetail.buildlogic.NoteDetailInjector
 import com.wiseassblog.spacenotes.notelist.NoteListActivity
 
 private const val VIEW = "NOTE_DETAIL"
@@ -35,7 +35,7 @@ class NoteDetailActivity : AppCompatActivity() {
 
         val view = this.supportFragmentManager.findFragmentByTag(VIEW) as NoteDetailView?
                 ?: NoteDetailView.newInstance(
-                        Injector(this),
+                        NoteDetailInjector(this),
                         noteId,
                         isPrivate
                 )

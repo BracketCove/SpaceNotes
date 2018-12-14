@@ -1,7 +1,6 @@
 package com.wiseassblog.spacenotes.notelist
 
 
-import android.content.Intent
 import android.graphics.drawable.AnimationDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -11,11 +10,7 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.ListAdapter
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.spacenotes.R
-import com.wiseassblog.spacenotes.buildlogic.Injector
-import com.wiseassblog.spacenotes.common.BOOLEAN_EXTRA_IS_PRIVATE
-import com.wiseassblog.spacenotes.common.STRING_EXTRA_NOTE_ID
-import com.wiseassblog.spacenotes.login.LoginActivity
-import com.wiseassblog.spacenotes.notedetail.NoteDetailActivity
+import com.wiseassblog.spacenotes.notelist.buildlogic.NoteListInjector
 import kotlinx.android.synthetic.main.fragment_note_list.*
 
 
@@ -23,12 +18,6 @@ class NoteListView : Fragment(), INoteListContract.View {
 
     override fun setToolbarTitle(title: String) {
         lbl_toolbar_title.text = title
-    }
-
-    override fun startUserAuthActivity() {
-        val i = Intent(this.activity, LoginActivity::class.java)
-        this.activity?.finish()
-        startActivity(i)
     }
 
     override fun setAdapter(adapter: ListAdapter<Note, NoteListAdapter.NoteViewHolder>) {
@@ -63,14 +52,6 @@ class NoteListView : Fragment(), INoteListContract.View {
 
         val satelliteLoop = imv_satellite_animation.drawable as AnimationDrawable
         satelliteLoop.stop()
-    }
-
-    override fun startDetailActivity(noteId: String, isPrivate: Boolean) {
-        val i = Intent(this.activity, NoteDetailActivity::class.java)
-        i.putExtra(STRING_EXTRA_NOTE_ID, noteId)
-        i.putExtra(BOOLEAN_EXTRA_IS_PRIVATE, isPrivate)
-        this.activity?.finish()
-        startActivity(i)
     }
 
     lateinit var logic: INoteListContract.Logic
@@ -113,14 +94,12 @@ class NoteListView : Fragment(), INoteListContract.View {
 
     companion object {
         @JvmStatic
-        fun newInstance(injector: Injector): Fragment = NoteListView()
+        fun newInstance(injector: NoteListInjector): Fragment = NoteListView()
                 .setLogic(injector)
     }
 
-    private fun setLogic(injector: Injector): Fragment {
+    private fun setLogic(injector: NoteListInjector): Fragment {
         logic = injector.provideNoteListLogic(this)
         return this
     }
-
-
 }

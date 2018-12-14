@@ -9,7 +9,7 @@ class PublicNoteSourceTest {
 
     val source = PublicNoteSource()
 
-    val locator: ServiceLocator = mockk()
+    val locator: NoteServiceLocator = mockk()
 
 
     /**

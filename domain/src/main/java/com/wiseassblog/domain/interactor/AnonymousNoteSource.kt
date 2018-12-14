@@ -1,16 +1,14 @@
 package com.wiseassblog.domain.interactor
 
 import com.wiseassblog.domain.DispatcherProvider
-import com.wiseassblog.domain.ServiceLocator
+import com.wiseassblog.domain.NoteServiceLocator
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.Result
 import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
-import java.lang.Exception
 
 class AnonymousNoteSource {
-    suspend fun getNotes(locator: ServiceLocator, dispatcher: DispatcherProvider):
+    suspend fun getNotes(locator: NoteServiceLocator, dispatcher: DispatcherProvider):
             Result<Exception, List<Note>> = runBlocking {
 
         val localResult = async(dispatcher.provideIOContext()) {
@@ -20,7 +18,7 @@ class AnonymousNoteSource {
         localResult.await()
     }
 
-    suspend fun getNoteById(id: String, locator: ServiceLocator, dispatcher: DispatcherProvider):
+    suspend fun getNoteById(id: String, locator: NoteServiceLocator, dispatcher: DispatcherProvider):
             Result<Exception, Note?> = runBlocking {
 
         val localResult = async(dispatcher.provideIOContext()) {
@@ -30,7 +28,7 @@ class AnonymousNoteSource {
         localResult.await()
     }
 
-    suspend fun updateNote(note: Note, locator: ServiceLocator, dispatcher: DispatcherProvider):
+    suspend fun updateNote(note: Note, locator: NoteServiceLocator, dispatcher: DispatcherProvider):
             Result<Exception, Unit> = runBlocking {
         val localResult = async(dispatcher.provideIOContext()) {
             locator.localAnon.updateNote(note)
@@ -39,7 +37,7 @@ class AnonymousNoteSource {
         localResult.await()
     }
 
-    suspend fun deleteNote(note: Note, locator: ServiceLocator, dispatcher: DispatcherProvider):
+    suspend fun deleteNote(note: Note, locator: NoteServiceLocator, dispatcher: DispatcherProvider):
             Result<Exception, Unit> = runBlocking {
         val localResult = async(dispatcher.provideIOContext()) {
             locator.localAnon.deleteNote(note)

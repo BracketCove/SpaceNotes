@@ -1,7 +1,8 @@
 package com.wiseassblog.spacenotes
 
 import com.wiseassblog.domain.DispatcherProvider
-import com.wiseassblog.domain.ServiceLocator
+import com.wiseassblog.domain.NoteServiceLocator
+import com.wiseassblog.domain.UserServiceLocator
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.Result
 import com.wiseassblog.domain.domainmodel.User
@@ -31,7 +32,11 @@ class NoteDetailLogicTest {
 
     private val dispatcher: DispatcherProvider = mockk()
 
-    private val locator: ServiceLocator = mockk()
+    private val noteLocator: NoteServiceLocator = mockk()
+
+    private val userLocator: UserServiceLocator = mockk()
+
+    private val navigator: INoteDetailContract.Navigator = mockk(relaxed = true)
 
     private val vModel: INoteDetailContract.ViewModel = mockk(relaxed = true)
 
@@ -78,7 +83,9 @@ class NoteDetailLogicTest {
     fun getLogic(id: String = getNote().creationDate,
                  isPrivate: Boolean = true) = NoteDetailLogic(
             dispatcher,
-            locator,
+            noteLocator,
+            userLocator,
+            navigator,
             vModel,
             view,
             anonymous,
@@ -126,11 +133,11 @@ class NoteDetailLogicTest {
         } returns getNote()
 
         coEvery {
-            anonymous.updateNote(getNote(), locator, dispatcher)
-        } returns Result.build { true }
+            anonymous.updateNote(getNote(), noteLocator, dispatcher)
+        } returns Result.build { Unit }
 
         coEvery {
-            auth.getCurrentUser(locator)
+            auth.getCurrentUser(userLocator)
         } returns Result.build { null }
 
         //call the unit to be tested
@@ -140,9 +147,9 @@ class NoteDetailLogicTest {
 
         verify { view.getNoteBody() }
         verify { vModel.getNoteState() }
-        coVerify { auth.getCurrentUser(locator) }
-        coVerify { anonymous.updateNote(getNote(), locator, dispatcher) }
-        verify { view.startListFeature() }
+        coVerify { auth.getCurrentUser(userLocator) }
+        coVerify { anonymous.updateNote(getNote(), noteLocator, dispatcher) }
+        verify { navigator.startListFeature() }
     }
 
     /**
@@ -164,11 +171,11 @@ class NoteDetailLogicTest {
         } returns getNote()
 
         coEvery {
-            registered.updateNote(getNote(), locator, dispatcher)
-        } returns Result.build { true }
+            registered.updateNote(getNote(), noteLocator, dispatcher)
+        } returns Result.build { Unit }
 
         coEvery {
-            auth.getCurrentUser(locator)
+            auth.getCurrentUser(userLocator)
         } returns Result.build { getUser() }
 
         //call the unit to be tested
@@ -178,9 +185,9 @@ class NoteDetailLogicTest {
 
         verify { view.getNoteBody() }
         verify { vModel.getNoteState() }
-        coVerify { auth.getCurrentUser(locator) }
-        coVerify { registered.updateNote(getNote(), locator, dispatcher) }
-        verify { view.startListFeature() }
+        coVerify { auth.getCurrentUser(userLocator) }
+        coVerify { registered.updateNote(getNote(), noteLocator, dispatcher) }
+        verify { navigator.startListFeature() }
     }
 
     /**
@@ -221,20 +228,20 @@ class NoteDetailLogicTest {
         } returns getNote()
 
         coEvery {
-            auth.getCurrentUser(locator)
+            auth.getCurrentUser(userLocator)
         } returns Result.build { null }
 
         coEvery {
-            anonymous.deleteNote(getNote(), locator, dispatcher)
-        } returns Result.build { true }
+            anonymous.deleteNote(getNote(), noteLocator, dispatcher)
+        } returns Result.build { Unit }
 
         logic.event(NoteDetailEvent.OnDeleteConfirmed)
 
         verify { vModel.getNoteState() }
         verify { view.showMessage(MESSAGE_DELETE_SUCCESSFUL) }
-        verify { view.startListFeature() }
-        coVerify { anonymous.deleteNote(getNote(), locator, dispatcher) }
-        coVerify { auth.getCurrentUser(locator) }
+        verify { navigator.startListFeature() }
+        coVerify { anonymous.deleteNote(getNote(), noteLocator, dispatcher) }
+        coVerify { auth.getCurrentUser(userLocator) }
     }
 
     /**
@@ -264,20 +271,20 @@ class NoteDetailLogicTest {
         } returns true
 
         coEvery {
-            auth.getCurrentUser(locator)
+            auth.getCurrentUser(userLocator)
         } returns Result.build { getUser() }
 
         coEvery {
-            registered.deleteNote(getNote(), locator, dispatcher)
-        } returns Result.build { true }
+            registered.deleteNote(getNote(), noteLocator, dispatcher)
+        } returns Result.build { Unit }
 
         logic.event(NoteDetailEvent.OnDeleteConfirmed)
 
         verify { vModel.getNoteState() }
         verify { view.showMessage(MESSAGE_DELETE_SUCCESSFUL) }
-        verify { view.startListFeature() }
-        coVerify { registered.deleteNote(getNote(), locator, dispatcher) }
-        coVerify { auth.getCurrentUser(locator) }
+        verify { navigator.startListFeature() }
+        coVerify { registered.deleteNote(getNote(), noteLocator, dispatcher) }
+        coVerify { auth.getCurrentUser(userLocator) }
     }
 
     /**
@@ -324,7 +331,7 @@ class NoteDetailLogicTest {
 
         logic.event(NoteDetailEvent.OnBackClick)
 
-        verify { view.startListFeature() }
+        verify { navigator.startListFeature() }
     }
 
 
@@ -366,7 +373,7 @@ class NoteDetailLogicTest {
         } returns true
 
         coEvery {
-            auth.getCurrentUser(locator)
+            auth.getCurrentUser(userLocator)
         } returns Result.build { null }
 
         logic.event(NoteDetailEvent.OnBind)
@@ -375,7 +382,7 @@ class NoteDetailLogicTest {
         //logged in
         verify { vModel.setNoteState(getNote(creator = null, contents = "", imageUrl = "satellite_beam")) }
         verify { vModel.setIsPrivateMode(true) }
-        coVerify { auth.getCurrentUser(locator) }
+        coVerify { auth.getCurrentUser(userLocator) }
         verify { vModel.setId("") }
         verify { view.getTime() }
         verify { view.hideBackButton() }
@@ -402,7 +409,7 @@ class NoteDetailLogicTest {
         } returns true
 
         coEvery {
-            auth.getCurrentUser(locator)
+            auth.getCurrentUser(userLocator)
         } returns Result.build { getUser() }
 
         logic.event(NoteDetailEvent.OnBind)
@@ -411,7 +418,7 @@ class NoteDetailLogicTest {
         //logged in
         verify { vModel.setNoteState(getNote(creator = getUser(), contents = "", imageUrl = "satellite_beam")) }
         verify { vModel.setIsPrivateMode(true) }
-        coVerify { auth.getCurrentUser(locator) }
+        coVerify { auth.getCurrentUser(userLocator) }
         verify { vModel.setId("") }
         verify { view.getTime() }
         verify { view.hideBackButton() }
@@ -438,11 +445,11 @@ class NoteDetailLogicTest {
         } returns true
 
         coEvery {
-            auth.getCurrentUser(locator)
+            auth.getCurrentUser(userLocator)
         } returns Result.build { null }
 
         coEvery {
-            anonymous.getNoteById(getNote().creationDate, locator, dispatcher)
+            anonymous.getNoteById(getNote().creationDate, noteLocator, dispatcher)
         } returns Result.build { getNote() }
 
         logic.event(NoteDetailEvent.OnBind)
@@ -451,7 +458,7 @@ class NoteDetailLogicTest {
         //logged in
         verify { vModel.setNoteState(getNote()) }
         verify { vModel.setIsPrivateMode(true) }
-        coVerify { auth.getCurrentUser(locator) }
+        coVerify { auth.getCurrentUser(userLocator) }
         verify { vModel.setId(getNote().creationDate) }
     }
 

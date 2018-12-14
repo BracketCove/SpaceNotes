@@ -1,7 +1,6 @@
 package com.wiseassblog.spacenotes.notedetail
 
 
-import android.content.Intent
 import android.graphics.drawable.AnimationDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -10,10 +9,8 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.google.android.material.snackbar.Snackbar
 import com.wiseassblog.spacenotes.R
-import com.wiseassblog.spacenotes.buildlogic.Injector
 import com.wiseassblog.spacenotes.common.*
-import com.wiseassblog.spacenotes.notelist.NoteListActivity
-
+import com.wiseassblog.spacenotes.notedetail.buildlogic.NoteDetailInjector
 import kotlinx.android.synthetic.main.fragment_note_detail.*
 
 
@@ -45,15 +42,9 @@ class NoteDetailView : Fragment(), INoteDetailContract.View {
         return edt_note_detail_text.text.toString()
     }
 
-    override fun startListFeature() {
-        val i = Intent(this.activity, NoteListActivity::class.java)
-        this.activity?.finish()
-        startActivity(i)
-    }
-
     override fun setBackgroundImage(imageUrl: String) {
         imv_note_detail_satellite.setImageResource(
-                        resources.getIdentifier(imageUrl, "drawable", context?.packageName)
+                resources.getIdentifier(imageUrl, "drawable", context?.packageName)
         )
 
         val satelliteLoop = imv_note_detail_satellite.drawable as AnimationDrawable
@@ -110,11 +101,11 @@ class NoteDetailView : Fragment(), INoteDetailContract.View {
 
     companion object {
         @JvmStatic
-        fun newInstance(injector: Injector, id: String, isPrivate: Boolean) =
+        fun newInstance(injector: NoteDetailInjector, id: String, isPrivate: Boolean) =
                 NoteDetailView().setLogic(injector, id, isPrivate)
     }
 
-    private fun setLogic(injector: Injector, id: String, isPrivate: Boolean): Fragment {
+    private fun setLogic(injector: NoteDetailInjector, id: String, isPrivate: Boolean): Fragment {
         logic = injector.provideNoteDetailLogic(this, id, isPrivate)
         return this
     }

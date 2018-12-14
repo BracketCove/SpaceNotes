@@ -4,12 +4,13 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInResult
 import com.google.android.gms.tasks.Task
 import com.wiseassblog.domain.DispatcherProvider
-import com.wiseassblog.domain.ServiceLocator
+import com.wiseassblog.domain.UserServiceLocator
 import com.wiseassblog.domain.domainmodel.Result
 import com.wiseassblog.domain.domainmodel.User
 import com.wiseassblog.domain.error.SpaceNotesError
 import com.wiseassblog.domain.interactor.AuthSource
 import com.wiseassblog.spacenotes.login.*
+import com.wiseassblog.spacenotes.notelist.INoteListContract
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -29,7 +30,9 @@ class LoginLogicTest {
 
     private val dispatcher: DispatcherProvider = mockk()
 
-    private val locator: ServiceLocator = mockk()
+    private val userLocator: UserServiceLocator = mockk()
+
+    private val navigator: ILoginContract.Navigator = mockk(relaxed = true)
 
     private val view: ILoginContract.View = mockk(relaxed = true)
 
@@ -56,7 +59,7 @@ class LoginLogicTest {
     fun clear() {
         clearMocks()
 
-        logic = LoginLogic(dispatcher, locator, view, auth)
+        logic = LoginLogic(dispatcher, userLocator, navigator, view, auth)
 
     }
 
@@ -84,13 +87,13 @@ class LoginLogicTest {
         } returns Dispatchers.Unconfined
 
         coEvery {
-            auth.getCurrentUser(locator)
+            auth.getCurrentUser(userLocator)
         } returns Result.build { getUser() }
 
         logic.event(LoginEvent.OnStart)
 
 
-        coVerify { auth.getCurrentUser(locator) }
+        coVerify { auth.getCurrentUser(userLocator) }
         verify { view.setLoginStatus(SIGNED_IN) }
         verify { view.showLoopAnimation() }
         verify { view.setAuthButton(SIGN_OUT) }
@@ -112,13 +115,13 @@ class LoginLogicTest {
         } returns Dispatchers.Unconfined
 
         coEvery {
-            auth.getCurrentUser(locator)
+            auth.getCurrentUser(userLocator)
         } returns Result.build { null }
 
         logic.event(LoginEvent.OnStart)
 
 
-        coVerify { auth.getCurrentUser(locator) }
+        coVerify { auth.getCurrentUser(userLocator) }
         verify { view.setLoginStatus(SIGNED_OUT) }
         verify { view.setStatusDrawable(ANTENNA_FULL) }
         verify { view.setAuthButton(SIGN_IN) }
@@ -138,13 +141,13 @@ class LoginLogicTest {
         } returns Dispatchers.Unconfined
 
         coEvery {
-            auth.getCurrentUser(locator)
+            auth.getCurrentUser(userLocator)
         } returns Result.build { throw SpaceNotesError.NetworkUnavailableException }
 
         logic.event(LoginEvent.OnStart)
 
 
-        coVerify { auth.getCurrentUser(locator) }
+        coVerify { auth.getCurrentUser(userLocator) }
         verify { view.setLoginStatus(ERROR_NETWORK_UNAVAILABLE) }
         verify { view.setStatusDrawable(ANTENNA_EMPTY) }
         verify { view.setAuthButton(RETRY) }
@@ -170,13 +173,13 @@ class LoginLogicTest {
         } returns Dispatchers.Unconfined
 
         coEvery {
-            auth.getCurrentUser(locator)
+            auth.getCurrentUser(userLocator)
         } returns Result.build { null }
 
         logic.event(LoginEvent.OnAuthButtonClick)
 
 
-        coVerify { auth.getCurrentUser(locator) }
+        coVerify { auth.getCurrentUser(userLocator) }
         verify { view.startSignInFlow() }
 
     }
@@ -196,19 +199,19 @@ class LoginLogicTest {
         } returns Dispatchers.Unconfined
 
         coEvery {
-            auth.getCurrentUser(locator)
+            auth.getCurrentUser(userLocator)
         } returns Result.build { getUser() }
 
         coEvery {
-            auth.signOutCurrentUser(locator)
+            auth.signOutCurrentUser(userLocator)
         } returns Result.build { Unit }
 
 
         logic.event(LoginEvent.OnAuthButtonClick)
 
 
-        coVerify { auth.getCurrentUser(locator) }
-        coVerify { auth.signOutCurrentUser(locator) }
+        coVerify { auth.getCurrentUser(userLocator) }
+        coVerify { auth.signOutCurrentUser(userLocator) }
         verify { view.setLoginStatus(SIGNED_OUT) }
         verify { view.setStatusDrawable(ANTENNA_FULL) }
         verify { view.setAuthButton(SIGN_IN) }
@@ -226,7 +229,7 @@ class LoginLogicTest {
         } returns Dispatchers.Unconfined
 
         coEvery {
-            auth.getCurrentUser(locator)
+            auth.getCurrentUser(userLocator)
         } returns Result.build { throw SpaceNotesError.NetworkUnavailableException }
 
 
@@ -234,7 +237,7 @@ class LoginLogicTest {
         logic.event(LoginEvent.OnAuthButtonClick)
 
 
-        coVerify { auth.getCurrentUser(locator) }
+        coVerify { auth.getCurrentUser(userLocator) }
         verify { view.setLoginStatus(ERROR_NETWORK_UNAVAILABLE) }
         verify { view.setStatusDrawable(ANTENNA_EMPTY) }
         verify { view.setAuthButton(RETRY) }
@@ -245,7 +248,7 @@ class LoginLogicTest {
     fun `On Back Click`() = runBlocking {
         logic.event(LoginEvent.OnBackClick)
 
-        verify { view.startListFeature() }
+        verify { navigator.startListFeature() }
     }
 
     /**
@@ -280,18 +283,18 @@ class LoginLogicTest {
         } returns Dispatchers.Unconfined
 
         coEvery {
-            auth.getCurrentUser(locator)
+            auth.getCurrentUser(userLocator)
         } returns Result.build { getUser() }
 
         coEvery {
-            auth.createGoogleUser(testIdToken, locator)
-        } returns Result.build { getUser() }
+            auth.createGoogleUser(testIdToken, userLocator)
+        } returns Result.build { Unit }
 
 
         logic.event(LoginEvent.OnGoogleSignInResult(loginResult))
 
-        coVerify { auth.createGoogleUser(testIdToken, locator) }
-        coVerify { auth.getCurrentUser(locator) }
+        coVerify { auth.createGoogleUser(testIdToken, userLocator) }
+        coVerify { auth.getCurrentUser(userLocator) }
         verify { view.setLoginStatus(SIGNED_IN) }
         verify { view.showLoopAnimation() }
         verify { view.setAuthButton(SIGN_OUT) }

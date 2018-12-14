@@ -1,16 +1,14 @@
 package com.wiseassblog.domain.interactor
 
 import com.wiseassblog.domain.DispatcherProvider
-import com.wiseassblog.domain.ServiceLocator
+import com.wiseassblog.domain.NoteServiceLocator
 import com.wiseassblog.domain.domainmodel.*
 import com.wiseassblog.domain.repository.IRemoteNoteRepository
 import com.wiseassblog.domain.repository.ITransactionRepository
-import kotlinx.coroutines.async
-import kotlinx.coroutines.runBlocking
 
 
 class RegisteredNoteSource {
-    suspend fun getNotes(locator: ServiceLocator,
+    suspend fun getNotes(locator: NoteServiceLocator,
                          dispatcher: DispatcherProvider): Result<Exception, List<Note>> {
 
         val transactionResult = locator.transactionReg.getTransactions()
@@ -50,12 +48,12 @@ class RegisteredNoteSource {
     }
 
     suspend fun getNoteById(id: String,
-                            locator: ServiceLocator,
+                            locator: NoteServiceLocator,
                             dispatcher: DispatcherProvider):
             Result<Exception, Note?> = locator.remoteReg.getNote(id)
 
     suspend fun updateNote(note: Note,
-                           locator: ServiceLocator,
+                           locator: NoteServiceLocator,
                            dispatcher: DispatcherProvider): Result<Exception, Unit> {
         val remoteResult = locator.remoteReg.updateNote(note)
 
@@ -66,7 +64,7 @@ class RegisteredNoteSource {
     }
 
     suspend fun deleteNote(note: Note,
-                           locator: ServiceLocator,
+                           locator: NoteServiceLocator,
                            dispatcher: DispatcherProvider): Result<Exception, Unit> {
         val remoteResult = locator.remoteReg.deleteNote(note)
 

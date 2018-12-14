@@ -1,7 +1,7 @@
 package com.wiseassblog.spacenotes.login
 
 import com.wiseassblog.domain.DispatcherProvider
-import com.wiseassblog.domain.ServiceLocator
+import com.wiseassblog.domain.UserServiceLocator
 import com.wiseassblog.domain.domainmodel.Result
 import com.wiseassblog.domain.error.SpaceNotesError
 import com.wiseassblog.domain.interactor.AuthSource
@@ -12,9 +12,10 @@ import kotlinx.coroutines.launch
 import kotlin.coroutines.CoroutineContext
 
 class LoginLogic(dispatcher: DispatcherProvider,
-                 locator: ServiceLocator,
+                 val userLocator: UserServiceLocator,
+                 val navigator: ILoginContract.Navigator,
                  val view: ILoginContract.View,
-                 val authSource: AuthSource) : BaseLogic(dispatcher, locator), CoroutineScope, ILoginContract.Logic {
+                 val authSource: AuthSource) : BaseLogic(dispatcher), CoroutineScope, ILoginContract.Logic {
 
 
     init {
@@ -40,7 +41,7 @@ class LoginLogic(dispatcher: DispatcherProvider,
 
             val createGoogleUserResult = authSource.createGoogleUser(
                     result.account.idToken!!,
-                    locator
+                    userLocator
             )
 
             when (createGoogleUserResult) {
@@ -53,7 +54,7 @@ class LoginLogic(dispatcher: DispatcherProvider,
     }
 
     private fun onAuthButtonClick() = launch {
-        val authResult = authSource.getCurrentUser(locator)
+        val authResult = authSource.getCurrentUser(userLocator)
 
         when (authResult) {
             is Result.Value -> {
@@ -77,7 +78,7 @@ class LoginLogic(dispatcher: DispatcherProvider,
     }
 
     private suspend fun signUserOut() {
-        val signOutResult = authSource.signOutCurrentUser(locator)
+        val signOutResult = authSource.signOutCurrentUser(userLocator)
 
         when (signOutResult) {
             is Result.Value -> renderNullUser()
@@ -87,11 +88,11 @@ class LoginLogic(dispatcher: DispatcherProvider,
     }
 
     private fun onBackClick() {
-        view.startListFeature()
+        navigator.startListFeature()
     }
 
     private fun onStart() = launch {
-        val authResult = authSource.getCurrentUser(locator)
+        val authResult = authSource.getCurrentUser(userLocator)
 
         when (authResult) {
             is Result.Value -> {

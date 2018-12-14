@@ -3,16 +3,13 @@ package com.wiseassblog.spacenotes.login
 import android.content.Intent
 import android.graphics.drawable.AnimationDrawable
 import android.os.Bundle
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.gms.auth.api.Auth
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.wiseassblog.spacenotes.R
-import com.wiseassblog.spacenotes.buildlogic.Injector
-import com.wiseassblog.spacenotes.notelist.NoteListActivity
+import com.wiseassblog.spacenotes.login.buildlogic.LoginInjector
 import kotlinx.android.synthetic.main.activity_login.*
 
 
@@ -23,7 +20,7 @@ class LoginActivity : AppCompatActivity(), ILoginContract.View {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
-        logic = Injector(this.applicationContext).provideLoginLogic(this)
+        logic = LoginInjector(this.applicationContext).provideLoginLogic(this)
         btn_auth_attempt.setOnClickListener { logic.event(LoginEvent.OnAuthButtonClick) }
         imb_toolbar_back.setOnClickListener { logic.event(LoginEvent.OnBackClick) }
     }
@@ -68,13 +65,6 @@ class LoginActivity : AppCompatActivity(), ILoginContract.View {
         val signInIntent = googleSignInClient.signInIntent
         startActivityForResult(signInIntent, RC_SIGN_IN)
     }
-
-    override fun startListFeature() {
-        val i = Intent(this, NoteListActivity::class.java)
-        this.finish()
-        startActivity(i)
-    }
-
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
