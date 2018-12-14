@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.google.android.material.snackbar.Snackbar
 import com.wiseassblog.spacenotes.R
+import com.wiseassblog.spacenotes.R.id.*
 import com.wiseassblog.spacenotes.common.*
 import com.wiseassblog.spacenotes.notedetail.buildlogic.NoteDetailInjector
 import kotlinx.android.synthetic.main.fragment_note_detail.*
@@ -30,13 +31,10 @@ class NoteDetailView : Fragment(), INoteDetailContract.View {
         }
     }
 
-    override fun showMessage(message: String) {
-        makeToast(message)
-    }
+    override fun showMessage(message: String) = makeToast(message)
 
-    override fun restartFeature() {
-        restartCurrentFeature()
-    }
+
+    override fun restartFeature() = restartCurrentFeature()
 
     override fun getNoteBody(): String {
         return edt_note_detail_text.text.toString()
