@@ -17,6 +17,7 @@ import com.wiseassblog.spacenotes.notedetail.NoteDetailLogic
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -99,7 +100,7 @@ class NoteDetailLogicTest {
 
     @BeforeEach
     fun clear() {
-        clearMocks()
+        clearAllMocks()
 
         every {
             dispatcher.provideUIContext()
@@ -386,6 +387,11 @@ class NoteDetailLogicTest {
         verify { vModel.setId("") }
         verify { view.getTime() }
         verify { view.hideBackButton() }
+        excludeRecords {
+            view.setBackgroundImage(any())
+            view.setDateLabel(any())
+            view.setNoteBody(any())
+        }
     }
 
     /**
@@ -422,6 +428,11 @@ class NoteDetailLogicTest {
         verify { vModel.setId("") }
         verify { view.getTime() }
         verify { view.hideBackButton() }
+        excludeRecords {
+            view.setBackgroundImage(any())
+            view.setDateLabel(any())
+            view.setNoteBody(any())
+        }
     }
 
     /**
@@ -460,6 +471,12 @@ class NoteDetailLogicTest {
         verify { vModel.setIsPrivateMode(true) }
         coVerify { auth.getCurrentUser(userLocator) }
         verify { vModel.setId(getNote().creationDate) }
+        coExcludeRecords {
+            anonymous.getNoteById(any(), any(), any())
+            view.setBackgroundImage(any())
+            view.setDateLabel(any())
+            view.setNoteBody(any())
+        }
     }
 
     /**
@@ -492,4 +509,32 @@ class NoteDetailLogicTest {
         verify { view.setDateLabel(getNote().creationDate) }
         verify { view.setNoteBody(getNote().contents) }
     }
+
+    @AfterEach
+    fun confirm() {
+        excludeRecords {
+            dispatcher.provideUIContext()
+
+            vModel.getNoteState()
+
+            vModel.setId(any())
+            vModel.getId()
+
+            vModel.setIsPrivateMode(any())
+            vModel.getIsPrivateMode()
+        }
+        confirmVerified(
+            dispatcher,
+            noteLocator,
+            userLocator,
+            navigator,
+            vModel,
+            view,
+            anonymous,
+            registered,
+            public,
+            auth
+        )
+    }
+
 }

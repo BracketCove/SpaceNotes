@@ -67,8 +67,10 @@ deps.firebase = firebase
 def test = [:]
 
 test.junit = "org.junit.jupiter:junit-jupiter-api:$versions.junit"
+test.jupiter_engine = "org.junit.jupiter:junit-jupiter-engine:$versions.junit"
+test.vintage_engine = "org.junit.vintage:junit-vintage-engine:$versions.junit"
 test.kotlin_junit = "org.jetbrains.kotlin:kotlin-test-junit:$versions.kotlin"
-test.mockk = "io.mockk:mockk:1.8.9.kotlin13"
+test.mockk = "io.mockk:mockk:1.9"
 deps.test = test
 
 def kotlin = [:]

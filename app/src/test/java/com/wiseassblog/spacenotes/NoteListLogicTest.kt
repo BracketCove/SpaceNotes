@@ -18,6 +18,7 @@ import com.wiseassblog.spacenotes.notelist.NoteListLogic
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import org.junit.After
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -95,7 +96,7 @@ class NoteListLogicTest {
 
     @BeforeEach
     fun build() {
-        clearMocks()
+        clearAllMocks()
         every { dispatcher.provideUIContext() } returns Dispatchers.Unconfined
     }
 
@@ -331,6 +332,24 @@ class NoteListLogicTest {
         verify { navigator.startNoteDetailFeatureWithExtras(getNote().creationDate, false) }
         verify { vModel.getAdapterState() }
         verify { vModel.getIsPrivateMode() }
+    }
+
+    @After
+    fun confirm() {
+        excludeRecords { dispatcher.provideUIContext() }
+        confirmVerified(
+            dispatcher,
+            noteLocator,
+            userLocator,
+            navigator,
+            vModel,
+            adapter,
+            view,
+            anonymous,
+            registered,
+            public,
+            auth
+        )
     }
 
 }

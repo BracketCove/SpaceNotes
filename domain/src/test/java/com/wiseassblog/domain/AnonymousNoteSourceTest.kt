@@ -9,6 +9,7 @@ import com.wiseassblog.domain.repository.ILocalNoteRepository
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -53,7 +54,7 @@ class AnonymousNoteSourceTest {
 
     @BeforeEach
     fun setUpRedundantMocks() {
-        clearMocks()
+        clearAllMocks()
         every { dispatcher.provideIOContext() } returns Dispatchers.Unconfined
     }
 
@@ -293,6 +294,15 @@ class AnonymousNoteSourceTest {
         coVerify { localNoteRepo.deleteNote(testNote) }
 
         assertTrue(result is Result.Error)
+    }
+
+    @AfterEach
+    fun confirm() {
+        confirmVerified(
+            dispatcher,
+            locator,
+            localNoteRepo
+        )
     }
 
 }
