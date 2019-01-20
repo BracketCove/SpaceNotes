@@ -9,6 +9,10 @@ apply plugin: 'kotlin-kapt'
 android {
     compileSdkVersion build_versions.target_sdk
 
+    lintOptions {
+        abortOnError false
+    }
+
     defaultConfig {
         minSdkVersion build_versions.min_sdk
         targetSdkVersion build_versions.target_sdk
@@ -35,6 +39,8 @@ android {
     }
 
     testOptions.unitTests.all {
+        useJUnitPlatform()
+
         testLogging {
             events 'passed', 'skipped', 'failed', 'standardOut', 'standardError'
         }
@@ -59,6 +65,8 @@ dependencies {
     kapt deps.room.compiler
 
     testImplementation deps.test.junit
+    testRuntimeOnly deps.test.jupiter_engine
+    testRuntimeOnly deps.test.vintage_engine
     testImplementation deps.test.mockk
     testImplementation deps.test.kotlin_junit
 }

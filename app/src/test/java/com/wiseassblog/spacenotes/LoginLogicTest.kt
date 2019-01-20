@@ -10,10 +10,10 @@ import com.wiseassblog.domain.domainmodel.User
 import com.wiseassblog.domain.error.SpaceNotesError
 import com.wiseassblog.domain.interactor.AuthSource
 import com.wiseassblog.spacenotes.login.*
-import com.wiseassblog.spacenotes.notelist.INoteListContract
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
@@ -57,7 +57,7 @@ class LoginLogicTest {
 
     @Before
     fun clear() {
-        clearMocks()
+        clearAllMocks()
 
         logic = LoginLogic(dispatcher, userLocator, navigator, view, auth)
 
@@ -317,6 +317,15 @@ class LoginLogicTest {
         verify { view.setLoginStatus(ERROR_AUTH) }
         verify { view.setStatusDrawable(ANTENNA_EMPTY) }
         verify { view.setAuthButton(RETRY) }
+    }
+
+    @After
+    fun confirm() {
+        excludeRecords {
+            dispatcher.provideUIContext()
+            testAccount.idToken
+        }
+        confirmVerified(dispatcher, userLocator, navigator, view, auth, testAccount)
     }
 
 }

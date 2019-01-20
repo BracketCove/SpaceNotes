@@ -9,6 +9,7 @@ import com.wiseassblog.domain.repository.IRemoteNoteRepository
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -63,7 +64,7 @@ class RegisteredNoteRepositoryTest {
 
     @BeforeEach
     fun setUpRedundantMocks() {
-        clearMocks()
+        clearAllMocks()
         every { dispatcher.provideIOContext() } returns Dispatchers.Unconfined
 
     }
@@ -313,5 +314,14 @@ class RegisteredNoteRepositoryTest {
         coVerify { remote.deleteNote(deleteTransaction.toNote) }
 
         assertTrue { result is Result.Error }
+    }
+
+    @AfterEach
+    fun confirm() {
+        confirmVerified(
+            dispatcher,
+            cache,
+            remote
+        )
     }
 }

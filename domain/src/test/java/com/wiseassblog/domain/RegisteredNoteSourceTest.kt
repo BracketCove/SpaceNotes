@@ -8,6 +8,7 @@ import com.wiseassblog.domain.repository.ITransactionRepository
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -74,7 +75,7 @@ class RegisteredNoteSourceTest {
 
     @BeforeEach
     fun setUpRedundantMocks() {
-        clearMocks()
+        clearAllMocks()
         every { dispatcher.provideIOContext() } returns Dispatchers.Unconfined
     }
 
@@ -419,4 +420,19 @@ class RegisteredNoteSourceTest {
 
         assertTrue { result is Result.Error }
     }
+
+    @AfterEach
+    fun confirm() {
+        excludeRecords {
+            locator.transactionReg
+            locator.remoteReg
+        }
+        confirmVerified(
+            dispatcher,
+            transactionRepository,
+            noteRepository,
+            locator
+        )
+    }
+
 }
