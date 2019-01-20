@@ -33,7 +33,6 @@ internal fun Fragment.makeToast(value: String) {
     Toast.makeText(activity, value, Toast.LENGTH_SHORT).show()
 }
 
-
 internal fun Fragment.restartCurrentFeature() {
     val i: Intent
     when (this) {

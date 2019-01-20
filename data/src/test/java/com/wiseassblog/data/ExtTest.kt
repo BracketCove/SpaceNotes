@@ -56,12 +56,11 @@ class ExtTest{
 
     @Test
     fun testExtensionFlatMap(){
-        val noteList = listOf<Note>(getNote(), getNote(), getNote())
-        val roomNoteList = listOf<AnonymousRoomNote>(getAnonymousRoomNote(), getAnonymousRoomNote(), getAnonymousRoomNote())
+        val roomNoteList = listOf<AnonymousRoomNote>(getAnonymousRoomNote(), getAnonymousRoomNote(), getAnonymousRoomNote(contents = "third"))
 
         val result = roomNoteList.toNoteListFromAnonymous()
 
-        assertTrue { result == noteList }
+        assertTrue { result.contains(getAnonymousRoomNote().toNote) }
 
     }
 }

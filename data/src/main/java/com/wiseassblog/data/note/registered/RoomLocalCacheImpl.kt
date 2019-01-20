@@ -9,19 +9,20 @@ import com.wiseassblog.domain.error.SpaceNotesError
 import com.wiseassblog.domain.repository.ILocalNoteRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 
 
 /**
  * This datasource is used by the RegisteredNoteRepository
  */
 class RoomLocalCacheImpl(private val noteDao: RegisteredNoteDao) : ILocalNoteRepository {
-    override suspend fun deleteAll(): Result<Exception, Unit> = runBlocking(Dispatchers.IO) {
+    override suspend fun deleteAll(): Result<Exception, Unit> = withContext(Dispatchers.IO) {
         noteDao.deleteAll()
 
         Result.build { Unit }
     }
 
-    override suspend fun updateAll(list: List<Note>): Result<Exception, Unit> = runBlocking(Dispatchers.IO) {
+    override suspend fun updateAll(list: List<Note>): Result<Exception, Unit> = withContext(Dispatchers.IO) {
         list.forEach {
             noteDao.insertOrUpdateNote(it.toRegisteredRoomNote)
         }
@@ -29,7 +30,7 @@ class RoomLocalCacheImpl(private val noteDao: RegisteredNoteDao) : ILocalNoteRep
         Result.build { Unit }
     }
 
-    override suspend fun updateNote(note: Note): Result<Exception, Unit> = runBlocking(Dispatchers.IO) {
+    override suspend fun updateNote(note: Note): Result<Exception, Unit> = withContext(Dispatchers.IO) {
         val updated = noteDao.insertOrUpdateNote(note.toRegisteredRoomNote)
 
         when {
@@ -39,17 +40,17 @@ class RoomLocalCacheImpl(private val noteDao: RegisteredNoteDao) : ILocalNoteRep
         }
     }
 
-    override suspend fun getNote(id: String): Result<Exception, Note?> = runBlocking(Dispatchers.IO) {
+    override suspend fun getNote(id: String): Result<Exception, Note?> = withContext(Dispatchers.IO) {
         Result.build { noteDao.getNoteById(id).toNote }
     }
 
 
-    override suspend fun getNotes(): Result<Exception, List<Note>> = runBlocking(Dispatchers.IO) {
+    override suspend fun getNotes(): Result<Exception, List<Note>> = withContext(Dispatchers.IO) {
         Result.build { noteDao.getNotes().toNoteListFromRegistered() }
     }
 
 
-    override suspend fun deleteNote(note: Note): Result<Exception, Unit> = runBlocking(Dispatchers.IO) {
+    override suspend fun deleteNote(note: Note): Result<Exception, Unit> = withContext(Dispatchers.IO) {
         noteDao.deleteNote(note.toRegisteredRoomNote)
         Result.build { Unit }
     }

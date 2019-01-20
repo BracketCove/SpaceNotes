@@ -202,7 +202,7 @@ class NoteListLogicTest {
     fun `On Start anonymous`() = runBlocking {
         every { vModel.getIsPrivateMode() } returns true
         every { vModel.getUserState() } returns null
-        coEvery { anonymous.getNotes(noteLocator, dispatcher) } returns Result.build { getNoteList }
+        coEvery { anonymous.getNotes(noteLocator) } returns Result.build { getNoteList }
 
         logic.event(NoteListEvent.OnStart)
 
@@ -210,7 +210,7 @@ class NoteListLogicTest {
         verify { vModel.getUserState() }
         verify { view.showList() }
         verify { adapter.submitList(getNoteList) }
-        coVerify { anonymous.getNotes(noteLocator, dispatcher) }
+        coVerify { anonymous.getNotes(noteLocator) }
     }
 
     /**
@@ -225,7 +225,7 @@ class NoteListLogicTest {
     fun `On Start Registered Private`() = runBlocking {
         every { vModel.getIsPrivateMode() } returns true
         every { vModel.getUserState() } returns getUser()
-        coEvery { registered.getNotes(noteLocator, dispatcher) } returns Result.build { getNoteList }
+        coEvery { registered.getNotes(noteLocator) } returns Result.build { getNoteList }
 
         logic.event(NoteListEvent.OnStart)
 
@@ -233,7 +233,7 @@ class NoteListLogicTest {
         verify { vModel.getUserState() }
         verify { view.showList() }
         verify { adapter.submitList(getNoteList) }
-        coVerify { registered.getNotes(noteLocator, dispatcher) }
+        coVerify { registered.getNotes(noteLocator) }
     }
 
     /**
@@ -243,7 +243,7 @@ class NoteListLogicTest {
     fun `On Start a with empty list`() = runBlocking {
         every { vModel.getIsPrivateMode() } returns true
         every { vModel.getUserState() } returns getUser()
-        coEvery { registered.getNotes(noteLocator, dispatcher) } returns Result.build { emptyList<Note>() }
+        coEvery { registered.getNotes(noteLocator) } returns Result.build { emptyList<Note>() }
 
         logic.event(NoteListEvent.OnStart)
 
@@ -251,7 +251,7 @@ class NoteListLogicTest {
         verify { vModel.getUserState() }
         verify { view.showEmptyState() }
         verify { adapter.submitList(emptyList<Note>()) }
-        coVerify { registered.getNotes(noteLocator, dispatcher) }
+        coVerify { registered.getNotes(noteLocator) }
     }
 
     /**
@@ -263,14 +263,14 @@ class NoteListLogicTest {
     @Test
     fun `On Start Public Mode`() = runBlocking {
         every { vModel.getIsPrivateMode() } returns false
-        coEvery { public.getNotes(noteLocator, dispatcher) } returns Result.build { getNoteList }
+        coEvery { public.getNotes(noteLocator) } returns Result.build { getNoteList }
 
         logic.event(NoteListEvent.OnStart)
 
         verify { vModel.getIsPrivateMode() }
         verify { view.showList() }
         verify { adapter.submitList(getNoteList) }
-        coVerify { public.getNotes(noteLocator, dispatcher) }
+        coVerify { public.getNotes(noteLocator) }
     }
 
 

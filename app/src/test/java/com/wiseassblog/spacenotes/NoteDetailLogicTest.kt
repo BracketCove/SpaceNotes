@@ -134,7 +134,7 @@ class NoteDetailLogicTest {
         } returns getNote()
 
         coEvery {
-            anonymous.updateNote(getNote(), noteLocator, dispatcher)
+            anonymous.updateNote(getNote(), noteLocator)
         } returns Result.build { Unit }
 
         coEvery {
@@ -149,7 +149,7 @@ class NoteDetailLogicTest {
         verify { view.getNoteBody() }
         verify { vModel.getNoteState() }
         coVerify { auth.getCurrentUser(userLocator) }
-        coVerify { anonymous.updateNote(getNote(), noteLocator, dispatcher) }
+        coVerify { anonymous.updateNote(getNote(), noteLocator) }
         verify { navigator.startListFeature() }
     }
 
@@ -172,7 +172,7 @@ class NoteDetailLogicTest {
         } returns getNote()
 
         coEvery {
-            registered.updateNote(getNote(), noteLocator, dispatcher)
+            registered.updateNote(getNote(), noteLocator)
         } returns Result.build { Unit }
 
         coEvery {
@@ -187,7 +187,7 @@ class NoteDetailLogicTest {
         verify { view.getNoteBody() }
         verify { vModel.getNoteState() }
         coVerify { auth.getCurrentUser(userLocator) }
-        coVerify { registered.updateNote(getNote(), noteLocator, dispatcher) }
+        coVerify { registered.updateNote(getNote(), noteLocator) }
         verify { navigator.startListFeature() }
     }
 
@@ -233,7 +233,7 @@ class NoteDetailLogicTest {
         } returns Result.build { null }
 
         coEvery {
-            anonymous.deleteNote(getNote(), noteLocator, dispatcher)
+            anonymous.deleteNote(getNote(), noteLocator)
         } returns Result.build { Unit }
 
         logic.event(NoteDetailEvent.OnDeleteConfirmed)
@@ -241,7 +241,7 @@ class NoteDetailLogicTest {
         verify { vModel.getNoteState() }
         verify { view.showMessage(MESSAGE_DELETE_SUCCESSFUL) }
         verify { navigator.startListFeature() }
-        coVerify { anonymous.deleteNote(getNote(), noteLocator, dispatcher) }
+        coVerify { anonymous.deleteNote(getNote(), noteLocator) }
         coVerify { auth.getCurrentUser(userLocator) }
     }
 
@@ -276,7 +276,7 @@ class NoteDetailLogicTest {
         } returns Result.build { getUser() }
 
         coEvery {
-            registered.deleteNote(getNote(), noteLocator, dispatcher)
+            registered.deleteNote(getNote(), noteLocator)
         } returns Result.build { Unit }
 
         logic.event(NoteDetailEvent.OnDeleteConfirmed)
@@ -284,7 +284,7 @@ class NoteDetailLogicTest {
         verify { vModel.getNoteState() }
         verify { view.showMessage(MESSAGE_DELETE_SUCCESSFUL) }
         verify { navigator.startListFeature() }
-        coVerify { registered.deleteNote(getNote(), noteLocator, dispatcher) }
+        coVerify { registered.deleteNote(getNote(), noteLocator) }
         coVerify { auth.getCurrentUser(userLocator) }
     }
 
@@ -460,7 +460,7 @@ class NoteDetailLogicTest {
         } returns Result.build { null }
 
         coEvery {
-            anonymous.getNoteById(getNote().creationDate, noteLocator, dispatcher)
+            anonymous.getNoteById(getNote().creationDate, noteLocator)
         } returns Result.build { getNote() }
 
         logic.event(NoteDetailEvent.OnBind)
@@ -472,7 +472,7 @@ class NoteDetailLogicTest {
         coVerify { auth.getCurrentUser(userLocator) }
         verify { vModel.setId(getNote().creationDate) }
         coExcludeRecords {
-            anonymous.getNoteById(any(), any(), any())
+            anonymous.getNoteById(any(), any())
             view.setBackgroundImage(any())
             view.setDateLabel(any())
             view.setNoteBody(any())

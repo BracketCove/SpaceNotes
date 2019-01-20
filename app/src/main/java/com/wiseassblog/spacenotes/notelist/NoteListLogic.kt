@@ -31,9 +31,11 @@ class NoteListLogic(dispatcher: DispatcherProvider,
         INoteListContract.Logic, CoroutineScope {
 
     init {
+        //This is directly analogous to CompositeDisposable
         jobTracker = Job()
     }
 
+    //dispatcher.provideUIContext is very analogous to observeOn(Dispatchers.UI)
     override val coroutineContext: CoroutineContext
         get() = dispatcher.provideUIContext() + jobTracker
 
@@ -52,10 +54,7 @@ class NoteListLogic(dispatcher: DispatcherProvider,
     private fun onNewNoteClick() = navigator.startNoteDetailFeatureWithExtras("", vModel.getIsPrivateMode())
 
     private fun onStart() {
-        //similar to CompositeDisposable from RxJava 2
-        jobTracker = Job()
         getListData(vModel.getIsPrivateMode())
-
     }
 
     fun getListData(isPrivateMode: Boolean) = launch {
@@ -78,12 +77,12 @@ class NoteListLogic(dispatcher: DispatcherProvider,
     }
 
     suspend fun getPublicListData(): Result<Exception, List<Note>> {
-        return publicNoteSource.getNotes(noteLocator, dispatcher)
+        return publicNoteSource.getNotes(noteLocator)
     }
 
     suspend fun getPrivateListData(): Result<Exception, List<Note>> {
-        return if (vModel.getUserState() == null) anonymousNoteSource.getNotes(noteLocator, dispatcher)
-        else registeredNoteSource.getNotes(noteLocator, dispatcher)
+        return if (vModel.getUserState() == null) anonymousNoteSource.getNotes(noteLocator)
+        else registeredNoteSource.getNotes(noteLocator)
     }
 
     fun renderView(list: List<Note>) {
@@ -104,7 +103,8 @@ class NoteListLogic(dispatcher: DispatcherProvider,
     private fun onNoteItemClick(position: Int) {
         val listData = vModel.getAdapterState()
 
-        navigator.startNoteDetailFeatureWithExtras(listData[position].creationDate, vModel.getIsPrivateMode())
+        navigator.startNoteDetailFeatureWithExtras(
+                listData[position].creationDate, vModel.getIsPrivateMode())
     }
 
 

@@ -64,7 +64,7 @@ class FirestoreRemoteNoteImpl(
 
     override suspend fun deleteNote(note: Note): Result<Exception, Unit> {
         return try {
-            awaitTaskResult(firestore.collection(COLLECTION_NAME)
+            awaitTaskCompletable(firestore.collection(COLLECTION_NAME)
                     .document(note.creationDate)
                     .delete()
             )

@@ -10,8 +10,6 @@ import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.NoteTransaction
 import com.wiseassblog.domain.domainmodel.TransactionType
 import com.wiseassblog.domain.domainmodel.User
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Deferred
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -26,7 +24,7 @@ suspend fun <T> awaitTaskResult(task: Task<T>): T = suspendCoroutine { continuat
         }
     }
 }
-
+//Wraps Firebase/GMS calls
 suspend fun <T> awaitTaskCompletable(task: Task<T>): Unit = suspendCoroutine { continuation ->
     task.addOnCompleteListener { task ->
         if (task.isSuccessful) {
@@ -140,7 +138,7 @@ internal val FirebaseNote.toNote: Note
             User(this.creator ?: "")
     )
 
-
+//Maps from lists of different Data Model types
 internal fun List<AnonymousRoomNote>.toNoteListFromAnonymous(): List<Note> = this.flatMap {
     listOf(it.toNote)
 }

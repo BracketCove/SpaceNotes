@@ -94,8 +94,6 @@ class LoginActivity : AppCompatActivity(), ILoginContract.View {
                         )
                 )
             }
-
         }
-
     }
 }

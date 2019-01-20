@@ -8,8 +8,7 @@ import com.wiseassblog.domain.repository.ITransactionRepository
 
 
 class RegisteredNoteSource {
-    suspend fun getNotes(locator: NoteServiceLocator,
-                         dispatcher: DispatcherProvider): Result<Exception, List<Note>> {
+    suspend fun getNotes(locator: NoteServiceLocator): Result<Exception, List<Note>> {
 
         val transactionResult = locator.transactionReg.getTransactions()
 
@@ -48,13 +47,11 @@ class RegisteredNoteSource {
     }
 
     suspend fun getNoteById(id: String,
-                            locator: NoteServiceLocator,
-                            dispatcher: DispatcherProvider):
+                            locator: NoteServiceLocator):
             Result<Exception, Note?> = locator.remoteReg.getNote(id)
 
     suspend fun updateNote(note: Note,
-                           locator: NoteServiceLocator,
-                           dispatcher: DispatcherProvider): Result<Exception, Unit> {
+                           locator: NoteServiceLocator): Result<Exception, Unit> {
         val remoteResult = locator.remoteReg.updateNote(note)
 
         if (remoteResult is Result.Value) return remoteResult
@@ -64,8 +61,7 @@ class RegisteredNoteSource {
     }
 
     suspend fun deleteNote(note: Note,
-                           locator: NoteServiceLocator,
-                           dispatcher: DispatcherProvider): Result<Exception, Unit> {
+                           locator: NoteServiceLocator): Result<Exception, Unit> {
         val remoteResult = locator.remoteReg.deleteNote(note)
 
         if (remoteResult is Result.Value) return remoteResult

@@ -54,6 +54,7 @@ class NoteListView : Fragment(), INoteListContract.View {
         satelliteLoop.stop()
     }
 
+    //Replace with channel/actor (which will ultimately be contained in the Logic class)
     lateinit var logic: INoteListContract.Logic
 
     override fun onStart() {

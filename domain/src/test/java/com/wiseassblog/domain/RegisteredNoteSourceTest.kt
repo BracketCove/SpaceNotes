@@ -115,7 +115,7 @@ class RegisteredNoteSourceTest {
             testNotes
         }
 
-        val result = source.getNotes(locator, dispatcher)
+        val result = source.getNotes(locator)
 
         coVerify { transactionRepository.getTransactions() }
         coVerify { noteRepository.getNotes() }
@@ -156,7 +156,7 @@ class RegisteredNoteSourceTest {
             Unit
         }
 
-        val result = source.getNotes(locator, dispatcher)
+        val result = source.getNotes(locator)
 
         coVerify { transactionRepository.getTransactions() }
         coVerify { noteRepository.synchronizeTransactions(testTransactions) }
@@ -189,7 +189,7 @@ class RegisteredNoteSourceTest {
             getNote()
         }
 
-        val result = source.getNoteById(testId, locator, dispatcher)
+        val result = source.getNoteById(testId, locator)
 
         coVerify { noteRepository.getNote(testId) }
 
@@ -214,7 +214,7 @@ class RegisteredNoteSourceTest {
             throw SpaceNotesError.RemoteIOException
         }
 
-        val result = source.getNoteById(testId, locator, dispatcher)
+        val result = source.getNoteById(testId, locator)
 
         coVerify { noteRepository.getNote(testId) }
 
@@ -243,7 +243,7 @@ class RegisteredNoteSourceTest {
             Unit
         }
 
-        val result = source.deleteNote(testNote, locator, dispatcher)
+        val result = source.deleteNote(testNote, locator)
 
         coVerify { noteRepository.deleteNote(testNote) }
 
@@ -278,7 +278,7 @@ class RegisteredNoteSourceTest {
             Unit
         }
 
-        val result = source.deleteNote(testNote, locator, dispatcher)
+        val result = source.deleteNote(testNote, locator)
 
         coVerify { noteRepository.deleteNote(testNote) }
         coVerify { transactionRepository.updateTransactions(testTransaction) }
@@ -314,7 +314,7 @@ class RegisteredNoteSourceTest {
             throw SpaceNotesError.TransactionIOException
         }
 
-        val result = source.deleteNote(testNote, locator, dispatcher)
+        val result = source.deleteNote(testNote, locator)
 
         coVerify { noteRepository.deleteNote(testNote) }
         coVerify { transactionRepository.updateTransactions(testTransaction) }
@@ -344,7 +344,7 @@ class RegisteredNoteSourceTest {
             Unit
         }
 
-        val result = source.updateNote(testNote, locator, dispatcher)
+        val result = source.updateNote(testNote, locator)
 
         coVerify { noteRepository.updateNote(testNote) }
 
@@ -378,7 +378,7 @@ class RegisteredNoteSourceTest {
             Unit
         }
 
-        val result = source.updateNote(testNote, locator, dispatcher)
+        val result = source.updateNote(testNote, locator)
 
         coVerify { noteRepository.updateNote(testNote) }
         coVerify { transactionRepository.updateTransactions(testTransaction) }
@@ -413,7 +413,7 @@ class RegisteredNoteSourceTest {
             throw SpaceNotesError.TransactionIOException
         }
 
-        val result = source.updateNote(testNote, locator, dispatcher)
+        val result = source.updateNote(testNote, locator)
 
         coVerify { noteRepository.updateNote(testNote) }
         coVerify { transactionRepository.updateTransactions(testTransaction) }

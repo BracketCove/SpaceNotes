@@ -1,13 +1,17 @@
 package com.wiseassblog.data.auth
 
+import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+import com.wiseassblog.data.awaitTaskCompletable
 import com.wiseassblog.data.awaitTaskResult
 import com.wiseassblog.data.defaultIfEmpty
 import com.wiseassblog.domain.domainmodel.Result
 import com.wiseassblog.domain.domainmodel.User
 import com.wiseassblog.domain.error.SpaceNotesError
 import com.wiseassblog.domain.repository.IAuthRepository
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Dispatchers.Main
 
 class FirebaseAuthRepositoryImpl(val auth: FirebaseAuth = FirebaseAuth.getInstance()) : IAuthRepository {
 
@@ -15,7 +19,9 @@ class FirebaseAuthRepositoryImpl(val auth: FirebaseAuth = FirebaseAuth.getInstan
             Result<Exception, Unit> {
         try {
             val credential = GoogleAuthProvider.getCredential(idToken, null)
-            awaitTaskResult(auth.signInWithCredential(credential))
+            awaitTaskCompletable(auth.signInWithCredential(credential))
+
+            Tasks.await(auth.signInWithCredential(credential))
 
             return Result.build { Unit }
         } catch (e: Exception) {
@@ -34,7 +40,7 @@ class FirebaseAuthRepositoryImpl(val auth: FirebaseAuth = FirebaseAuth.getInstan
         return try {
             val user = auth.currentUser ?: throw SpaceNotesError.AuthError
 
-            awaitTaskResult(user.delete())
+            awaitTaskCompletable(user.delete())
             Result.build { true }
         } catch (exception: Exception) {
             Result.build { throw exception }

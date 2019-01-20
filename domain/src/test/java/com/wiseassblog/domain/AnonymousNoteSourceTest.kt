@@ -81,7 +81,7 @@ class AnonymousNoteSourceTest {
         coEvery { localNoteRepo.getNotes() } returns Result.build { testList }
 
         //2 Call the Unit to be tested
-        val result: Result<Exception, List<Note>> = anonSource.getNotes(locator, dispatcher)
+        val result: Result<Exception, List<Note>> = anonSource.getNotes(locator)
 
         //3 Verify behaviour and state
         verify { dispatcher.provideIOContext() }
@@ -105,7 +105,7 @@ class AnonymousNoteSourceTest {
         coEvery { localNoteRepo.getNotes() } returns Result.build { throw SpaceNotesError.LocalIOException }
 
         //2 Call the Unit to be tested
-        val result: Result<Exception, List<Note>> = anonSource.getNotes(locator, dispatcher)
+        val result: Result<Exception, List<Note>> = anonSource.getNotes(locator)
 
         //3 Verify behaviour and state
         verify { dispatcher.provideIOContext() }
@@ -136,8 +136,7 @@ class AnonymousNoteSourceTest {
         //2 Call the Unit to be tested
         val result: Result<Exception, Note?> = anonSource.getNoteById(
                 testNote.creationDate,
-                locator,
-                dispatcher
+                locator
         )
 
         //3 Verify behaviour and state
@@ -162,7 +161,7 @@ class AnonymousNoteSourceTest {
         coEvery { localNoteRepo.getNote(testId) } returns Result.build { throw SpaceNotesError.LocalIOException }
 
         //2 Call the Unit to be tested
-        val result: Result<Exception, Note?> = anonSource.getNoteById(testId, locator, dispatcher)
+        val result: Result<Exception, Note?> = anonSource.getNoteById(testId, locator)
 
         //3 Verify behaviour and state
         verify { dispatcher.provideIOContext() }
@@ -192,8 +191,7 @@ class AnonymousNoteSourceTest {
         //2 Call the Unit to be tested
         val result: Result<Exception, Unit> = anonSource.updateNote(
                 testNote,
-                locator,
-                dispatcher
+                locator
         )
 
         //3 Verify behaviour and state
@@ -222,8 +220,7 @@ class AnonymousNoteSourceTest {
         //2 Call the Unit to be tested
         val result: Result<Exception, Unit> = anonSource.updateNote(
                 testNote,
-                locator,
-                dispatcher
+                locator
         )
 
         //3 Verify behaviour and state
@@ -254,8 +251,7 @@ class AnonymousNoteSourceTest {
         //2 Call the Unit to be tested
         val result: Result<Exception, Unit> = anonSource.deleteNote(
                 testNote,
-                locator,
-                dispatcher
+                locator
         )
 
         //3 Verify behaviour and state
@@ -284,8 +280,7 @@ class AnonymousNoteSourceTest {
         //2 Call the Unit to be tested
         val result: Result<Exception, Unit> = anonSource.deleteNote(
                 testNote,
-                locator,
-                dispatcher
+                locator
         )
 
         //3 Verify behaviour and state
