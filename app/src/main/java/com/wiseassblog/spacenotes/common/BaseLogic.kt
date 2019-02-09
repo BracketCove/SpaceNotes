@@ -4,7 +4,7 @@ import com.wiseassblog.domain.DispatcherProvider
 import kotlinx.coroutines.Job
 
 /**
- * Why use a base class? To both share implementation (properties and functions), and enforce a contract (interface) for all logic classes
+ * Why use a base class? To both share implementation (properties and functions), and enforce a contract (interface) for all listener classes
  */
 abstract class BaseLogic(val dispatcher: DispatcherProvider) {
 

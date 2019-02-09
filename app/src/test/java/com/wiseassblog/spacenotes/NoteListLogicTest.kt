@@ -6,10 +6,12 @@ import com.wiseassblog.domain.UserServiceLocator
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.Result
 import com.wiseassblog.domain.domainmodel.User
+import com.wiseassblog.domain.error.SpaceNotesError
 import com.wiseassblog.domain.interactor.AnonymousNoteSource
 import com.wiseassblog.domain.interactor.AuthSource
 import com.wiseassblog.domain.interactor.PublicNoteSource
 import com.wiseassblog.domain.interactor.RegisteredNoteSource
+import com.wiseassblog.spacenotes.common.MESSAGE_GENERIC_ERROR
 import com.wiseassblog.spacenotes.common.MODE_PRIVATE
 import com.wiseassblog.spacenotes.notelist.INoteListContract
 import com.wiseassblog.spacenotes.notelist.NoteListAdapter
@@ -21,6 +23,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import kotlin.text.Typography.registered
 
 class NoteListLogicTest {
 
@@ -29,8 +32,6 @@ class NoteListLogicTest {
     private val noteLocator: NoteServiceLocator = mockk()
 
     private val userLocator: UserServiceLocator = mockk()
-
-    private val navigator: INoteListContract.Navigator = mockk(relaxed = true)
 
     private val vModel: INoteListContract.ViewModel = mockk(relaxed = true)
 
@@ -51,7 +52,6 @@ class NoteListLogicTest {
             dispatcher,
             noteLocator,
             userLocator,
-            navigator,
             vModel,
             adapter,
             view,
@@ -117,10 +117,10 @@ class NoteListLogicTest {
         every { vModel.getIsPrivateMode() } returns true
 
         //call the unit to be tested
-        logic.event(NoteListEvent.OnNewNoteClick)
+        logic.onChanged(NoteListEvent.OnNewNoteClick)
 
         //verify interactions and state if necessary
-        verify { navigator.startNoteDetailFeatureWithExtras("", true) }
+        verify { view.startNoteDetailFeatureWithExtras("", true) }
     }
 
     /**
@@ -134,10 +134,10 @@ class NoteListLogicTest {
         every { vModel.getIsPrivateMode() } returns false
 
         //call the unit to be tested
-        logic.event(NoteListEvent.OnNewNoteClick)
+        logic.onChanged(NoteListEvent.OnNewNoteClick)
 
         //verify interactions and state if necessary
-        verify { navigator.startNoteDetailFeatureWithExtras("", false) }
+        verify { view.startNoteDetailFeatureWithExtras("", false) }
     }
 
     /**
@@ -158,14 +158,14 @@ class NoteListLogicTest {
 
         coEvery { auth.getCurrentUser(userLocator) } returns Result.build { null }
 
-        logic.event(NoteListEvent.OnBind)
+        logic.onChanged(NoteListEvent.OnBind)
 
         coVerify { auth.getCurrentUser(userLocator) }
         verify { vModel.setUserState(null) }
         verify { view.showLoadingView() }
         verify { view.setToolbarTitle(MODE_PRIVATE) }
         verify { view.setAdapter(adapter) }
-        verify { adapter.logic = logic }
+        verify { adapter.setObserver(logic) }
 
     }
 
@@ -174,14 +174,28 @@ class NoteListLogicTest {
 
         coEvery { auth.getCurrentUser(userLocator) } returns Result.build { getUser() }
 
-        logic.event(NoteListEvent.OnBind)
+        logic.onChanged(NoteListEvent.OnBind)
 
         coVerify { auth.getCurrentUser(userLocator) }
         verify { vModel.setUserState(getUser()) }
         verify { view.showLoadingView() }
         verify { view.setAdapter(adapter) }
         verify { view.setToolbarTitle(MODE_PRIVATE) }
-        verify { adapter.logic = logic }
+        verify { adapter.setObserver(logic) }
+    }
+
+    @Test
+    fun `On bind error retrieving user`() = runBlocking {
+
+        coEvery { auth.getCurrentUser(userLocator) } returns Result.build { throw SpaceNotesError.AuthError }
+
+        logic.onChanged(NoteListEvent.OnBind)
+
+        coVerify { auth.getCurrentUser(userLocator) }
+        verify { view.showLoadingView() }
+        verify { view.setToolbarTitle(MODE_PRIVATE) }
+        verify { view.setAdapter(adapter) }
+        verify { adapter.setObserver(logic) }
     }
 
     /**
@@ -204,7 +218,7 @@ class NoteListLogicTest {
         every { vModel.getUserState() } returns null
         coEvery { anonymous.getNotes(noteLocator) } returns Result.build { getNoteList }
 
-        logic.event(NoteListEvent.OnStart)
+        logic.onChanged(NoteListEvent.OnStart)
 
         verify { vModel.getIsPrivateMode() }
         verify { vModel.getUserState() }
@@ -227,12 +241,35 @@ class NoteListLogicTest {
         every { vModel.getUserState() } returns getUser()
         coEvery { registered.getNotes(noteLocator) } returns Result.build { getNoteList }
 
-        logic.event(NoteListEvent.OnStart)
+        logic.onChanged(NoteListEvent.OnStart)
 
         verify { vModel.getIsPrivateMode() }
         verify { vModel.getUserState() }
         verify { view.showList() }
         verify { adapter.submitList(getNoteList) }
+        coVerify { registered.getNotes(noteLocator) }
+    }
+
+    /**
+     * error:
+     *1. Check isPrivate status: false
+     *2. Check login status in backend if necessary
+     *3. parse datasources accordingly
+     *4. draw view accordingly
+     *
+     */
+    @Test
+    fun `On Start Error`() = runBlocking {
+        every { vModel.getIsPrivateMode() } returns true
+        every { vModel.getUserState() } returns getUser()
+        coEvery { registered.getNotes(noteLocator) } returns Result.build { throw SpaceNotesError.RemoteIOException }
+
+        logic.onChanged(NoteListEvent.OnStart)
+
+        verify { vModel.getIsPrivateMode() }
+        verify { vModel.getUserState() }
+        verify { view.showEmptyState() }
+        verify { view.showErrorState(MESSAGE_GENERIC_ERROR) }
         coVerify { registered.getNotes(noteLocator) }
     }
 
@@ -245,7 +282,7 @@ class NoteListLogicTest {
         every { vModel.getUserState() } returns getUser()
         coEvery { registered.getNotes(noteLocator) } returns Result.build { emptyList<Note>() }
 
-        logic.event(NoteListEvent.OnStart)
+        logic.onChanged(NoteListEvent.OnStart)
 
         verify { vModel.getIsPrivateMode() }
         verify { vModel.getUserState() }
@@ -265,7 +302,7 @@ class NoteListLogicTest {
         every { vModel.getIsPrivateMode() } returns false
         coEvery { public.getNotes(noteLocator) } returns Result.build { getNoteList }
 
-        logic.event(NoteListEvent.OnStart)
+        logic.onChanged(NoteListEvent.OnStart)
 
         verify { vModel.getIsPrivateMode() }
         verify { view.showList() }
@@ -282,9 +319,9 @@ class NoteListLogicTest {
     @Test
     fun `On Login Click `() {
 
-        logic.event(NoteListEvent.OnLoginClick)
+        logic.onChanged(NoteListEvent.OnLoginClick)
 
-        verify { navigator.startLoginFeature() }
+        verify { view.startLoginFeature() }
     }
 
     /**
@@ -304,9 +341,9 @@ class NoteListLogicTest {
         //auth selects first item in adapter
         val clickEvent = NoteListEvent.OnNoteItemClick(0)
 
-        logic.event(clickEvent)
+        logic.onChanged(clickEvent)
 
-        verify { navigator.startNoteDetailFeatureWithExtras(getNote().creationDate, true) }
+        verify { view.startNoteDetailFeatureWithExtras(getNote().creationDate, true) }
         verify { vModel.getAdapterState() }
         verify { vModel.getIsPrivateMode() }
     }
@@ -327,9 +364,9 @@ class NoteListLogicTest {
         //auth selects first item in adapter
         val clickEvent = NoteListEvent.OnNoteItemClick(0)
 
-        logic.event(clickEvent)
+        logic.onChanged(clickEvent)
 
-        verify { navigator.startNoteDetailFeatureWithExtras(getNote().creationDate, false) }
+        verify { view.startNoteDetailFeatureWithExtras(getNote().creationDate, false) }
         verify { vModel.getAdapterState() }
         verify { vModel.getIsPrivateMode() }
     }
@@ -338,17 +375,16 @@ class NoteListLogicTest {
     fun confirm() {
         excludeRecords { dispatcher.provideUIContext() }
         confirmVerified(
-            dispatcher,
-            noteLocator,
-            userLocator,
-            navigator,
-            vModel,
-            adapter,
-            view,
-            anonymous,
-            registered,
-            public,
-            auth
+                dispatcher,
+                noteLocator,
+                userLocator,
+                vModel,
+                adapter,
+                view,
+                anonymous,
+                registered,
+                public,
+                auth
         )
     }
 

@@ -1,6 +1,8 @@
 package com.wiseassblog.spacenotes.notedetail.buildlogic
 
+import android.app.Application
 import android.content.Context
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModelProviders
 import com.google.firebase.FirebaseApp
 import com.wiseassblog.data.auth.FirebaseAuthRepositoryImpl
@@ -22,22 +24,26 @@ import com.wiseassblog.domain.repository.ILocalNoteRepository
 import com.wiseassblog.domain.repository.IRemoteNoteRepository
 import com.wiseassblog.domain.repository.ITransactionRepository
 import com.wiseassblog.spacenotes.notedetail.*
+import com.wiseassblog.spacenotes.notelist.NoteListLogic
 
-class NoteDetailInjector(private val activityContext: Context) {
+/**
+ *
+ */
+class NoteDetailInjector(application: Application) : AndroidViewModel(application) {
     init {
-        FirebaseApp.initializeApp(activityContext)
+        FirebaseApp.initializeApp(application)
     }
 
     private val anonNoteDao: AnonymousNoteDao by lazy {
-        AnonymousNoteDatabase.getInstance(activityContext).roomNoteDao()
+        AnonymousNoteDatabase.getInstance(getApplication()).roomNoteDao()
     }
 
     private val regNoteDao: RegisteredNoteDao by lazy {
-        RegisteredNoteDatabase.getInstance(activityContext).roomNoteDao()
+        RegisteredNoteDatabase.getInstance(getApplication()).roomNoteDao()
     }
 
     private val transactionDao: RegisteredTransactionDao by lazy {
-        RoomRegisteredTransactionDatabase.getInstance(activityContext).roomTransactionDao()
+        RoomRegisteredTransactionDatabase.getInstance(getApplication()).roomTransactionDao()
     }
 
     //For non-registered user persistence
@@ -71,15 +77,16 @@ class NoteDetailInjector(private val activityContext: Context) {
         FirebaseAuthRepositoryImpl()
     }
 
-    fun provideNoteDetailLogic(view: NoteDetailView,
-                               id: String,
-                               isPrivate: Boolean): INoteDetailContract.Logic {
-        return NoteDetailLogic(
+    private lateinit var logic: NoteDetailLogic
+
+    fun buildNoteDetailLogic(view: NoteDetailView,
+                             id: String,
+                             isPrivate: Boolean): NoteDetailLogic {
+        logic = NoteDetailLogic(
                 DispatcherProvider,
                 NoteServiceLocator(localAnon, remoteRepo, transactionReg),
                 UserServiceLocator(auth),
-                NoteDetailNavigator(activityContext as NoteDetailActivity),
-                ViewModelProviders.of(activityContext)
+                ViewModelProviders.of(view)
                         .get(NoteDetailViewModel::class.java),
                 view,
                 AnonymousNoteSource(),
@@ -89,5 +96,9 @@ class NoteDetailInjector(private val activityContext: Context) {
                 id,
                 isPrivate
         )
+
+        view.setObserver(logic)
+
+        return logic
     }
 }

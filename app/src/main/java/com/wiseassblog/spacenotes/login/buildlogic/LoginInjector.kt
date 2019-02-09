@@ -1,6 +1,7 @@
 package com.wiseassblog.spacenotes.login.buildlogic
 
-import android.content.Context
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import com.google.firebase.FirebaseApp
 import com.wiseassblog.data.auth.FirebaseAuthRepositoryImpl
 import com.wiseassblog.domain.DispatcherProvider
@@ -10,11 +11,10 @@ import com.wiseassblog.domain.repository.IAuthRepository
 import com.wiseassblog.spacenotes.login.ILoginContract
 import com.wiseassblog.spacenotes.login.LoginActivity
 import com.wiseassblog.spacenotes.login.LoginLogic
-import com.wiseassblog.spacenotes.login.LoginNavigator
 
-class LoginInjector(activityContext: Context) {
+class LoginInjector(application: Application) : AndroidViewModel(application) {
     init {
-        FirebaseApp.initializeApp(activityContext)
+        FirebaseApp.initializeApp(application)
     }
 
     //For user management
@@ -22,13 +22,11 @@ class LoginInjector(activityContext: Context) {
         FirebaseAuthRepositoryImpl()
     }
 
-    fun provideLoginLogic(view: LoginActivity): ILoginContract.Logic {
-        return LoginLogic(
-                DispatcherProvider,
-                UserServiceLocator(auth),
-                LoginNavigator(view),
-                view,
-                AuthSource()
-        )
-    }
+
+    fun buildLoginLogic(view: LoginActivity): LoginLogic = LoginLogic(
+            DispatcherProvider,
+            UserServiceLocator(auth),
+            view,
+            AuthSource()
+    ).also { view.setObserver(it) }
 }

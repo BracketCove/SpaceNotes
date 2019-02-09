@@ -3,6 +3,7 @@ package com.wiseassblog.spacenotes.notelist
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProviders
 import com.wiseassblog.spacenotes.R
 import com.wiseassblog.spacenotes.common.attachFragment
 import com.wiseassblog.spacenotes.notelist.buildlogic.NoteListInjector
@@ -17,11 +18,13 @@ class NoteListActivity : AppCompatActivity() {
         setContentView(R.layout.activity_note_list)
 
 
-        val view = this.supportFragmentManager.findFragmentByTag(VIEW) as Fragment?
-                ?: NoteListView.newInstance(
-                        NoteListInjector(this)
-                )
+        val view = this.supportFragmentManager.findFragmentByTag(VIEW)
+                ?: NoteListView.newInstance()
 
         attachFragment(supportFragmentManager, R.id.root_activity_list, view, VIEW)
+
+        NoteListInjector(application)
+                .buildNoteListLogic(view as NoteListView)
+
     }
 }

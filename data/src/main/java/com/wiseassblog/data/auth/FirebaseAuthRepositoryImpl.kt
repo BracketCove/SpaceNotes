@@ -4,28 +4,27 @@ import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.wiseassblog.data.awaitTaskCompletable
-import com.wiseassblog.data.awaitTaskResult
 import com.wiseassblog.data.defaultIfEmpty
 import com.wiseassblog.domain.domainmodel.Result
 import com.wiseassblog.domain.domainmodel.User
 import com.wiseassblog.domain.error.SpaceNotesError
 import com.wiseassblog.domain.repository.IAuthRepository
-import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class FirebaseAuthRepositoryImpl(val auth: FirebaseAuth = FirebaseAuth.getInstance()) : IAuthRepository {
 
     override suspend fun createGoogleUser(idToken: String):
-            Result<Exception, Unit> {
+            Result<Exception, Unit> = withContext(Dispatchers.IO) {
         try {
             val credential = GoogleAuthProvider.getCredential(idToken, null)
             awaitTaskCompletable(auth.signInWithCredential(credential))
 
             Tasks.await(auth.signInWithCredential(credential))
 
-            return Result.build { Unit }
+            Result.build { Unit }
         } catch (e: Exception) {
-            return Result.build { throw e }
+            Result.build { throw e }
         }
     }
 

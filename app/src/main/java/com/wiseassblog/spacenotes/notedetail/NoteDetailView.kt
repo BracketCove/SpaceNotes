@@ -7,15 +7,25 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
 import com.google.android.material.snackbar.Snackbar
 import com.wiseassblog.spacenotes.R
 import com.wiseassblog.spacenotes.R.id.*
 import com.wiseassblog.spacenotes.common.*
 import com.wiseassblog.spacenotes.notedetail.buildlogic.NoteDetailInjector
+import com.wiseassblog.spacenotes.notelist.NoteListEvent
 import kotlinx.android.synthetic.main.fragment_note_detail.*
 
 
 class NoteDetailView : Fragment(), INoteDetailContract.View {
+
+    val event = MutableLiveData<NoteDetailEvent>()
+
+    override fun setObserver(observer: Observer<NoteDetailEvent>) = event.observeForever(observer)
+
+    override fun startListFeature() = com.wiseassblog.spacenotes.common.startListFeature(this.activity)
+
     override fun hideBackButton() {
         imb_toolbar_back.visibility = View.INVISIBLE
         imb_toolbar_back.isEnabled = false
@@ -26,7 +36,7 @@ class NoteDetailView : Fragment(), INoteDetailContract.View {
     override fun showConfirmDeleteSnackbar() {
         if (activity != null) {
             Snackbar.make(frag_note_detail, MESSAGE_DELETE_CONFIRMATION, Snackbar.LENGTH_LONG)
-                    .setAction(MESSAGE_DELETE) { logic.event(NoteDetailEvent.OnDeleteConfirmed) }
+                    .setAction(MESSAGE_DELETE) { event.value = NoteDetailEvent.OnDeleteConfirmed }
                     .show()
         }
     }
@@ -58,15 +68,13 @@ class NoteDetailView : Fragment(), INoteDetailContract.View {
         edt_note_detail_text.text = content.toEditable()
     }
 
-    lateinit var logic: INoteDetailContract.Logic
-
     override fun onStart() {
         super.onStart()
-        logic.event(NoteDetailEvent.OnBind)
+        event.value = NoteDetailEvent.OnBind
     }
 
     override fun onDestroy() {
-        logic.event(NoteDetailEvent.OnDestroy)
+        event.value = NoteDetailEvent.OnDestroy
         super.onDestroy()
     }
 
@@ -84,9 +92,9 @@ class NoteDetailView : Fragment(), INoteDetailContract.View {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
-        imb_toolbar_done.setOnClickListener { logic.event(NoteDetailEvent.OnDoneClick) }
-        imb_toolbar_back.setOnClickListener { logic.event(NoteDetailEvent.OnBackClick) }
-        imb_toolbar_delete.setOnClickListener { logic.event(NoteDetailEvent.OnDeleteClick) }
+        imb_toolbar_done.setOnClickListener { event.value = NoteDetailEvent.OnDoneClick }
+        imb_toolbar_back.setOnClickListener { event.value = NoteDetailEvent.OnBackClick }
+        imb_toolbar_delete.setOnClickListener { event.value = NoteDetailEvent.OnDeleteClick }
 
         val spaceLoop = frag_note_detail.background as AnimationDrawable
         spaceLoop.setEnterFadeDuration(1000)
@@ -99,12 +107,7 @@ class NoteDetailView : Fragment(), INoteDetailContract.View {
 
     companion object {
         @JvmStatic
-        fun newInstance(injector: NoteDetailInjector, id: String, isPrivate: Boolean) =
-                NoteDetailView().setLogic(injector, id, isPrivate)
-    }
-
-    private fun setLogic(injector: NoteDetailInjector, id: String, isPrivate: Boolean): Fragment {
-        logic = injector.provideNoteDetailLogic(this, id, isPrivate)
-        return this
+        fun newInstance() =
+                NoteDetailView()
     }
 }

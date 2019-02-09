@@ -34,14 +34,11 @@ class NoteDetailActivity : AppCompatActivity() {
         val isPrivate = i.getBooleanExtra(BOOLEAN_EXTRA_IS_PRIVATE, true)
 
         val view = this.supportFragmentManager.findFragmentByTag(VIEW) as NoteDetailView?
-                ?: NoteDetailView.newInstance(
-                        NoteDetailInjector(this),
-                        noteId,
-                        isPrivate
-                )
-
-
+                ?: NoteDetailView.newInstance()
 
         attachFragment(supportFragmentManager, R.id.root_activity_detail, view, VIEW)
+
+        NoteDetailInjector(application)
+                .buildNoteDetailLogic(view as NoteDetailView, noteId, isPrivate)
     }
 }

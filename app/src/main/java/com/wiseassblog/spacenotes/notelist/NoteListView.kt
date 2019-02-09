@@ -7,14 +7,28 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.ListAdapter
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.spacenotes.R
+import com.wiseassblog.spacenotes.R.id.*
+import com.wiseassblog.spacenotes.common.makeToast
 import com.wiseassblog.spacenotes.notelist.buildlogic.NoteListInjector
 import kotlinx.android.synthetic.main.fragment_note_list.*
 
 
 class NoteListView : Fragment(), INoteListContract.View {
+    val event = MutableLiveData<NoteListEvent<Int>>()
+
+    //Event listener
+    override fun setObserver(observer: Observer<NoteListEvent<Int>>) = event.observeForever(observer)
+
+    override fun showErrorState(message: String) = this.makeToast(message)
+
+    override fun startLoginFeature() = com.wiseassblog.spacenotes.common.startLoginFeature(this.activity)
+
+    override fun startNoteDetailFeatureWithExtras(noteId: String, isPrivate: Boolean) = com.wiseassblog.spacenotes.common.startNoteDetailFeatureWithExtras(this.activity, noteId, isPrivate)
 
     override fun setToolbarTitle(title: String) {
         lbl_toolbar_title.text = title
@@ -54,17 +68,19 @@ class NoteListView : Fragment(), INoteListContract.View {
         satelliteLoop.stop()
     }
 
-    //Replace with channel/actor (which will ultimately be contained in the Logic class)
-    lateinit var logic: INoteListContract.Logic
 
     override fun onStart() {
         super.onStart()
-        logic.event(NoteListEvent.OnStart)
+        event.value = NoteListEvent.OnBind
+    }
 
+    override fun onResume() {
+        super.onResume()
+        event.value = NoteListEvent.OnStart
     }
 
     override fun onDestroy() {
-        logic.event(NoteListEvent.OnDestroy)
+        event.value = NoteListEvent.OnDestroy
         super.onDestroy()
     }
 
@@ -81,10 +97,10 @@ class NoteListView : Fragment(), INoteListContract.View {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        logic.event(NoteListEvent.OnBind)
+        event.value = NoteListEvent.OnBind
 
-        imv_toolbar_auth.setOnClickListener { logic.event((NoteListEvent.OnLoginClick)) }
-        fab_create_new_item.setOnClickListener { logic.event(NoteListEvent.OnNewNoteClick) }
+        imv_toolbar_auth.setOnClickListener { event.value = NoteListEvent.OnLoginClick }
+        fab_create_new_item.setOnClickListener { event.value = NoteListEvent.OnNewNoteClick }
 
         val spaceLoop = imv_space_background.drawable as AnimationDrawable
         spaceLoop.setEnterFadeDuration(1000)
@@ -95,12 +111,9 @@ class NoteListView : Fragment(), INoteListContract.View {
 
     companion object {
         @JvmStatic
-        fun newInstance(injector: NoteListInjector): Fragment = NoteListView()
-                .setLogic(injector)
+        fun newInstance(): Fragment = NoteListView()
     }
 
-    private fun setLogic(injector: NoteListInjector): Fragment {
-        logic = injector.provideNoteListLogic(this)
-        return this
-    }
+
+
 }

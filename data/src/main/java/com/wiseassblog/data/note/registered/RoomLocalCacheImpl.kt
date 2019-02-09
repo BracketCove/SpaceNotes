@@ -5,10 +5,8 @@ import com.wiseassblog.data.toNoteListFromRegistered
 import com.wiseassblog.data.toRegisteredRoomNote
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.Result
-import com.wiseassblog.domain.error.SpaceNotesError
 import com.wiseassblog.domain.repository.ILocalNoteRepository
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 
 
@@ -31,13 +29,9 @@ class RoomLocalCacheImpl(private val noteDao: RegisteredNoteDao) : ILocalNoteRep
     }
 
     override suspend fun updateNote(note: Note): Result<Exception, Unit> = withContext(Dispatchers.IO) {
-        val updated = noteDao.insertOrUpdateNote(note.toRegisteredRoomNote)
+        noteDao.insertOrUpdateNote(note.toRegisteredRoomNote)
 
-        when {
-            //TODO verify that if nothing is updated, the resulting value will be 0
-            updated == 0L -> Result.build { throw SpaceNotesError.LocalIOException }
-            else -> Result.build { Unit }
-        }
+        Result.build { Unit }
     }
 
     override suspend fun getNote(id: String): Result<Exception, Note?> = withContext(Dispatchers.IO) {

@@ -1,6 +1,7 @@
 package com.wiseassblog.spacenotes.notelist.buildlogic
 
-import android.content.Context
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModelProviders
 import com.google.firebase.FirebaseApp
 import com.wiseassblog.data.auth.FirebaseAuthRepositoryImpl
@@ -21,23 +22,26 @@ import com.wiseassblog.domain.repository.IAuthRepository
 import com.wiseassblog.domain.repository.ILocalNoteRepository
 import com.wiseassblog.domain.repository.IRemoteNoteRepository
 import com.wiseassblog.domain.repository.ITransactionRepository
-import com.wiseassblog.spacenotes.notelist.*
+import com.wiseassblog.spacenotes.notelist.NoteListAdapter
+import com.wiseassblog.spacenotes.notelist.NoteListLogic
+import com.wiseassblog.spacenotes.notelist.NoteListView
+import com.wiseassblog.spacenotes.notelist.NoteListViewModel
 
-class NoteListInjector(private val activityContext: Context) {
+class NoteListInjector(application: Application) : AndroidViewModel(application) {
     init {
-        FirebaseApp.initializeApp(activityContext)
+        FirebaseApp.initializeApp(application)
     }
 
     private val anonNoteDao: AnonymousNoteDao by lazy {
-        AnonymousNoteDatabase.getInstance(activityContext).roomNoteDao()
+        AnonymousNoteDatabase.getInstance(application).roomNoteDao()
     }
 
     private val regNoteDao: RegisteredNoteDao by lazy {
-        RegisteredNoteDatabase.getInstance(activityContext).roomNoteDao()
+        RegisteredNoteDatabase.getInstance(application).roomNoteDao()
     }
 
     private val transactionDao: RegisteredTransactionDao by lazy {
-        RoomRegisteredTransactionDatabase.getInstance(activityContext).roomTransactionDao()
+        RoomRegisteredTransactionDatabase.getInstance(application).roomTransactionDao()
     }
 
     //For non-registered user persistence
@@ -72,13 +76,14 @@ class NoteListInjector(private val activityContext: Context) {
     }
 
 
-    fun provideNoteListLogic(view: NoteListView): INoteListContract.Logic {
-        return NoteListLogic(
+    private lateinit var logic: NoteListLogic
+
+    fun buildNoteListLogic(view: NoteListView): NoteListLogic {
+         logic = NoteListLogic(
                 DispatcherProvider,
                 NoteServiceLocator(localAnon, remoteRepo, transactionReg),
                 UserServiceLocator(auth),
-                NoteListNavigator(activityContext as NoteListActivity),
-                ViewModelProviders.of(activityContext)
+                ViewModelProviders.of(view)
                         .get(NoteListViewModel::class.java),
                 NoteListAdapter(),
                 view,
@@ -87,5 +92,9 @@ class NoteListInjector(private val activityContext: Context) {
                 PublicNoteSource(),
                 AuthSource()
         )
+
+        view.setObserver(logic)
+
+        return logic
     }
 }

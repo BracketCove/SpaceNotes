@@ -16,9 +16,9 @@ private const val COLLECTION_NAME = "notes"
 class FirestoreRemoteNoteImpl(
         val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
 ) : IRemoteNoteRepository {
-    override suspend fun synchronizeTransactions(transactions: List<NoteTransaction>): Result<Exception, Unit> {
-        TODO("Currently handled in RegisteredNoteRepositoryImpl")
-    }
+
+    //Currently handled in RegisteredNoteRepositoryImpl
+    override suspend fun synchronizeTransactions(transactions: List<NoteTransaction>): Result<Exception, Unit> = Result.build { Unit }
 
 
     override suspend fun getNotes(): Result<Exception, List<Note>> {

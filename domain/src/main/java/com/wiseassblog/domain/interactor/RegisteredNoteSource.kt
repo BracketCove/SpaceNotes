@@ -1,6 +1,5 @@
 package com.wiseassblog.domain.interactor
 
-import com.wiseassblog.domain.DispatcherProvider
 import com.wiseassblog.domain.NoteServiceLocator
 import com.wiseassblog.domain.domainmodel.*
 import com.wiseassblog.domain.repository.IRemoteNoteRepository

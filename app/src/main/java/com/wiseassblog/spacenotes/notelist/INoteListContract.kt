@@ -1,5 +1,6 @@
 package com.wiseassblog.spacenotes.notelist
 
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.ListAdapter
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.User
@@ -14,11 +15,16 @@ interface INoteListContract {
         fun setAdapter(adapter: ListAdapter<Note, NoteListAdapter.NoteViewHolder>)
         fun showList()
         fun showEmptyState()
+        fun showErrorState(message:String)
         fun showLoadingView()
         fun setToolbarTitle(title: String)
+        fun startLoginFeature()
+        fun setObserver(observer: Observer<NoteListEvent<Int>>)
+        fun startNoteDetailFeatureWithExtras(noteId: String, isPrivate: Boolean)
     }
 
     interface ViewModel {
+
         fun setAdapterState(result: List<Note>)
 
         fun getAdapterState(): List<Note>
@@ -30,16 +36,7 @@ interface INoteListContract {
         fun getIsPrivateMode(): Boolean
 
         fun setIsPrivateMode(isPrivateMode: Boolean)
-    }
 
-    interface Navigator {
-        fun startLoginFeature()
-
-        fun startNoteDetailFeatureWithExtras(noteId: String, isPrivate: Boolean)
-    }
-
-    interface Logic {
-        fun event(event: NoteListEvent<Int>)
     }
 }
 

@@ -1,5 +1,7 @@
 package com.wiseassblog.spacenotes.login
 
+import androidx.lifecycle.Observer
+
 interface ILoginContract {
 
     interface View {
@@ -8,16 +10,13 @@ interface ILoginContract {
         fun showLoopAnimation()
         fun setStatusDrawable(imageURL: String)
         fun startSignInFlow()
-    }
-
-    interface Navigator {
+        fun setObserver(observer: Observer<LoginEvent<LoginResult>>)
         fun startListFeature()
     }
 
     interface Logic {
         fun event(event: LoginEvent<LoginResult>)
     }
-
 }
 
 internal const val SIGN_OUT = "SIGN OUT"

@@ -7,6 +7,8 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.wiseassblog.domain.domainmodel.Note
@@ -14,8 +16,9 @@ import com.wiseassblog.spacenotes.R
 import kotlinx.android.synthetic.main.item_note.view.*
 
 
-class NoteListAdapter(var logic: INoteListContract.Logic?
-                      = null) : ListAdapter<Note, NoteListAdapter.NoteViewHolder>(NoteDiffUtilCallback()) {
+class NoteListAdapter(var event: MutableLiveData<NoteListEvent<Int>> = MutableLiveData()  ) : ListAdapter<Note, NoteListAdapter.NoteViewHolder>(NoteDiffUtilCallback()) {
+
+    internal fun setObserver(observer: Observer<NoteListEvent<Int>>) = event.observeForever(observer)
 
     override fun onBindViewHolder(holder: NoteListAdapter.NoteViewHolder, position: Int) {
         getItem(position).let { note ->
@@ -25,9 +28,8 @@ class NoteListAdapter(var logic: INoteListContract.Logic?
                 holder.square.setImageResource(R.drawable.gps_icon)
                 holder.content.text = note.contents
                 holder.itemView.setOnClickListener {
-                    logic?.event(
-                            NoteListEvent.OnNoteItemClick(position)
-                    )
+                    event.value = NoteListEvent.OnNoteItemClick(position)
+
                 }
             }
         }

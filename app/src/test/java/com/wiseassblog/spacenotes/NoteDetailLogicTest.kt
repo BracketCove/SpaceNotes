@@ -37,8 +37,6 @@ class NoteDetailLogicTest {
 
     private val userLocator: UserServiceLocator = mockk()
 
-    private val navigator: INoteDetailContract.Navigator = mockk(relaxed = true)
-
     private val vModel: INoteDetailContract.ViewModel = mockk(relaxed = true)
 
     private val view: INoteDetailContract.View = mockk(relaxed = true)
@@ -86,7 +84,6 @@ class NoteDetailLogicTest {
             dispatcher,
             noteLocator,
             userLocator,
-            navigator,
             vModel,
             view,
             anonymous,
@@ -142,7 +139,7 @@ class NoteDetailLogicTest {
         } returns Result.build { null }
 
         //call the unit to be tested
-        logic.event(NoteDetailEvent.OnDoneClick)
+        logic.onChanged(NoteDetailEvent.OnDoneClick)
 
         //verify interactions and state if necessary
 
@@ -150,7 +147,7 @@ class NoteDetailLogicTest {
         verify { vModel.getNoteState() }
         coVerify { auth.getCurrentUser(userLocator) }
         coVerify { anonymous.updateNote(getNote(), noteLocator) }
-        verify { navigator.startListFeature() }
+        verify { view.startListFeature() }
     }
 
     /**
@@ -180,7 +177,7 @@ class NoteDetailLogicTest {
         } returns Result.build { getUser() }
 
         //call the unit to be tested
-        logic.event(NoteDetailEvent.OnDoneClick)
+        logic.onChanged(NoteDetailEvent.OnDoneClick)
 
         //verify interactions and state if necessary
 
@@ -188,7 +185,7 @@ class NoteDetailLogicTest {
         verify { vModel.getNoteState() }
         coVerify { auth.getCurrentUser(userLocator) }
         coVerify { registered.updateNote(getNote(), noteLocator) }
-        verify { navigator.startListFeature() }
+        verify { view.startListFeature() }
     }
 
     /**
@@ -202,7 +199,7 @@ class NoteDetailLogicTest {
             view.showConfirmDeleteSnackbar()
         } returns Unit
 
-        logic.event(NoteDetailEvent.OnDeleteClick)
+        logic.onChanged(NoteDetailEvent.OnDeleteClick)
 
         verify { view.showConfirmDeleteSnackbar() }
     }
@@ -236,11 +233,11 @@ class NoteDetailLogicTest {
             anonymous.deleteNote(getNote(), noteLocator)
         } returns Result.build { Unit }
 
-        logic.event(NoteDetailEvent.OnDeleteConfirmed)
+        logic.onChanged(NoteDetailEvent.OnDeleteConfirmed)
 
         verify { vModel.getNoteState() }
         verify { view.showMessage(MESSAGE_DELETE_SUCCESSFUL) }
-        verify { navigator.startListFeature() }
+        verify { view.startListFeature() }
         coVerify { anonymous.deleteNote(getNote(), noteLocator) }
         coVerify { auth.getCurrentUser(userLocator) }
     }
@@ -279,11 +276,11 @@ class NoteDetailLogicTest {
             registered.deleteNote(getNote(), noteLocator)
         } returns Result.build { Unit }
 
-        logic.event(NoteDetailEvent.OnDeleteConfirmed)
+        logic.onChanged(NoteDetailEvent.OnDeleteConfirmed)
 
         verify { vModel.getNoteState() }
         verify { view.showMessage(MESSAGE_DELETE_SUCCESSFUL) }
-        verify { navigator.startListFeature() }
+        verify { view.startListFeature() }
         coVerify { registered.deleteNote(getNote(), noteLocator) }
         coVerify { auth.getCurrentUser(userLocator) }
     }
@@ -299,7 +296,7 @@ class NoteDetailLogicTest {
      */
     @Test
     fun `On Delete Confirmation successful public`() {
-//        logic = getLogic()
+//        listener = getListener()
 //
 //        every {
 //            vModel.getNoteState()
@@ -317,7 +314,7 @@ class NoteDetailLogicTest {
 //            public.deleteNote( locator, dispatcher)
 //        } returns Result.build { true }
 //
-//        logic.event(NoteDetailEvent.OnDeleteConfirmed)
+//        listener.event(NoteDetailEvent.OnDeleteConfirmed)
 //
 //        verify { vModel.getNoteState() }
 //        verify { view.showMessage(MESSAGE_DELETE_SUCCESSFUL) }
@@ -330,9 +327,9 @@ class NoteDetailLogicTest {
     fun `On Back Click`() {
         logic = getLogic()
 
-        logic.event(NoteDetailEvent.OnBackClick)
+        logic.onChanged(NoteDetailEvent.OnBackClick)
 
-        verify { navigator.startListFeature() }
+        verify { view.startListFeature() }
     }
 
 
@@ -377,7 +374,7 @@ class NoteDetailLogicTest {
             auth.getCurrentUser(userLocator)
         } returns Result.build { null }
 
-        logic.event(NoteDetailEvent.OnBind)
+        logic.onChanged(NoteDetailEvent.OnBind)
 
         //creatorId should be null for new note. It will be added if the user saves the note while
         //logged in
@@ -418,7 +415,7 @@ class NoteDetailLogicTest {
             auth.getCurrentUser(userLocator)
         } returns Result.build { getUser() }
 
-        logic.event(NoteDetailEvent.OnBind)
+        logic.onChanged(NoteDetailEvent.OnBind)
 
         //creatorId should be null for new note. It will be added if the user saves the note while
         //logged in
@@ -463,7 +460,7 @@ class NoteDetailLogicTest {
             anonymous.getNoteById(getNote().creationDate, noteLocator)
         } returns Result.build { getNote() }
 
-        logic.event(NoteDetailEvent.OnBind)
+        logic.onChanged(NoteDetailEvent.OnBind)
 
         //creatorId should be null for new note. It will be added if the user saves the note while
         //logged in
@@ -488,7 +485,7 @@ class NoteDetailLogicTest {
 
     }
 
-    /**On start  can be considered as a generic event to represent the view telling the logic
+    /**On start  can be considered as a generic event to represent the view telling the listener
      * that it's time to rock'n'roll.
      *
      * 1. Get value of the Note from VM
@@ -502,7 +499,7 @@ class NoteDetailLogicTest {
             vModel.getNoteState()
         } returns getNote()
 
-        logic.event(NoteDetailEvent.OnStart)
+        logic.onChanged(NoteDetailEvent.OnStart)
 
         verify { vModel.getNoteState() }
         verify { view.setBackgroundImage(getNote().imageUrl) }
@@ -524,16 +521,15 @@ class NoteDetailLogicTest {
             vModel.getIsPrivateMode()
         }
         confirmVerified(
-            dispatcher,
-            noteLocator,
-            userLocator,
-            navigator,
-            vModel,
-            view,
-            anonymous,
-            registered,
-            public,
-            auth
+                dispatcher,
+                noteLocator,
+                userLocator,
+                vModel,
+                view,
+                anonymous,
+                registered,
+                public,
+                auth
         )
     }
 

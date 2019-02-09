@@ -1,5 +1,6 @@
 package com.wiseassblog.spacenotes.notedetail
 
+import androidx.lifecycle.Observer
 import com.wiseassblog.domain.DispatcherProvider
 import com.wiseassblog.domain.NoteServiceLocator
 import com.wiseassblog.domain.UserServiceLocator
@@ -22,7 +23,6 @@ import kotlin.coroutines.CoroutineContext
 class NoteDetailLogic(dispatcher: DispatcherProvider,
                       val noteLocator: NoteServiceLocator,
                       val userLocator: UserServiceLocator,
-                      val navigator: INoteDetailContract.Navigator,
                       val vModel: INoteDetailContract.ViewModel,
                       val view: INoteDetailContract.View,
                       val anonymousNoteSource: AnonymousNoteSource,
@@ -31,7 +31,7 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
                       val authSource: AuthSource,
                       id: String,
                       isPrivate: Boolean)
-    : BaseLogic(dispatcher), INoteDetailContract.Logic, CoroutineScope {
+    : BaseLogic(dispatcher), CoroutineScope, Observer<NoteDetailEvent> {
 
     init {
         vModel.setId(id)
@@ -46,7 +46,7 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
     override val coroutineContext: CoroutineContext
         get() = dispatcher.provideUIContext() + jobTracker
 
-    override fun event(event: NoteDetailEvent) {
+    override fun onChanged(event: NoteDetailEvent) {
         when (event) {
             is NoteDetailEvent.OnDoneClick -> onDoneClick()
             is NoteDetailEvent.OnDeleteClick -> onDeleteClick()
@@ -78,7 +78,7 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
         val result = anonymousNoteSource.updateNote(updatedNote, noteLocator)
 
         when (result) {
-            is Result.Value -> navigator.startListFeature()
+            is Result.Value -> view.startListFeature()
             is Result.Error -> view.showMessage(result.error.toString())
         }
     }
@@ -90,7 +90,7 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
         val result = registeredNoteSource.updateNote(updatedNote, noteLocator)
 
         when (result) {
-            is Result.Value -> navigator.startListFeature()
+            is Result.Value -> view.startListFeature()
             is Result.Error -> view.showMessage(result.error.toString())
         }
     }
@@ -103,7 +103,7 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
         val result = registeredNoteSource.updateNote(updatedNote, noteLocator)
 
         when (result) {
-            is Result.Value -> navigator.startListFeature()
+            is Result.Value -> view.startListFeature()
             is Result.Error -> view.showMessage(result.error.toString())
         }
     }
@@ -168,7 +168,7 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
             renderView(state)
         } else {
             view.showMessage(MESSAGE_GENERIC_ERROR)
-            navigator.startListFeature()
+            view.startListFeature()
         }
     }
 
@@ -179,7 +179,7 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
     }
 
     fun onBackClick() {
-        navigator.startListFeature()
+        view.startListFeature()
     }
 
     fun onDeleteClick() {
@@ -217,7 +217,7 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
         when (result) {
             is Result.Value -> {
                 view.showMessage(MESSAGE_DELETE_SUCCESSFUL)
-                navigator.startListFeature()
+                view.startListFeature()
             }
             is Result.Error -> view.showMessage(result.error.toString())
         }
@@ -229,7 +229,7 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
         when (result) {
             is Result.Value -> {
                 view.showMessage(MESSAGE_DELETE_SUCCESSFUL)
-                navigator.startListFeature()
+                view.startListFeature()
             }
             is Result.Error -> view.showMessage(result.error.toString())
         }
@@ -241,7 +241,7 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
         when (result) {
             is Result.Value -> {
                 view.showMessage(MESSAGE_DELETE_SUCCESSFUL)
-                navigator.startListFeature()
+                view.startListFeature()
             }
             is Result.Error -> view.showMessage(result.error.toString())
         }

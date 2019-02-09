@@ -18,13 +18,6 @@ import org.junit.Before
 import org.junit.Test
 
 
-/**
- * Example local unit test, which will execute on the development machine (host).
- *
- * Philipp Hauer
- *
- * See [testing documentation](http://d.android.com/tools/testing).
- */
 class LoginLogicTest {
 
 
@@ -32,11 +25,7 @@ class LoginLogicTest {
 
     private val userLocator: UserServiceLocator = mockk()
 
-    private val navigator: ILoginContract.Navigator = mockk(relaxed = true)
-
     private val view: ILoginContract.View = mockk(relaxed = true)
-
-    private val task: Task<GoogleSignInResult> = mockk()
 
     private val auth: AuthSource = mockk()
 
@@ -59,13 +48,13 @@ class LoginLogicTest {
     fun clear() {
         clearAllMocks()
 
-        logic = LoginLogic(dispatcher, userLocator, navigator, view, auth)
+        logic = LoginLogic(dispatcher, userLocator, view, auth)
 
     }
 
     /**
      * In onstart, we give a channel to the firebaseauth backend which it can use to push the latest
-     * user state to logic.
+     * user state to listener.
      * the ui appropriately.
      * a. User is retrieved successfully
      * b. User is null
@@ -90,12 +79,13 @@ class LoginLogicTest {
             auth.getCurrentUser(userLocator)
         } returns Result.build { getUser() }
 
-        logic.event(LoginEvent.OnStart)
+        logic.onChanged(LoginEvent.OnStart)
 
 
         coVerify { auth.getCurrentUser(userLocator) }
         verify { view.setLoginStatus(SIGNED_IN) }
         verify { view.showLoopAnimation() }
+        verify { view.setStatusDrawable(ANTENNA_FULL) }
         verify { view.setAuthButton(SIGN_OUT) }
     }
 
@@ -118,12 +108,13 @@ class LoginLogicTest {
             auth.getCurrentUser(userLocator)
         } returns Result.build { null }
 
-        logic.event(LoginEvent.OnStart)
+        logic.onChanged(LoginEvent.OnStart)
 
 
         coVerify { auth.getCurrentUser(userLocator) }
         verify { view.setLoginStatus(SIGNED_OUT) }
-        verify { view.setStatusDrawable(ANTENNA_FULL) }
+        verify { view.showLoopAnimation() }
+        verify { view.setStatusDrawable(ANTENNA_EMPTY) }
         verify { view.setAuthButton(SIGN_IN) }
     }
 
@@ -144,11 +135,12 @@ class LoginLogicTest {
             auth.getCurrentUser(userLocator)
         } returns Result.build { throw SpaceNotesError.NetworkUnavailableException }
 
-        logic.event(LoginEvent.OnStart)
+        logic.onChanged(LoginEvent.OnStart)
 
 
         coVerify { auth.getCurrentUser(userLocator) }
         verify { view.setLoginStatus(ERROR_NETWORK_UNAVAILABLE) }
+        verify { view.showLoopAnimation() }
         verify { view.setStatusDrawable(ANTENNA_EMPTY) }
         verify { view.setAuthButton(RETRY) }
     }
@@ -176,11 +168,13 @@ class LoginLogicTest {
             auth.getCurrentUser(userLocator)
         } returns Result.build { null }
 
-        logic.event(LoginEvent.OnAuthButtonClick)
+        logic.onChanged(LoginEvent.OnAuthButtonClick)
 
 
         coVerify { auth.getCurrentUser(userLocator) }
+        verify { view.showLoopAnimation() }
         verify { view.startSignInFlow() }
+
 
     }
 
@@ -207,13 +201,13 @@ class LoginLogicTest {
         } returns Result.build { Unit }
 
 
-        logic.event(LoginEvent.OnAuthButtonClick)
+        logic.onChanged(LoginEvent.OnAuthButtonClick)
 
-
+        verify { view.showLoopAnimation() }
         coVerify { auth.getCurrentUser(userLocator) }
         coVerify { auth.signOutCurrentUser(userLocator) }
         verify { view.setLoginStatus(SIGNED_OUT) }
-        verify { view.setStatusDrawable(ANTENNA_FULL) }
+        verify { view.setStatusDrawable(ANTENNA_EMPTY) }
         verify { view.setAuthButton(SIGN_IN) }
     }
 
@@ -234,9 +228,9 @@ class LoginLogicTest {
 
 
 
-        logic.event(LoginEvent.OnAuthButtonClick)
+        logic.onChanged(LoginEvent.OnAuthButtonClick)
 
-
+        verify { view.showLoopAnimation() }
         coVerify { auth.getCurrentUser(userLocator) }
         verify { view.setLoginStatus(ERROR_NETWORK_UNAVAILABLE) }
         verify { view.setStatusDrawable(ANTENNA_EMPTY) }
@@ -246,9 +240,9 @@ class LoginLogicTest {
 
     @Test
     fun `On Back Click`() = runBlocking {
-        logic.event(LoginEvent.OnBackClick)
+        logic.onChanged(LoginEvent.OnBackClick)
 
-        verify { navigator.startListFeature() }
+        verify { view.startListFeature() }
     }
 
     /**
@@ -291,12 +285,13 @@ class LoginLogicTest {
         } returns Result.build { Unit }
 
 
-        logic.event(LoginEvent.OnGoogleSignInResult(loginResult))
+        logic.onChanged(LoginEvent.OnGoogleSignInResult(loginResult))
 
         coVerify { auth.createGoogleUser(testIdToken, userLocator) }
         coVerify { auth.getCurrentUser(userLocator) }
         verify { view.setLoginStatus(SIGNED_IN) }
         verify { view.showLoopAnimation() }
+        verify { view.setStatusDrawable(ANTENNA_FULL) }
         verify { view.setAuthButton(SIGN_OUT) }
     }
 
@@ -312,7 +307,7 @@ class LoginLogicTest {
             dispatcher.provideUIContext()
         } returns Dispatchers.Unconfined
 
-        logic.event(LoginEvent.OnGoogleSignInResult(loginResult))
+        logic.onChanged(LoginEvent.OnGoogleSignInResult(loginResult))
 
         verify { view.setLoginStatus(ERROR_AUTH) }
         verify { view.setStatusDrawable(ANTENNA_EMPTY) }
@@ -325,7 +320,7 @@ class LoginLogicTest {
             dispatcher.provideUIContext()
             testAccount.idToken
         }
-        confirmVerified(dispatcher, userLocator, navigator, view, auth, testAccount)
+        confirmVerified(dispatcher, userLocator, view, auth, testAccount)
     }
 
 }

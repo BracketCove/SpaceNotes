@@ -1,5 +1,6 @@
 package com.wiseassblog.spacenotes.login
 
+import androidx.lifecycle.Observer
 import com.wiseassblog.domain.DispatcherProvider
 import com.wiseassblog.domain.UserServiceLocator
 import com.wiseassblog.domain.domainmodel.Result
@@ -13,9 +14,8 @@ import kotlin.coroutines.CoroutineContext
 
 class LoginLogic(dispatcher: DispatcherProvider,
                  val userLocator: UserServiceLocator,
-                 val navigator: ILoginContract.Navigator,
                  val view: ILoginContract.View,
-                 val authSource: AuthSource) : BaseLogic(dispatcher), CoroutineScope, ILoginContract.Logic {
+                 val authSource: AuthSource) : BaseLogic(dispatcher), CoroutineScope, Observer<LoginEvent<LoginResult>> {
 
 
     init {
@@ -26,7 +26,7 @@ class LoginLogic(dispatcher: DispatcherProvider,
         get() = dispatcher.provideUIContext() + jobTracker
 
 
-    override fun event(event: LoginEvent<LoginResult>) {
+    override fun onChanged(event: LoginEvent<LoginResult>) {
         when (event) {
             is LoginEvent.OnStart -> onStart()
             is LoginEvent.OnDestroy -> jobTracker.cancel()
@@ -38,6 +38,7 @@ class LoginLogic(dispatcher: DispatcherProvider,
 
     private fun onSignInResult(result: LoginResult) = launch {
         if (result.requestCode == RC_SIGN_IN && result.account != null) {
+            view.showLoopAnimation()
 
             val createGoogleUserResult = authSource.createGoogleUser(
                     result.account.idToken!!,
@@ -54,6 +55,8 @@ class LoginLogic(dispatcher: DispatcherProvider,
     }
 
     private fun onAuthButtonClick() = launch {
+        view.showLoopAnimation()
+
         val authResult = authSource.getCurrentUser(userLocator)
 
         when (authResult) {
@@ -88,10 +91,12 @@ class LoginLogic(dispatcher: DispatcherProvider,
     }
 
     private fun onBackClick() {
-        navigator.startListFeature()
+        view.startListFeature()
     }
 
     private fun onStart() = launch {
+        view.showLoopAnimation()
+
         val authResult = authSource.getCurrentUser(userLocator)
 
         when (authResult) {
@@ -105,23 +110,21 @@ class LoginLogic(dispatcher: DispatcherProvider,
     }
 
     private fun renderActiveUser() {
-        view.showLoopAnimation()
+        view.setStatusDrawable(ANTENNA_FULL)
         view.setAuthButton(SIGN_OUT)
         view.setLoginStatus(SIGNED_IN)
     }
 
     private fun renderNullUser() {
-        view.setStatusDrawable(ANTENNA_FULL)
+        view.setStatusDrawable(ANTENNA_EMPTY)
         view.setAuthButton(SIGN_IN)
         view.setLoginStatus(SIGNED_OUT)
     }
 
     private fun renderErrorState(message: String) {
-        //TODO handle different types of errors
         view.setStatusDrawable(ANTENNA_EMPTY)
         view.setAuthButton(RETRY)
         view.setLoginStatus(message)
-
     }
 
 }

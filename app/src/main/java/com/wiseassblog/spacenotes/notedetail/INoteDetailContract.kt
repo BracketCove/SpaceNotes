@@ -1,5 +1,6 @@
 package com.wiseassblog.spacenotes.notedetail
 
+import androidx.lifecycle.Observer
 import com.wiseassblog.domain.domainmodel.Note
 
 
@@ -12,12 +13,14 @@ interface INoteDetailContract {
         fun setBackgroundImage(imageUrl: String)
         fun setDateLabel(date: String)
         fun setNoteBody(content: String)
+        fun setObserver(observer: Observer<NoteDetailEvent>)
         fun hideBackButton()
         fun getNoteBody(): String
         fun getTime(): String
         fun restartFeature()
         fun showMessage(message: String)
         fun showConfirmDeleteSnackbar()
+        fun startListFeature()
     }
 
     interface ViewModel {
@@ -32,14 +35,6 @@ interface INoteDetailContract {
         fun setId(id: String)
 
         fun getId(): String?
-    }
-
-    interface Navigator {
-        fun startListFeature()
-    }
-
-    interface Logic {
-        fun event(event: NoteDetailEvent)
     }
 }
 

@@ -8,18 +8,17 @@ import kotlinx.coroutines.channels.Channel
 
 
 class PublicNoteSource {
-    suspend fun getNotes(locator: NoteServiceLocator): Result<Exception, List<Note>> {
-        val listener = Channel<Result<Exception, List<Note>>>()
-
-//    launch {
-//        remote.getNotes(listener)
-//    }
-//
-//    launch {
-//        local.getNotes(listener)
-//    }
-
-        return listener.receive()
+    suspend fun getNotes(locator: NoteServiceLocator): Result<Exception, List<Note>> = Result.build {
+        listOf(Note("28/10/2018",
+                "When I understand that this glass is already broken, every moment with it becomes precious.",
+                0,
+                "gps_icon",
+                User(
+                        "8675309",
+                        "Ajahn Chah",
+                        ""
+                )
+        ))
     }
 
     suspend fun getNoteById(id: String,
