@@ -36,6 +36,7 @@ interface INoteDetailContract {
 
         fun getId(): String?
     }
+
 }
 
 sealed class NoteDetailEvent {

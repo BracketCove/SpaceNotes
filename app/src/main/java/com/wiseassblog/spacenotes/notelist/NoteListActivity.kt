@@ -16,8 +16,7 @@ class NoteListActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_note_list)
-
-
+        //A container basically just builds things and sets the feature in motion
         val view = this.supportFragmentManager.findFragmentByTag(VIEW)
                 ?: NoteListView.newInstance()
 

@@ -13,6 +13,7 @@ interface INoteListContract {
 
     interface View {
         fun setAdapter(adapter: ListAdapter<Note, NoteListAdapter.NoteViewHolder>)
+        fun setPrivateIcon(isPrivate: Boolean)
         fun showList()
         fun showEmptyState()
         fun showErrorState(message:String)

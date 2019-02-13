@@ -8,6 +8,7 @@ import com.wiseassblog.data.auth.FirebaseAuthRepositoryImpl
 import com.wiseassblog.data.note.anonymous.AnonymousNoteDao
 import com.wiseassblog.data.note.anonymous.AnonymousNoteDatabase
 import com.wiseassblog.data.note.anonymous.RoomLocalAnonymousRepositoryImpl
+import com.wiseassblog.data.note.public.FirestoreRemoteNoteImpl
 import com.wiseassblog.data.note.registered.*
 import com.wiseassblog.data.transaction.RoomRegisteredTransactionDatabase
 import com.wiseassblog.data.transaction.RoomTransactionRepositoryImpl
@@ -18,10 +19,7 @@ import com.wiseassblog.domain.interactor.AnonymousNoteSource
 import com.wiseassblog.domain.interactor.AuthSource
 import com.wiseassblog.domain.interactor.PublicNoteSource
 import com.wiseassblog.domain.interactor.RegisteredNoteSource
-import com.wiseassblog.domain.repository.IAuthRepository
-import com.wiseassblog.domain.repository.ILocalNoteRepository
-import com.wiseassblog.domain.repository.IRemoteNoteRepository
-import com.wiseassblog.domain.repository.ITransactionRepository
+import com.wiseassblog.domain.repository.*
 import com.wiseassblog.spacenotes.notelist.NoteListAdapter
 import com.wiseassblog.spacenotes.notelist.NoteListLogic
 import com.wiseassblog.spacenotes.notelist.NoteListView
@@ -50,8 +48,13 @@ class NoteListInjector(application: Application) : AndroidViewModel(application)
     }
 
     //For registered user remote persistence (Source of Truth)
-    private val remoteReg: IRemoteNoteRepository by lazy {
-        FirestoreRemoteNoteImpl()
+    private val remotePrivate: IRemoteNoteRepository by lazy {
+        FirestorePrivateRemoteNoteImpl()
+    }
+
+    //For registered user remote persistence (Source of Truth)
+    private val remotePublicRepo: IPublicNoteRepository by lazy {
+        FirestoreRemoteNoteImpl
     }
 
     //For registered user local persistience (cache)
@@ -60,8 +63,8 @@ class NoteListInjector(application: Application) : AndroidViewModel(application)
     }
 
     //For registered user remote persistence (Source of Truth)
-    private val remoteRepo: IRemoteNoteRepository by lazy {
-        RegisteredNoteRepositoryImpl(remoteReg, cacheReg)
+    private val remotePrivateRepo: IRemoteNoteRepository by lazy {
+        RegisteredNoteRepositoryImpl(remotePrivate, cacheReg)
     }
 
 
@@ -81,7 +84,7 @@ class NoteListInjector(application: Application) : AndroidViewModel(application)
     fun buildNoteListLogic(view: NoteListView): NoteListLogic {
          logic = NoteListLogic(
                 DispatcherProvider,
-                NoteServiceLocator(localAnon, remoteRepo, transactionReg),
+                NoteServiceLocator(localAnon, remotePrivateRepo, transactionReg, remotePublicRepo),
                 UserServiceLocator(auth),
                 ViewModelProviders.of(view)
                         .get(NoteListViewModel::class.java),

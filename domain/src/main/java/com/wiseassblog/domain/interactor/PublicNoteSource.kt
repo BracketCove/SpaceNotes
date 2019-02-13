@@ -8,64 +8,23 @@ import kotlinx.coroutines.channels.Channel
 
 
 class PublicNoteSource {
-    suspend fun getNotes(locator: NoteServiceLocator): Result<Exception, List<Note>> = Result.build {
-        listOf(Note("28/10/2018",
-                "When I understand that this glass is already broken, every moment with it becomes precious.",
-                0,
-                "gps_icon",
-                User(
-                        "8675309",
-                        "Ajahn Chah",
-                        ""
-                )
-        ))
-    }
+    suspend fun getNotes(locator: NoteServiceLocator): Result<Exception, List<Note>> = locator
+            .remotePublic
+            .getNotes()
+
 
     suspend fun getNoteById(id: String,
-                            locator: NoteServiceLocator): Result<Exception, Note> {
-
-
-        return Result.build {
-            Note("28/10/2018",
-                    "When I understand that this glass is already broken, every moment with it becomes precious.",
-                    0,
-                    "gps_icon",
-                    User(
-                            "8675309",
-                            "Ajahn Chah",
-                            ""
-                    )
-            )
-        }
-    }
+                            locator: NoteServiceLocator): Result<Exception, Note?> = locator
+            .remotePublic
+            .getNote(id)
 
     suspend fun updateNote(note: Note,
-                           locator: NoteServiceLocator): Result<Exception, Boolean> {
-        val listener = Channel<Result<Exception, Boolean>>()
+                           locator: NoteServiceLocator): Result<Exception, Unit> = locator
+            .remotePublic
+            .updateNote(note)
 
-//    launch {
-//        locator.remote.updateNote(note, listener)
-//    }
-//
-//    launch {
-//        locator.local.updateNote(note, listener)
-//    }
-
-        return listener.receive()
-    }
-
-    suspend fun deleteNote(id: String,
-                           locator: NoteServiceLocator): Result<Exception, Boolean> {
-        val listener = Channel<Result<Exception, Boolean>>()
-
-//    launch {
-//        locator.remote.updateNote(note, listener)
-//    }
-//
-//    launch {
-//        locator.local.updateNote(note, listener)
-//    }
-
-        return listener.receive()
-    }
+    suspend fun deleteNote(note: Note,
+                           locator: NoteServiceLocator): Result<Exception, Unit> = locator
+            .remotePublic
+            .deleteNote(note)
 }

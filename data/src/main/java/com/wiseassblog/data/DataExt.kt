@@ -5,7 +5,7 @@ import com.google.android.gms.tasks.Task
 import com.wiseassblog.data.entities.AnonymousRoomNote
 import com.wiseassblog.data.entities.RegisteredRoomNote
 import com.wiseassblog.data.entities.RegisteredRoomTransaction
-import com.wiseassblog.data.note.registered.FirebaseNote
+import com.wiseassblog.data.entities.FirebaseNote
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.NoteTransaction
 import com.wiseassblog.domain.domainmodel.TransactionType

@@ -66,7 +66,8 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
             is Result.Value -> {
                 //if null, user is anonymous
                 if (userResult.value == null) prepareAnonymousRepoUpdate()
-                else prepareRegisteredRepoUpdate()
+                else if (vModel.getIsPrivateMode()) prepareRegisteredRepoUpdate()
+                else preparePublicRepoUpdate()
             }
         }
 
@@ -100,7 +101,7 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
         val updatedNote = vModel.getNoteState()!!
                 .copy(contents = view.getNoteBody())
 
-        val result = registeredNoteSource.updateNote(updatedNote, noteLocator)
+        val result = publicNoteSource.updateNote(updatedNote, noteLocator)
 
         when (result) {
             is Result.Value -> view.startListFeature()
@@ -144,8 +145,12 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
     fun getNoteFromSource(id: String, user: User?) = launch {
         val noteResult: Result<Exception, Note?>
 
+        //private anonymous
         if (user == null) noteResult = anonymousNoteSource.getNoteById(id, noteLocator)
-        else noteResult = registeredNoteSource.getNoteById(id, noteLocator)
+        //private registered
+        else if (vModel.getIsPrivateMode()) noteResult = registeredNoteSource.getNoteById(id, noteLocator)
+        //public registered
+        else noteResult = publicNoteSource.getNoteById(id, noteLocator)
 
         when (noteResult) {
             is Result.Value -> {
@@ -199,8 +204,6 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
 
             when (userResult) {
                 is Result.Value -> {
-
-
                     if (userResult.value == null) prepareAnonymousRepoDelete(currentNote)
                     else if (vModel.getIsPrivateMode()) prepareRegisteredRepoDelete(currentNote)
                     else preparePublicRepoDelete(currentNote)
@@ -212,7 +215,7 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
     }
 
     private fun preparePublicRepoDelete(note: Note) = launch {
-        val result = publicNoteSource.deleteNote(note.creationDate, noteLocator)
+        val result = publicNoteSource.deleteNote(note, noteLocator)
 
         when (result) {
             is Result.Value -> {

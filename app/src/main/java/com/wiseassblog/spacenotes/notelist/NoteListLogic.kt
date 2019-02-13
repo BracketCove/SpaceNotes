@@ -6,6 +6,7 @@ import com.wiseassblog.domain.NoteServiceLocator
 import com.wiseassblog.domain.UserServiceLocator
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.Result
+import com.wiseassblog.domain.error.SpaceNotesError
 import com.wiseassblog.domain.interactor.AnonymousNoteSource
 import com.wiseassblog.domain.interactor.AuthSource
 import com.wiseassblog.domain.interactor.PublicNoteSource
@@ -13,9 +14,9 @@ import com.wiseassblog.domain.interactor.RegisteredNoteSource
 import com.wiseassblog.spacenotes.common.BaseLogic
 import com.wiseassblog.spacenotes.common.MESSAGE_GENERIC_ERROR
 import com.wiseassblog.spacenotes.common.MODE_PRIVATE
+import com.wiseassblog.spacenotes.common.MODE_PUBLIC
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlin.coroutines.CoroutineContext
 
@@ -81,7 +82,8 @@ class NoteListLogic(dispatcher: DispatcherProvider,
     }
 
     suspend fun getPublicListData(): Result<Exception, List<Note>> {
-        return publicNoteSource.getNotes(noteLocator)
+        return if (vModel.getUserState() != null) publicNoteSource.getNotes(noteLocator)
+        else Result.build { throw SpaceNotesError.LocalIOException }
     }
 
     suspend fun getPrivateListData(): Result<Exception, List<Note>> {
@@ -90,6 +92,10 @@ class NoteListLogic(dispatcher: DispatcherProvider,
     }
 
     fun renderView(list: List<Note>) {
+        view.setPrivateIcon(vModel.getIsPrivateMode())
+        if (vModel.getIsPrivateMode()) view.setToolbarTitle(MODE_PRIVATE)
+        else view.setToolbarTitle(MODE_PUBLIC)
+
         if (list.isEmpty()) view.showEmptyState()
         else view.showList()
 
@@ -97,7 +103,13 @@ class NoteListLogic(dispatcher: DispatcherProvider,
     }
 
     private fun onTogglePublicMode() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        if (vModel.getIsPrivateMode()) {
+            vModel.setIsPrivateMode(false)
+            getListData(false)
+        } else {
+            vModel.setIsPrivateMode(true)
+            getListData(true)
+        }
     }
 
     private fun onLoginClick() {

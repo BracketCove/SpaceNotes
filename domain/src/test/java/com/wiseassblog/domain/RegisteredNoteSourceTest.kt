@@ -23,8 +23,6 @@ import kotlin.test.assertTrue
  */
 class RegisteredNoteSourceTest {
 
-    val dispatcher: DispatcherProvider = mockk()
-
     val source = RegisteredNoteSource()
 
     //Stores transactions (NoteTransaction Cache) to be pushed to Remote eventually
@@ -76,7 +74,6 @@ class RegisteredNoteSourceTest {
     @BeforeEach
     fun setUpRedundantMocks() {
         clearAllMocks()
-        every { dispatcher.provideIOContext() } returns Dispatchers.Unconfined
     }
 
 
@@ -428,7 +425,6 @@ class RegisteredNoteSourceTest {
             locator.remoteReg
         }
         confirmVerified(
-            dispatcher,
             transactionRepository,
             noteRepository,
             locator

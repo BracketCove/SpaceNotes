@@ -24,8 +24,6 @@ import kotlin.test.assertTrue
 
 class AnonymousNoteSourceTest {
 
-    val dispatcher: DispatcherProvider = mockk()
-
     val anonSource = AnonymousNoteSource()
 
     val locator: NoteServiceLocator = mockk()
@@ -55,7 +53,6 @@ class AnonymousNoteSourceTest {
     @BeforeEach
     fun setUpRedundantMocks() {
         clearAllMocks()
-        every { dispatcher.provideIOContext() } returns Dispatchers.Unconfined
     }
 
     /**
@@ -84,7 +81,6 @@ class AnonymousNoteSourceTest {
         val result: Result<Exception, List<Note>> = anonSource.getNotes(locator)
 
         //3 Verify behaviour and state
-        verify { dispatcher.provideIOContext() }
         verify { locator.localAnon }
         coVerify { localNoteRepo.getNotes() }
 
@@ -108,7 +104,6 @@ class AnonymousNoteSourceTest {
         val result: Result<Exception, List<Note>> = anonSource.getNotes(locator)
 
         //3 Verify behaviour and state
-        verify { dispatcher.provideIOContext() }
         verify { locator.localAnon }
         coVerify { localNoteRepo.getNotes() }
 
@@ -140,7 +135,6 @@ class AnonymousNoteSourceTest {
         )
 
         //3 Verify behaviour and state
-        verify { dispatcher.provideIOContext() }
         verify { locator.localAnon }
         coVerify { localNoteRepo.getNote(testNote.creationDate) }
 
@@ -164,7 +158,6 @@ class AnonymousNoteSourceTest {
         val result: Result<Exception, Note?> = anonSource.getNoteById(testId, locator)
 
         //3 Verify behaviour and state
-        verify { dispatcher.provideIOContext() }
         verify { locator.localAnon }
         coVerify { localNoteRepo.getNote(testId) }
 
@@ -195,7 +188,6 @@ class AnonymousNoteSourceTest {
         )
 
         //3 Verify behaviour and state
-        verify { dispatcher.provideIOContext() }
         verify { locator.localAnon }
         coVerify { localNoteRepo.updateNote(testNote) }
 
@@ -223,8 +215,6 @@ class AnonymousNoteSourceTest {
                 locator
         )
 
-        //3 Verify behaviour and state
-        verify { dispatcher.provideIOContext() }
         verify { locator.localAnon }
         coVerify { localNoteRepo.updateNote(testNote) }
 
@@ -254,8 +244,6 @@ class AnonymousNoteSourceTest {
                 locator
         )
 
-        //3 Verify behaviour and state
-        verify { dispatcher.provideIOContext() }
         verify { locator.localAnon }
         coVerify { localNoteRepo.deleteNote(testNote) }
 
@@ -283,8 +271,6 @@ class AnonymousNoteSourceTest {
                 locator
         )
 
-        //3 Verify behaviour and state
-        verify { dispatcher.provideIOContext() }
         verify { locator.localAnon }
         coVerify { localNoteRepo.deleteNote(testNote) }
 
@@ -294,7 +280,6 @@ class AnonymousNoteSourceTest {
     @AfterEach
     fun confirm() {
         confirmVerified(
-            dispatcher,
             locator,
             localNoteRepo
         )

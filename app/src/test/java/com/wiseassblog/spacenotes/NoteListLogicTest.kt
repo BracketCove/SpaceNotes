@@ -11,8 +11,10 @@ import com.wiseassblog.domain.interactor.AnonymousNoteSource
 import com.wiseassblog.domain.interactor.AuthSource
 import com.wiseassblog.domain.interactor.PublicNoteSource
 import com.wiseassblog.domain.interactor.RegisteredNoteSource
+import com.wiseassblog.spacenotes.common.COLLECTION_PUBLIC
 import com.wiseassblog.spacenotes.common.MESSAGE_GENERIC_ERROR
 import com.wiseassblog.spacenotes.common.MODE_PRIVATE
+import com.wiseassblog.spacenotes.common.MODE_PUBLIC
 import com.wiseassblog.spacenotes.notelist.INoteListContract
 import com.wiseassblog.spacenotes.notelist.NoteListAdapter
 import com.wiseassblog.spacenotes.notelist.NoteListEvent
@@ -23,10 +25,10 @@ import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import kotlin.text.Typography.registered
 
 class NoteListLogicTest {
 
+    //This mocking framework is called Mockk
     private val dispatcher: DispatcherProvider = mockk()
 
     private val noteLocator: NoteServiceLocator = mockk()
@@ -251,6 +253,29 @@ class NoteListLogicTest {
     }
 
     /**
+     *c:
+     *1. Check isPrivate status: false
+     *2. Check login status in backend if necessary
+     *3. parse datasources accordingly
+     *4. draw view accordingly
+     *
+     */
+    @Test
+    fun `On Start Registered Public`() = runBlocking {
+        every { vModel.getIsPrivateMode() } returns false
+        every { vModel.getUserState() } returns getUser()
+        coEvery { public.getNotes(noteLocator) } returns Result.build { getNoteList }
+
+        logic.onChanged(NoteListEvent.OnStart)
+
+        verify { vModel.getIsPrivateMode() }
+        verify { vModel.getUserState() }
+        verify { view.showList() }
+        verify { adapter.submitList(getNoteList) }
+        coVerify { public.getNotes(noteLocator) }
+    }
+
+    /**
      * error:
      *1. Check isPrivate status: false
      *2. Check login status in backend if necessary
@@ -369,6 +394,60 @@ class NoteListLogicTest {
         verify { view.startNoteDetailFeatureWithExtras(getNote().creationDate, false) }
         verify { vModel.getAdapterState() }
         verify { vModel.getIsPrivateMode() }
+    }
+
+    /**
+     * When the user wants to switch between private and public mode
+     * a: User is logged in, currently in private mode
+     * b: User is logged in, currently in public mode
+     * c: User is logged out, private only
+     *
+     *a:
+     *1. Check current user status: User
+     *2. Get isPrivate from vModel: true
+     *3. Request public notes from repo: Notes
+     *4. Update view/adapter appropriately
+     *  */
+    @Test
+    fun `On Toggle Public Mode`() = runBlocking {
+
+        every { vModel.getIsPrivateMode() } returns true andThen false
+        coEvery { public.getNotes(noteLocator) } returns Result.build { getNoteList }
+
+        logic.onChanged(NoteListEvent.OnTogglePublicMode)
+
+        verify { vModel.setAdapterState(getNoteList) }
+        verify { vModel.getIsPrivateMode() }
+        verify { adapter.submitList(getNoteList) }
+        coVerify { public.getNotes(noteLocator) }
+        //ought to be false and MODE_PUBLIC, but
+        verify { view.setPrivateIcon(false) }
+        verify { view.setToolbarTitle(MODE_PUBLIC) }
+
+    }
+
+    /**
+     * b:
+    *1. Check current user status: User
+    *2. Get isPrivate from vModel: false
+    *3. Request private notes from repo: Notes
+    *4. Update view/adapter appropriately
+    *  */
+    @Test
+    fun `On Toggle Private Mode`() = runBlocking {
+
+
+        every { vModel.getIsPrivateMode() } returns false andThen true
+        coEvery { registered.getNotes(noteLocator) } returns Result.build { getNoteList }
+
+        logic.onChanged(NoteListEvent.OnTogglePublicMode)
+
+        verify { vModel.setAdapterState(getNoteList) }
+        verify { vModel.getIsPrivateMode() }
+        verify { adapter.submitList(getNoteList) }
+        coVerify { registered.getNotes(noteLocator) }
+        verify { view.setPrivateIcon(true) }
+        verify { view.setToolbarTitle(MODE_PRIVATE) }
     }
 
     @After
