@@ -11,10 +11,7 @@ import com.wiseassblog.domain.interactor.AnonymousNoteSource
 import com.wiseassblog.domain.interactor.AuthSource
 import com.wiseassblog.domain.interactor.PublicNoteSource
 import com.wiseassblog.domain.interactor.RegisteredNoteSource
-import com.wiseassblog.spacenotes.common.BaseLogic
-import com.wiseassblog.spacenotes.common.MESSAGE_GENERIC_ERROR
-import com.wiseassblog.spacenotes.common.MODE_PRIVATE
-import com.wiseassblog.spacenotes.common.MODE_PUBLIC
+import com.wiseassblog.spacenotes.common.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -103,13 +100,18 @@ class NoteListLogic(dispatcher: DispatcherProvider,
     }
 
     private fun onTogglePublicMode() {
-        if (vModel.getIsPrivateMode()) {
-            vModel.setIsPrivateMode(false)
-            getListData(false)
+        if (vModel.getUserState() != null) {
+            if (vModel.getIsPrivateMode()) {
+                vModel.setIsPrivateMode(false)
+                getListData(false)
+            } else {
+                vModel.setIsPrivateMode(true)
+                getListData(true)
+            }
         } else {
-            vModel.setIsPrivateMode(true)
-            getListData(true)
+            view.showErrorState(MESSAGE_LOGIN)
         }
+
     }
 
     private fun onLoginClick() {

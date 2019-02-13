@@ -11,10 +11,7 @@ import com.wiseassblog.domain.interactor.AnonymousNoteSource
 import com.wiseassblog.domain.interactor.AuthSource
 import com.wiseassblog.domain.interactor.PublicNoteSource
 import com.wiseassblog.domain.interactor.RegisteredNoteSource
-import com.wiseassblog.spacenotes.common.COLLECTION_PUBLIC
-import com.wiseassblog.spacenotes.common.MESSAGE_GENERIC_ERROR
-import com.wiseassblog.spacenotes.common.MODE_PRIVATE
-import com.wiseassblog.spacenotes.common.MODE_PUBLIC
+import com.wiseassblog.spacenotes.common.*
 import com.wiseassblog.spacenotes.notelist.INoteListContract
 import com.wiseassblog.spacenotes.notelist.NoteListAdapter
 import com.wiseassblog.spacenotes.notelist.NoteListEvent
@@ -448,6 +445,20 @@ class NoteListLogicTest {
         coVerify { registered.getNotes(noteLocator) }
         verify { view.setPrivateIcon(true) }
         verify { view.setToolbarTitle(MODE_PRIVATE) }
+    }
+
+    /**
+     * C:
+     *1. Check current user status: no user
+     *2. Tell user to log in if they want to use the public feature
+     *  */
+    @Test
+    fun `On Toggle Private Mode logged out`() = runBlocking {
+        every { vModel.getUserState() } returns null
+
+        logic.onChanged(NoteListEvent.OnTogglePublicMode)
+
+        verify { view.showErrorState(MESSAGE_LOGIN) }
     }
 
     @After
