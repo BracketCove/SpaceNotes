@@ -1,10 +1,8 @@
 package com.wiseassblog.domain.interactor
 
-import com.wiseassblog.domain.NoteServiceLocator
+import com.wiseassblog.domain.servicelocator.NoteServiceLocator
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.Result
-import com.wiseassblog.domain.domainmodel.User
-import kotlinx.coroutines.channels.Channel
 
 
 class PublicNoteSource {

@@ -4,7 +4,7 @@ import com.wiseassblog.domain.domainmodel.*
 import com.wiseassblog.domain.error.SpaceNotesError
 import com.wiseassblog.domain.interactor.PublicNoteSource
 import com.wiseassblog.domain.repository.IPublicNoteRepository
-import com.wiseassblog.domain.repository.IRemoteNoteRepository
+import com.wiseassblog.domain.servicelocator.NoteServiceLocator
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every

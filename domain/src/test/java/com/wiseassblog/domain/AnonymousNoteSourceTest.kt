@@ -6,8 +6,8 @@ import com.wiseassblog.domain.domainmodel.User
 import com.wiseassblog.domain.error.SpaceNotesError
 import com.wiseassblog.domain.interactor.AnonymousNoteSource
 import com.wiseassblog.domain.repository.ILocalNoteRepository
+import com.wiseassblog.domain.servicelocator.NoteServiceLocator
 import io.mockk.*
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach

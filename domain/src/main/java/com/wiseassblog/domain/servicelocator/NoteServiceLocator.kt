@@ -1,4 +1,4 @@
-package com.wiseassblog.domain
+package com.wiseassblog.domain.servicelocator
 
 import com.wiseassblog.domain.repository.ILocalNoteRepository
 import com.wiseassblog.domain.repository.IPublicNoteRepository

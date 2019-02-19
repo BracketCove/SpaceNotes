@@ -1,10 +1,8 @@
 package com.wiseassblog.spacenotes
 
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
-import com.google.android.gms.auth.api.signin.GoogleSignInResult
-import com.google.android.gms.tasks.Task
 import com.wiseassblog.domain.DispatcherProvider
-import com.wiseassblog.domain.UserServiceLocator
+import com.wiseassblog.domain.servicelocator.UserServiceLocator
 import com.wiseassblog.domain.domainmodel.Result
 import com.wiseassblog.domain.domainmodel.User
 import com.wiseassblog.domain.error.SpaceNotesError

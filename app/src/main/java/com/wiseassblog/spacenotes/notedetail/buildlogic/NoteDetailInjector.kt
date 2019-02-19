@@ -13,8 +13,8 @@ import com.wiseassblog.data.note.registered.*
 import com.wiseassblog.data.transaction.RoomRegisteredTransactionDatabase
 import com.wiseassblog.data.transaction.RoomTransactionRepositoryImpl
 import com.wiseassblog.domain.DispatcherProvider
-import com.wiseassblog.domain.NoteServiceLocator
-import com.wiseassblog.domain.UserServiceLocator
+import com.wiseassblog.domain.servicelocator.NoteServiceLocator
+import com.wiseassblog.domain.servicelocator.UserServiceLocator
 import com.wiseassblog.domain.interactor.AnonymousNoteSource
 import com.wiseassblog.domain.interactor.AuthSource
 import com.wiseassblog.domain.interactor.PublicNoteSource

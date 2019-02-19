@@ -1,4 +1,4 @@
-package com.wiseassblog.data.entities
+package com.wiseassblog.data.datamodels
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
@@ -8,10 +8,10 @@ import androidx.room.PrimaryKey
 //If you're Data Models for a given API require API specific code, then create a separate Data
 //Model instead of polluting your domain with platform specific APIs.
 @Entity(
-        tableName = "anonymous_notes",
+        tableName = "registered_notes",
         indices = [Index("creation_date")]
 )
-data class AnonymousRoomNote(
+data class RegisteredRoomNote(
 
         @PrimaryKey
         @ColumnInfo(name = "creation_date")

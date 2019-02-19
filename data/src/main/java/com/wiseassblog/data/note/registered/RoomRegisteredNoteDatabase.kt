@@ -4,9 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.wiseassblog.data.entities.AnonymousRoomNote
-import com.wiseassblog.data.entities.RegisteredRoomNote
-import com.wiseassblog.data.note.anonymous.AnonymousNoteDao
+import com.wiseassblog.data.datamodels.RegisteredRoomNote
 
 private const val DATABASE_REG = "registered"
 

@@ -1,7 +1,7 @@
 package com.wiseassblog.data
 
-import com.wiseassblog.data.entities.AnonymousRoomNote
-import com.wiseassblog.data.entities.RegisteredRoomNote
+import com.wiseassblog.data.datamodels.AnonymousRoomNote
+import com.wiseassblog.data.datamodels.RegisteredRoomNote
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.User
 import org.junit.Test

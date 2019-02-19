@@ -1,4 +1,4 @@
-package com.wiseassblog.data.entities
+package com.wiseassblog.data.datamodels
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity

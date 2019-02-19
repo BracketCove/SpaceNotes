@@ -1,4 +1,4 @@
-package com.wiseassblog.data.entities
+package com.wiseassblog.data.datamodels
 
 //var and default arguments used due to firestore requiring a no argument constructor to
 //deserialize

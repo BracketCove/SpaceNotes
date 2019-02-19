@@ -1,7 +1,7 @@
 package com.wiseassblog.data.note.anonymous
 
 import androidx.room.*
-import com.wiseassblog.data.entities.AnonymousRoomNote
+import com.wiseassblog.data.datamodels.AnonymousRoomNote
 
 @Dao
 interface AnonymousNoteDao {

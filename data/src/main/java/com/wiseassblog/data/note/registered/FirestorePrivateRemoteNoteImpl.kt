@@ -4,7 +4,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
 import com.wiseassblog.data.awaitTaskCompletable
 import com.wiseassblog.data.awaitTaskResult
-import com.wiseassblog.data.entities.FirebaseNote
+import com.wiseassblog.data.datamodels.FirebaseNote
 import com.wiseassblog.data.toFirebaseNote
 import com.wiseassblog.data.toNote
 import com.wiseassblog.domain.domainmodel.Note

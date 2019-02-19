@@ -1,7 +1,7 @@
 package com.wiseassblog.data.note.registered
 
 import androidx.room.*
-import com.wiseassblog.data.entities.RegisteredRoomNote
+import com.wiseassblog.data.datamodels.RegisteredRoomNote
 
 @Dao
 interface RegisteredNoteDao {

@@ -1,8 +1,6 @@
 package com.wiseassblog.spacenotes
 
 import com.wiseassblog.domain.DispatcherProvider
-import com.wiseassblog.domain.NoteServiceLocator
-import com.wiseassblog.domain.UserServiceLocator
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.Result
 import com.wiseassblog.domain.domainmodel.User
@@ -10,7 +8,8 @@ import com.wiseassblog.domain.interactor.AnonymousNoteSource
 import com.wiseassblog.domain.interactor.AuthSource
 import com.wiseassblog.domain.interactor.PublicNoteSource
 import com.wiseassblog.domain.interactor.RegisteredNoteSource
-import com.wiseassblog.spacenotes.common.COLLECTION_PUBLIC
+import com.wiseassblog.domain.servicelocator.NoteServiceLocator
+import com.wiseassblog.domain.servicelocator.UserServiceLocator
 import com.wiseassblog.spacenotes.common.MESSAGE_DELETE_SUCCESSFUL
 import com.wiseassblog.spacenotes.notedetail.INoteDetailContract
 import com.wiseassblog.spacenotes.notedetail.NoteDetailEvent

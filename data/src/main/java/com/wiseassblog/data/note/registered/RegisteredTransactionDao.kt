@@ -4,7 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.wiseassblog.data.entities.RegisteredRoomTransaction
+import com.wiseassblog.data.datamodels.RegisteredRoomTransaction
 
 @Dao
 interface RegisteredTransactionDao {

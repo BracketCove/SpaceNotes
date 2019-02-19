@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.wiseassblog.data.entities.RegisteredRoomTransaction
+import com.wiseassblog.data.datamodels.RegisteredRoomTransaction
 import com.wiseassblog.data.note.registered.RegisteredTransactionDao
 
 private const val DATABASE_TRANSACTION = "transactions"

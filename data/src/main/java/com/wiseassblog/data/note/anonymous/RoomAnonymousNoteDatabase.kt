@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.wiseassblog.data.entities.AnonymousRoomNote
+import com.wiseassblog.data.datamodels.AnonymousRoomNote
 
 private const val DATABASE_ANON = "anonymous"
 
