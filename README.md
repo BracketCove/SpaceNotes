@@ -6,17 +6,6 @@ out with Kotlin for Android, consider checking out [Application Programming
 Fundamentals w/ Kotlin](https://www.udemy.com/application-programming-fundamentals-with-kotlin/learn/v4/overview). If you like my videos and repositories, I think
 you'll really enjoy a more polished course experience from wiseAss!
 
-
-
-## Topics
-* [What is SpaceNotes?](#what-is-spacenotes)
-* [Software Architecture](#software-architecture)
-* [Can I use the code?](#can-i-use-code-from-this-repo)
-* [Project APIs/Concepts](#apis-and-architectures-used)
-* [Learning Sources/Inspiration](#sources-and-inspiration)
-* [Support Me](#contactsupport-me)
-* [License](#license)
-
 ## What is SpaceNotes?
 
 SpaceNotes is a Kotlin based Android Application, which was built with
