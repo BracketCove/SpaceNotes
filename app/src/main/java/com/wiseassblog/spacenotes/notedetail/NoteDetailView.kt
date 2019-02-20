@@ -11,10 +11,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import com.google.android.material.snackbar.Snackbar
 import com.wiseassblog.spacenotes.R
-import com.wiseassblog.spacenotes.R.id.*
 import com.wiseassblog.spacenotes.common.*
-import com.wiseassblog.spacenotes.notedetail.buildlogic.NoteDetailInjector
-import com.wiseassblog.spacenotes.notelist.NoteListEvent
 import kotlinx.android.synthetic.main.fragment_note_detail.*
 
 
