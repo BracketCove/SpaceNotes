@@ -1,17 +1,18 @@
 package com.wiseassblog.spacenotes
 
 import com.wiseassblog.domain.DispatcherProvider
-import com.wiseassblog.domain.servicelocator.NoteServiceLocator
-import com.wiseassblog.domain.servicelocator.UserServiceLocator
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.Result
 import com.wiseassblog.domain.domainmodel.User
 import com.wiseassblog.domain.error.SpaceNotesError
 import com.wiseassblog.domain.interactor.AnonymousNoteSource
 import com.wiseassblog.domain.interactor.AuthSource
-import com.wiseassblog.domain.interactor.PublicNoteSource
 import com.wiseassblog.domain.interactor.RegisteredNoteSource
-import com.wiseassblog.spacenotes.common.*
+import com.wiseassblog.domain.servicelocator.NoteServiceLocator
+import com.wiseassblog.domain.servicelocator.UserServiceLocator
+import com.wiseassblog.spacenotes.common.MESSAGE_GENERIC_ERROR
+import com.wiseassblog.spacenotes.common.MESSAGE_LOGIN
+import com.wiseassblog.spacenotes.common.TITLE_TOOLBAR
 import com.wiseassblog.spacenotes.notelist.INoteListContract
 import com.wiseassblog.spacenotes.notelist.NoteListAdapter
 import com.wiseassblog.spacenotes.notelist.NoteListEvent
@@ -42,8 +43,6 @@ class NoteListLogicTest {
 
     private val registered: RegisteredNoteSource = mockk()
 
-    private val public: PublicNoteSource = mockk()
-
     private val auth: AuthSource = mockk()
 
 
@@ -56,7 +55,6 @@ class NoteListLogicTest {
             view,
             anonymous,
             registered,
-            public,
             auth
     )
 
@@ -162,7 +160,7 @@ class NoteListLogicTest {
         coVerify { auth.getCurrentUser(userLocator) }
         verify { vModel.setUserState(null) }
         verify { view.showLoadingView() }
-        verify { view.setToolbarTitle(MODE_PRIVATE) }
+        verify { view.setToolbarTitle(TITLE_TOOLBAR) }
         verify { view.setAdapter(adapter) }
         verify { adapter.setObserver(logic) }
 
@@ -179,7 +177,7 @@ class NoteListLogicTest {
         verify { vModel.setUserState(getUser()) }
         verify { view.showLoadingView() }
         verify { view.setAdapter(adapter) }
-        verify { view.setToolbarTitle(MODE_PRIVATE) }
+        verify { view.setToolbarTitle(TITLE_TOOLBAR) }
         verify { adapter.setObserver(logic) }
     }
 
@@ -192,7 +190,7 @@ class NoteListLogicTest {
 
         coVerify { auth.getCurrentUser(userLocator) }
         verify { view.showLoadingView() }
-        verify { view.setToolbarTitle(MODE_PRIVATE) }
+        verify { view.setToolbarTitle(TITLE_TOOLBAR) }
         verify { view.setAdapter(adapter) }
         verify { adapter.setObserver(logic) }
     }
@@ -250,29 +248,6 @@ class NoteListLogicTest {
     }
 
     /**
-     *c:
-     *1. Check isPrivate status: false
-     *2. Check login status in backend if necessary
-     *3. parse datasources accordingly
-     *4. draw view accordingly
-     *
-     */
-    @Test
-    fun `On Start Registered Public`() = runBlocking {
-        every { vModel.getIsPrivateMode() } returns false
-        every { vModel.getUserState() } returns getUser()
-        coEvery { public.getNotes(noteLocator) } returns Result.build { getNoteList }
-
-        logic.onChanged(NoteListEvent.OnStart)
-
-        verify { vModel.getIsPrivateMode() }
-        verify { vModel.getUserState() }
-        verify { view.showList() }
-        verify { adapter.submitList(getNoteList) }
-        coVerify { public.getNotes(noteLocator) }
-    }
-
-    /**
      * error:
      *1. Check isPrivate status: false
      *2. Check login status in backend if necessary
@@ -312,26 +287,6 @@ class NoteListLogicTest {
         verify { adapter.submitList(emptyList<Note>()) }
         coVerify { registered.getNotes(noteLocator) }
     }
-
-    /**
-     * c. auth is logged in and in public mode
-     *1. Check auth status
-     *2. Check isPrivate status
-     *3.  parse datasources accordingly
-     */
-    @Test
-    fun `On Start Public Mode`() = runBlocking {
-        every { vModel.getIsPrivateMode() } returns false
-        coEvery { public.getNotes(noteLocator) } returns Result.build { getNoteList }
-
-        logic.onChanged(NoteListEvent.OnStart)
-
-        verify { vModel.getIsPrivateMode() }
-        verify { view.showList() }
-        verify { adapter.submitList(getNoteList) }
-        coVerify { public.getNotes(noteLocator) }
-    }
-
 
     /**
      * On login click, send auth to Auth Activity in order to manage their login status
@@ -393,43 +348,14 @@ class NoteListLogicTest {
         verify { vModel.getIsPrivateMode() }
     }
 
-    /**
-     * When the user wants to switch between private and public mode
-     * a: User is logged in, currently in private mode
-     * b: User is logged in, currently in public mode
-     * c: User is logged out, private only
-     *
-     *a:
-     *1. Check current user status: User
-     *2. Get isPrivate from vModel: true
-     *3. Request public notes from repo: Notes
-     *4. Update view/adapter appropriately
-     *  */
-    @Test
-    fun `On Toggle Public Mode`() = runBlocking {
-
-        every { vModel.getIsPrivateMode() } returns true andThen false
-        coEvery { public.getNotes(noteLocator) } returns Result.build { getNoteList }
-
-        logic.onChanged(NoteListEvent.OnTogglePublicMode)
-
-        verify { vModel.setAdapterState(getNoteList) }
-        verify { vModel.getIsPrivateMode() }
-        verify { adapter.submitList(getNoteList) }
-        coVerify { public.getNotes(noteLocator) }
-        //ought to be false and MODE_PUBLIC, but
-        verify { view.setPrivateIcon(false) }
-        verify { view.setToolbarTitle(MODE_PUBLIC) }
-
-    }
 
     /**
      * b:
-    *1. Check current user status: User
-    *2. Get isPrivate from vModel: false
-    *3. Request private notes from repo: Notes
-    *4. Update view/adapter appropriately
-    *  */
+     *1. Check current user status: User
+     *2. Get isPrivate from vModel: false
+     *3. Request private notes from repo: Notes
+     *4. Update view/adapter appropriately
+     *  */
     @Test
     fun `On Toggle Private Mode`() = runBlocking {
 
@@ -444,7 +370,7 @@ class NoteListLogicTest {
         verify { adapter.submitList(getNoteList) }
         coVerify { registered.getNotes(noteLocator) }
         verify { view.setPrivateIcon(true) }
-        verify { view.setToolbarTitle(MODE_PRIVATE) }
+        verify { view.setToolbarTitle(TITLE_TOOLBAR) }
     }
 
     /**
@@ -473,7 +399,6 @@ class NoteListLogicTest {
                 view,
                 anonymous,
                 registered,
-                public,
                 auth
         )
     }

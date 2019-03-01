@@ -2,15 +2,14 @@ package com.wiseassblog.spacenotes.notedetail
 
 import androidx.lifecycle.Observer
 import com.wiseassblog.domain.DispatcherProvider
-import com.wiseassblog.domain.servicelocator.NoteServiceLocator
-import com.wiseassblog.domain.servicelocator.UserServiceLocator
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.Result
 import com.wiseassblog.domain.domainmodel.User
 import com.wiseassblog.domain.interactor.AnonymousNoteSource
 import com.wiseassblog.domain.interactor.AuthSource
-import com.wiseassblog.domain.interactor.PublicNoteSource
 import com.wiseassblog.domain.interactor.RegisteredNoteSource
+import com.wiseassblog.domain.servicelocator.NoteServiceLocator
+import com.wiseassblog.domain.servicelocator.UserServiceLocator
 import com.wiseassblog.spacenotes.common.BaseLogic
 import com.wiseassblog.spacenotes.common.MESSAGE_DELETE_SUCCESSFUL
 import com.wiseassblog.spacenotes.common.MESSAGE_GENERIC_ERROR
@@ -27,7 +26,6 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
                       val view: INoteDetailContract.View,
                       val anonymousNoteSource: AnonymousNoteSource,
                       val registeredNoteSource: RegisteredNoteSource,
-                      val publicNoteSource: PublicNoteSource,
                       val authSource: AuthSource,
                       id: String,
                       isPrivate: Boolean)
@@ -66,8 +64,7 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
             is Result.Value -> {
                 //if null, user is anonymous
                 if (userResult.value == null) prepareAnonymousRepoUpdate()
-                else if (vModel.getIsPrivateMode()) prepareRegisteredRepoUpdate()
-                else preparePublicRepoUpdate()
+                else prepareRegisteredRepoUpdate()
             }
         }
 
@@ -89,19 +86,6 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
         val updatedNote = vModel.getNoteState()!!.copy(contents = view.getNoteBody())
 
         val result = registeredNoteSource.updateNote(updatedNote, noteLocator)
-
-        when (result) {
-            is Result.Value -> view.startListFeature()
-            is Result.Error -> view.showMessage(result.error.toString())
-        }
-    }
-
-    suspend fun preparePublicRepoUpdate() {
-
-        val updatedNote = vModel.getNoteState()!!
-                .copy(contents = view.getNoteBody())
-
-        val result = publicNoteSource.updateNote(updatedNote, noteLocator)
 
         when (result) {
             is Result.Value -> view.startListFeature()
@@ -148,9 +132,8 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
         //private anonymous
         if (user == null) noteResult = anonymousNoteSource.getNoteById(id, noteLocator)
         //private registered
-        else if (vModel.getIsPrivateMode()) noteResult = registeredNoteSource.getNoteById(id, noteLocator)
+        else noteResult = registeredNoteSource.getNoteById(id, noteLocator)
         //public registered
-        else noteResult = publicNoteSource.getNoteById(id, noteLocator)
 
         when (noteResult) {
             is Result.Value -> {
@@ -205,24 +188,11 @@ class NoteDetailLogic(dispatcher: DispatcherProvider,
             when (userResult) {
                 is Result.Value -> {
                     if (userResult.value == null) prepareAnonymousRepoDelete(currentNote)
-                    else if (vModel.getIsPrivateMode()) prepareRegisteredRepoDelete(currentNote)
-                    else preparePublicRepoDelete(currentNote)
+                    else prepareRegisteredRepoDelete(currentNote)
                 }
 
                 is Result.Error -> view.showMessage(userResult.error.toString())
             }
-        }
-    }
-
-    private fun preparePublicRepoDelete(note: Note) = launch {
-        val result = publicNoteSource.deleteNote(note, noteLocator)
-
-        when (result) {
-            is Result.Value -> {
-                view.showMessage(MESSAGE_DELETE_SUCCESSFUL)
-                view.startListFeature()
-            }
-            is Result.Error -> view.showMessage(result.error.toString())
         }
     }
 

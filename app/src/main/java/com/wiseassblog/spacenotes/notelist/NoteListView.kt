@@ -21,10 +21,10 @@ import kotlinx.android.synthetic.main.fragment_note_list.*
 class NoteListView : Fragment(), INoteListContract.View {
     override fun setPrivateIcon(isPrivate: Boolean) {
         //private mode
-        if (isPrivate) imv_toolbar_private_toggle.setImageResource(R.drawable.design_ic_visibility_off)
+//        if (isPrivate) imv_toolbar_private_toggle.setImageResource(R.drawable.design_ic_visibility_off)
 
         //public mode
-        else imv_toolbar_private_toggle.setImageResource(R.drawable.design_ic_visibility)
+//        else imv_toolbar_private_toggle.setImageResource(R.drawable.design_ic_visibility)
     }
 
     val event = MutableLiveData<NoteListEvent<Int>>()
@@ -103,7 +103,7 @@ class NoteListView : Fragment(), INoteListContract.View {
         event.value = NoteListEvent.OnBind
 
         imv_toolbar_auth.setOnClickListener { event.value = NoteListEvent.OnLoginClick }
-        imv_toolbar_private_toggle.setOnClickListener { event.value = NoteListEvent.OnTogglePublicMode }
+        //imv_toolbar_private_toggle.setOnClickListener { event.value = NoteListEvent.OnTogglePublicMode }
         fab_create_new_item.setOnClickListener { event.value = NoteListEvent.OnNewNoteClick }
 
         val spaceLoop = imv_space_background.drawable as AnimationDrawable

@@ -16,8 +16,8 @@ android {
     defaultConfig {
         minSdkVersion build_versions.min_sdk
         targetSdkVersion build_versions.target_sdk
-        versionCode 1
-        versionName "1.0"
+        versionCode 25
+        versionName "2.0.5"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
@@ -28,12 +28,10 @@ android {
 
     buildTypes {
         debug {
-            testCoverageEnabled = true
-            minifyEnabled false
+            minifyEnabled true
         }
 
         release {
-            testCoverageEnabled = false
             minifyEnabled true
         }
     }
@@ -70,4 +68,3 @@ dependencies {
     testImplementation deps.test.mockk
     testImplementation deps.test.kotlin_junit
 }
-

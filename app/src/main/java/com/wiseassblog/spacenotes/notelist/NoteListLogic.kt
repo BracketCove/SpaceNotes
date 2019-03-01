@@ -2,16 +2,17 @@ package com.wiseassblog.spacenotes.notelist
 
 import androidx.lifecycle.Observer
 import com.wiseassblog.domain.DispatcherProvider
-import com.wiseassblog.domain.servicelocator.NoteServiceLocator
-import com.wiseassblog.domain.servicelocator.UserServiceLocator
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.Result
-import com.wiseassblog.domain.error.SpaceNotesError
 import com.wiseassblog.domain.interactor.AnonymousNoteSource
 import com.wiseassblog.domain.interactor.AuthSource
-import com.wiseassblog.domain.interactor.PublicNoteSource
 import com.wiseassblog.domain.interactor.RegisteredNoteSource
-import com.wiseassblog.spacenotes.common.*
+import com.wiseassblog.domain.servicelocator.NoteServiceLocator
+import com.wiseassblog.domain.servicelocator.UserServiceLocator
+import com.wiseassblog.spacenotes.common.BaseLogic
+import com.wiseassblog.spacenotes.common.MESSAGE_GENERIC_ERROR
+import com.wiseassblog.spacenotes.common.MESSAGE_LOGIN
+import com.wiseassblog.spacenotes.common.TITLE_TOOLBAR
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -25,7 +26,6 @@ class NoteListLogic(dispatcher: DispatcherProvider,
                     val view: INoteListContract.View,
                     val anonymousNoteSource: AnonymousNoteSource,
                     val registeredNoteSource: RegisteredNoteSource,
-                    val publicNoteSource: PublicNoteSource,
                     val authSource: AuthSource)
     : BaseLogic(dispatcher), CoroutineScope, Observer<NoteListEvent<Int>> {
     override fun onChanged(event: NoteListEvent<Int>?) {
@@ -59,12 +59,7 @@ class NoteListLogic(dispatcher: DispatcherProvider,
     }
 
     fun getListData(isPrivateMode: Boolean) = launch {
-        val dataResult: Result<Exception, List<Note>>
-
-        when (isPrivateMode) {
-            true -> dataResult = getPrivateListData()
-            false -> dataResult = getPublicListData()
-        }
+        val dataResult = getPrivateListData()
 
         when (dataResult) {
             is Result.Value -> {
@@ -78,20 +73,18 @@ class NoteListLogic(dispatcher: DispatcherProvider,
         }
     }
 
-    suspend fun getPublicListData(): Result<Exception, List<Note>> {
-        return if (vModel.getUserState() != null) publicNoteSource.getNotes(noteLocator)
-        else Result.build { throw SpaceNotesError.LocalIOException }
-    }
-
     suspend fun getPrivateListData(): Result<Exception, List<Note>> {
-        return if (vModel.getUserState() == null) anonymousNoteSource.getNotes(noteLocator)
-        else registeredNoteSource.getNotes(noteLocator)
+        return if (vModel.getUserState() == null) {
+            anonymousNoteSource.getNotes(noteLocator)
+        }
+        else {
+            registeredNoteSource.getNotes(noteLocator)
+        }
     }
 
     fun renderView(list: List<Note>) {
         view.setPrivateIcon(vModel.getIsPrivateMode())
-        if (vModel.getIsPrivateMode()) view.setToolbarTitle(MODE_PRIVATE)
-        else view.setToolbarTitle(MODE_PUBLIC)
+        view.setToolbarTitle(TITLE_TOOLBAR)
 
         if (list.isEmpty()) view.showEmptyState()
         else view.showList()
@@ -127,7 +120,7 @@ class NoteListLogic(dispatcher: DispatcherProvider,
 
 
     fun bind() {
-        view.setToolbarTitle(MODE_PRIVATE)
+        view.setToolbarTitle(TITLE_TOOLBAR)
         view.showLoadingView()
         adapter.setObserver(this)
         view.setAdapter(adapter)
@@ -136,7 +129,6 @@ class NoteListLogic(dispatcher: DispatcherProvider,
         launch {
             val result = authSource.getCurrentUser(userLocator)
             if (result is Result.Value) vModel.setUserState(result.value)
-            //otherwise defaults to null
         }
     }
 

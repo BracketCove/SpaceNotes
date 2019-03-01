@@ -70,15 +70,7 @@ class LoginLogic(dispatcher: DispatcherProvider,
 
     }
 
-    private fun handleError(error: Exception) {
-        when (error) {
-            is SpaceNotesError.NetworkUnavailableException -> renderErrorState(
-                    ERROR_NETWORK_UNAVAILABLE
-            )
 
-            else -> renderErrorState(ERROR_AUTH)
-        }
-    }
 
     private suspend fun signUserOut() {
         val signOutResult = authSource.signOutCurrentUser(userLocator)
@@ -109,6 +101,14 @@ class LoginLogic(dispatcher: DispatcherProvider,
         }
     }
 
+    private fun handleError(error: Exception) {
+        when (error) {
+            is SpaceNotesError.NetworkUnavailableException -> renderErrorState(
+                    ERROR_NETWORK_UNAVAILABLE
+            )
+            else -> renderErrorState(ERROR_AUTH)
+        }
+    }
     private fun renderActiveUser() {
         view.setStatusDrawable(ANTENNA_FULL)
         view.setAuthButton(SIGN_OUT)

@@ -1,5 +1,6 @@
 package com.wiseassblog.data.auth
 
+import android.util.Log
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
@@ -49,7 +50,9 @@ class FirebaseAuthRepositoryImpl(val auth: FirebaseAuth = FirebaseAuth.getInstan
     override suspend fun getCurrentUser(): Result<Exception, User?> {
         val firebaseUser = auth.currentUser
 
-        if (firebaseUser == null) return Result.build { null }
+        if (firebaseUser == null) {
+            return Result.build { null }
+        }
         else return Result.build {
             User(
                     firebaseUser.uid,

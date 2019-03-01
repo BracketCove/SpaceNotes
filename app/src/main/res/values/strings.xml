@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">SpaceNotes</string>
+
+    <string name="client_id">939593603920-un822r081hquhs0r15ol3jsun6leks92.apps.googleusercontent.com</string>
 </resources>

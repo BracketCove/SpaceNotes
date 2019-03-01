@@ -13,8 +13,8 @@ android {
         applicationId "com.wiseassblog.spacenotes"
         minSdkVersion build_versions.min_sdk
         targetSdkVersion build_versions.target_sdk
-        versionCode 1
-        versionName "1.0"
+        versionCode 25
+        versionName "2.0.5"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
@@ -25,8 +25,10 @@ android {
 
     buildTypes {
         debug {
-            testCoverageEnabled = true
-            minifyEnabled false
+            testCoverageEnabled = false
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'),
+                    'proguard-rules.pro'
         }
 
         release {

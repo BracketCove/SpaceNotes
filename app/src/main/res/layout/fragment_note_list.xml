@@ -18,15 +18,6 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:text="Private Mode" />
 
-    <ImageButton
-        android:id="@+id/imv_toolbar_private_toggle"
-        style="@style/Widget.AppCompat.ActionButton"
-        android:layout_width="wrap_content"
-        android:layout_height="56dp"
-        android:layout_marginRight="8dp"
-        android:src="@drawable/ic_visibility_off_black_24dp"
-        app:layout_constraintRight_toLeftOf="@+id/imv_toolbar_auth"
-        app:layout_constraintTop_toTopOf="parent" />
 
     <ImageButton
         android:id="@+id/imv_toolbar_auth"

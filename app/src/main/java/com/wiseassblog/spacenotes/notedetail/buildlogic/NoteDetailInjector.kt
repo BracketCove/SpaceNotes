@@ -8,19 +8,22 @@ import com.wiseassblog.data.auth.FirebaseAuthRepositoryImpl
 import com.wiseassblog.data.note.anonymous.AnonymousNoteDao
 import com.wiseassblog.data.note.anonymous.AnonymousNoteDatabase
 import com.wiseassblog.data.note.anonymous.RoomLocalAnonymousRepositoryImpl
-import com.wiseassblog.data.note.public.FirestoreRemoteNoteImpl
 import com.wiseassblog.data.note.registered.*
 import com.wiseassblog.data.transaction.RoomRegisteredTransactionDatabase
 import com.wiseassblog.data.transaction.RoomTransactionRepositoryImpl
 import com.wiseassblog.domain.DispatcherProvider
-import com.wiseassblog.domain.servicelocator.NoteServiceLocator
-import com.wiseassblog.domain.servicelocator.UserServiceLocator
 import com.wiseassblog.domain.interactor.AnonymousNoteSource
 import com.wiseassblog.domain.interactor.AuthSource
-import com.wiseassblog.domain.interactor.PublicNoteSource
 import com.wiseassblog.domain.interactor.RegisteredNoteSource
-import com.wiseassblog.domain.repository.*
-import com.wiseassblog.spacenotes.notedetail.*
+import com.wiseassblog.domain.repository.IAuthRepository
+import com.wiseassblog.domain.repository.ILocalNoteRepository
+import com.wiseassblog.domain.repository.IRemoteNoteRepository
+import com.wiseassblog.domain.repository.ITransactionRepository
+import com.wiseassblog.domain.servicelocator.NoteServiceLocator
+import com.wiseassblog.domain.servicelocator.UserServiceLocator
+import com.wiseassblog.spacenotes.notedetail.NoteDetailLogic
+import com.wiseassblog.spacenotes.notedetail.NoteDetailView
+import com.wiseassblog.spacenotes.notedetail.NoteDetailViewModel
 
 /**
  *
@@ -52,11 +55,6 @@ class NoteDetailInjector(application: Application) : AndroidViewModel(applicatio
         FirestorePrivateRemoteNoteImpl()
     }
 
-    //For registered user remote persistence (Source of Truth)
-    private val remotePublic: IPublicNoteRepository by lazy {
-        FirestoreRemoteNoteImpl
-    }
-
     //For registered user local persistience (cache)
     private val cacheReg: ILocalNoteRepository by lazy {
         RoomLocalCacheImpl(regNoteDao)
@@ -85,14 +83,13 @@ class NoteDetailInjector(application: Application) : AndroidViewModel(applicatio
                              isPrivate: Boolean): NoteDetailLogic {
         logic = NoteDetailLogic(
                 DispatcherProvider,
-                NoteServiceLocator(localAnon, remoteRepo, transactionReg, remotePublic),
+                NoteServiceLocator(localAnon, remoteRepo, transactionReg),
                 UserServiceLocator(auth),
                 ViewModelProviders.of(view)
                         .get(NoteDetailViewModel::class.java),
                 view,
                 AnonymousNoteSource(),
                 RegisteredNoteSource(),
-                PublicNoteSource(),
                 AuthSource(),
                 id,
                 isPrivate

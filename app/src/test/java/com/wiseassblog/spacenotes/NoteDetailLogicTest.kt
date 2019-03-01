@@ -6,7 +6,6 @@ import com.wiseassblog.domain.domainmodel.Result
 import com.wiseassblog.domain.domainmodel.User
 import com.wiseassblog.domain.interactor.AnonymousNoteSource
 import com.wiseassblog.domain.interactor.AuthSource
-import com.wiseassblog.domain.interactor.PublicNoteSource
 import com.wiseassblog.domain.interactor.RegisteredNoteSource
 import com.wiseassblog.domain.servicelocator.NoteServiceLocator
 import com.wiseassblog.domain.servicelocator.UserServiceLocator
@@ -44,8 +43,6 @@ class NoteDetailLogicTest {
     private val anonymous: AnonymousNoteSource = mockk()
 
     private val registered: RegisteredNoteSource = mockk()
-
-    private val public: PublicNoteSource = mockk()
 
     private val auth: AuthSource = mockk()
 
@@ -88,7 +85,6 @@ class NoteDetailLogicTest {
             view,
             anonymous,
             registered,
-            public,
             auth,
             id,
             isPrivate
@@ -192,47 +188,7 @@ class NoteDetailLogicTest {
         verify { view.startListFeature() }
     }
 
-    /**
-     *c:
-     * 1. get current value of noteBody
-     * 2. write updated note to public
-     * 3. exit to list activity
-     */
-    @Test
-    fun `On Done Click public, logged in`() = runBlocking {
-        logic = getLogic()
 
-        every {
-            view.getNoteBody()
-        } returns getNote().contents
-
-        every {
-            vModel.getNoteState()
-        } returns getNote()
-
-        every {
-            vModel.getIsPrivateMode()
-        } returns false
-
-        coEvery {
-            public.updateNote(getNote(), noteLocator)
-        } returns Result.build { Unit }
-
-        coEvery {
-            auth.getCurrentUser(userLocator)
-        } returns Result.build { getUser() }
-
-        //call the unit to be tested
-        logic.onChanged(NoteDetailEvent.OnDoneClick)
-
-        //verify interactions and state if necessary
-
-        verify { view.getNoteBody() }
-        verify { vModel.getNoteState() }
-        coVerify { auth.getCurrentUser(userLocator) }
-        coVerify { public.updateNote(getNote(), noteLocator) }
-        verify { view.startListFeature() }
-    }
 
     /**
      * When auth presses delete, they may wish to delete a note. Show confirmation.
@@ -328,44 +284,6 @@ class NoteDetailLogicTest {
         verify { view.showMessage(MESSAGE_DELETE_SUCCESSFUL) }
         verify { view.startListFeature() }
         coVerify { registered.deleteNote(getNote(), noteLocator) }
-        coVerify { auth.getCurrentUser(userLocator) }
-    }
-
-    /**
-     *
-     * c:
-     * 1. Check status of current user: not null
-     * 2. check isPrivate: false
-     * 2. delete Note from public repo
-     * 3. show message to indicate if operation was successful
-     * 3. startListFeature
-     */
-    @Test
-    fun `On Delete Confirmation successful public`() {
-        logic = getLogic()
-
-        every {
-            vModel.getNoteState()
-        } returns getNote()
-
-        every {
-            vModel.getIsPrivateMode()
-        } returns false
-
-        coEvery {
-            auth.getCurrentUser(userLocator)
-        } returns Result.build { getUser() }
-
-        coEvery {
-            public.deleteNote(getNote(), noteLocator)
-        } returns Result.build { Unit }
-
-        logic.onChanged(NoteDetailEvent.OnDeleteConfirmed)
-
-        verify { vModel.getNoteState() }
-        verify { view.showMessage(MESSAGE_DELETE_SUCCESSFUL) }
-        verify { view.startListFeature() }
-        coVerify { public.deleteNote(getNote(), noteLocator) }
         coVerify { auth.getCurrentUser(userLocator) }
     }
 
@@ -522,47 +440,6 @@ class NoteDetailLogicTest {
     }
 
     /**
-     *b: Not new Note
-     *f: public mode
-     */
-    @Test
-    fun `On bind b and f`() {
-        logic = getLogic(getNote().creationDate, false)
-
-        every {
-            vModel.getId()
-        } returns getNote().creationDate
-
-        every {
-            vModel.getIsPrivateMode()
-        } returns false
-
-        coEvery {
-            auth.getCurrentUser(userLocator)
-        } returns Result.build { getUser() }
-
-        coEvery {
-            public.getNoteById(getNote().creationDate, noteLocator)
-        } returns Result.build { getNote() }
-
-        logic.onChanged(NoteDetailEvent.OnBind)
-
-        //creatorId should be null for new note. It will be added if the user saves the note while
-        //logged in
-        verify { vModel.setNoteState(getNote()) }
-        verify { vModel.setIsPrivateMode(false) }
-        coVerify { auth.getCurrentUser(userLocator) }
-        coVerify { public.getNoteById(getNote().creationDate, noteLocator) }
-        verify { vModel.setId(getNote().creationDate) }
-        coExcludeRecords {
-            anonymous.getNoteById(any(), any())
-            view.setBackgroundImage(any())
-            view.setDateLabel(any())
-            view.setNoteBody(any())
-        }
-    }
-
-    /**
      *a: New Note
      *f: public mode
      */
@@ -650,7 +527,6 @@ class NoteDetailLogicTest {
                 view,
                 anonymous,
                 registered,
-                public,
                 auth
         )
     }

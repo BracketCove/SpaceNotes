@@ -1,5 +1,6 @@
 package com.wiseassblog.data.note.registered
 
+import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
 import com.wiseassblog.data.awaitTaskCompletable
@@ -63,18 +64,11 @@ class FirestorePrivateRemoteNoteImpl(
 
     }
 
-    override suspend fun deleteNote(note: Note): Result<Exception, Unit> {
-        return try {
-            awaitTaskCompletable(firestore.collection(COLLECTION_NAME)
-                    .document(note.creationDate)
-                    .delete()
-            )
-
-            Result.build { Unit }
-
-        } catch (exception: Exception) {
-            Result.build { throw exception }
-        }
+    override suspend fun deleteNote(note: Note): Result<Exception, Unit> = Result.build {
+        awaitTaskCompletable(firestore.collection(COLLECTION_NAME)
+                .document(note.creationDate)
+                .delete()
+        )
     }
 
     override suspend fun updateNote(note: Note): Result<Exception, Unit> {
@@ -90,4 +84,6 @@ class FirestorePrivateRemoteNoteImpl(
             Result.build { throw exception }
         }
     }
+
+
 }

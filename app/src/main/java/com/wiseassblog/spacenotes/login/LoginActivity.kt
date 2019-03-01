@@ -3,6 +3,8 @@ package com.wiseassblog.spacenotes.login
 import android.content.Intent
 import android.graphics.drawable.AnimationDrawable
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
@@ -102,6 +104,7 @@ class LoginActivity : AppCompatActivity(), ILoginContract.View {
                 )
 
             } catch (exception: Exception) {
+                Log.d("Login", exception.message)
                 event.value = LoginEvent.OnGoogleSignInResult(
                         LoginResult(
                                 0,
