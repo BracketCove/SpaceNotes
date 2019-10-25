@@ -156,11 +156,11 @@ internal fun List<RegisteredRoomTransaction>.toNoteTransactionListFromRegistered
 
 
 internal inline fun <reified T> resultToList(result: QuerySnapshot?): Result<Exception, List<T>> {
-    val noteList = mutableListOf<T>()
+    val targetList = mutableListOf<T>()
     result?.forEach { documentSnapshop ->
-        noteList.add(documentSnapshop.toObject(T::class.java))
+        targetList.add(documentSnapshop.toObject(T::class.java))
     }
     return Result.build {
-        noteList
+        targetList
     }
 }
