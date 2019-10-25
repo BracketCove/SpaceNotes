@@ -6,6 +6,7 @@ import com.wiseassblog.domain.domainmodel.Result
 
 
 class PublicNoteSource {
+
     suspend fun getNotes(locator: NoteServiceLocator): Result<Exception, List<Note>> = locator
             .remotePublic
             .getNotes()

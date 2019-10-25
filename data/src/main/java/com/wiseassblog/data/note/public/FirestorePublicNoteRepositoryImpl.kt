@@ -2,8 +2,7 @@ package com.wiseassblog.data.note.public
 
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
-import com.wiseassblog.data.awaitTaskCompletable
-import com.wiseassblog.data.awaitTaskResult
+import com.wiseassblog.data.*
 import com.wiseassblog.data.datamodels.FirebaseNote
 import com.wiseassblog.data.toFirebaseNote
 import com.wiseassblog.data.toNote
@@ -13,6 +12,7 @@ import com.wiseassblog.domain.repository.IPublicNoteRepository
 
 
 const val COLLECTION_PUBLIC = "public_notes"
+
 object FirestoreRemoteNoteImpl : IPublicNoteRepository {
     override suspend fun getNotes(): Result<Exception, List<Note>> {
         val firestore = FirebaseFirestore.getInstance()
@@ -22,7 +22,7 @@ object FirestoreRemoteNoteImpl : IPublicNoteRepository {
         return try {
             val task = awaitTaskResult(reference.get())
 
-            return resultToNoteList(task)
+            return resultToList<Note>(task)
         } catch (exception: Exception) {
             Result.build { throw exception }
         }
@@ -77,15 +77,4 @@ object FirestoreRemoteNoteImpl : IPublicNoteRepository {
         }
     }
 
-    private fun resultToNoteList(result: QuerySnapshot?): Result<Exception, List<Note>> {
-        val noteList = mutableListOf<Note>()
-
-        result?.forEach { documentSnapshop ->
-            noteList.add(documentSnapshop.toObject(FirebaseNote::class.java).toNote)
-        }
-
-        return Result.build {
-            noteList
-        }
-    }
 }

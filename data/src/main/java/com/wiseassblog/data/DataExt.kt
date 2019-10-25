@@ -2,12 +2,14 @@ package com.wiseassblog.data
 
 import android.net.Uri
 import com.google.android.gms.tasks.Task
+import com.google.firebase.firestore.QuerySnapshot
 import com.wiseassblog.data.datamodels.AnonymousRoomNote
 import com.wiseassblog.data.datamodels.RegisteredRoomNote
 import com.wiseassblog.data.datamodels.RegisteredRoomTransaction
 import com.wiseassblog.data.datamodels.FirebaseNote
 import com.wiseassblog.domain.domainmodel.Note
 import com.wiseassblog.domain.domainmodel.NoteTransaction
+import com.wiseassblog.domain.domainmodel.Result
 import com.wiseassblog.domain.domainmodel.TransactionType
 import com.wiseassblog.domain.domainmodel.User
 import kotlin.coroutines.resume
@@ -24,6 +26,7 @@ suspend fun <T> awaitTaskResult(task: Task<T>): T = suspendCoroutine { continuat
         }
     }
 }
+
 //Wraps Firebase/GMS calls
 suspend fun <T> awaitTaskCompletable(task: Task<T>): Unit = suspendCoroutine { continuation ->
     task.addOnCompleteListener { task ->
@@ -149,4 +152,15 @@ internal fun List<RegisteredRoomNote>.toNoteListFromRegistered(): List<Note> = t
 
 internal fun List<RegisteredRoomTransaction>.toNoteTransactionListFromRegistered(): List<NoteTransaction> = this.flatMap {
     listOf(it.toTransaction)
+}
+
+
+internal inline fun <reified T> resultToList(result: QuerySnapshot?): Result<Exception, List<T>> {
+    val noteList = mutableListOf<T>()
+    result?.forEach { documentSnapshop ->
+        noteList.add(documentSnapshop.toObject(T::class.java))
+    }
+    return Result.build {
+        noteList
+    }
 }

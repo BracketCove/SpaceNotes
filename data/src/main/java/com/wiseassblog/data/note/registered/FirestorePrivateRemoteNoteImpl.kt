@@ -2,9 +2,9 @@ package com.wiseassblog.data.note.registered
 
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
-import com.wiseassblog.data.awaitTaskCompletable
-import com.wiseassblog.data.awaitTaskResult
+import com.wiseassblog.data.*
 import com.wiseassblog.data.datamodels.FirebaseNote
+import com.wiseassblog.data.resultToList
 import com.wiseassblog.data.toFirebaseNote
 import com.wiseassblog.data.toNote
 import com.wiseassblog.domain.domainmodel.Note
@@ -28,24 +28,11 @@ class FirestorePrivateRemoteNoteImpl(
         return try {
             val task = awaitTaskResult(reference.get())
 
-            return resultToNoteList(task)
+            return resultToList(task)
         } catch (exception: Exception) {
             Result.build { throw exception }
         }
     }
-
-    private fun resultToNoteList(result: QuerySnapshot?): Result<Exception, List<Note>> {
-        val noteList = mutableListOf<Note>()
-
-        result?.forEach { documentSnapshop ->
-            noteList.add(documentSnapshop.toObject(FirebaseNote::class.java).toNote)
-        }
-
-        return Result.build {
-            noteList
-        }
-    }
-
 
     override suspend fun getNote(id: String): Result<Exception, Note?> {
         var reference = firestore.collection(COLLECTION_NAME)
