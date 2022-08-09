@@ -1,3 +1,6 @@
+### Please Note:
+- Since I see people are still looking at this repo, I want to be clear that I no longer recommend multi-module (i.e. multiple gradle subprojects) architecture unless you actually have a good reason for it. In this case, it really just adds extra complexity for no real benefit. However, multi-platform projects would be a great example of a situation where you'd want to use multi-module.
+
 
 # SpaceNotes
 
