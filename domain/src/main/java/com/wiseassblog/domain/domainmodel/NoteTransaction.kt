@@ -21,4 +21,4 @@ fun Note.toTransaction(type: TransactionType): NoteTransaction = NoteTransaction
         imageUrl,
         creator,
         type
-)
+        )

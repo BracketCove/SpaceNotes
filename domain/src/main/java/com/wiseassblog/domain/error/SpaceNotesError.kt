@@ -10,8 +10,6 @@ sealed class SpaceNotesError: Exception() {
     object AuthError: SpaceNotesError()
     object TransactionIOException : SpaceNotesError()
 
-
-
 }
 
 const val ERROR_UPDATE_FAILED = "Update operation unsuccessful."
